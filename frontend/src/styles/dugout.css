@@ -2759,3 +2759,315 @@ body {
 .wr-bot-gh:hover {
   color: var(--wr-brand);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE / TABLET — additive overrides only
+   Desktop styles above are untouched; these only activate
+   below their breakpoints.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Tablet (≤ 1024px) ─────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .wr-main {
+    grid-template-columns: 280px 1fr;
+  }
+  .wr-col-right {
+    display: contents;
+  }
+  /* Right-column panels flow after center column */
+  .wr-wire-pnl  { order: 10; }
+  .wr-log-pnl   { order: 11; }
+  .wr-col-center {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* ── Mobile (≤ 768px) ──────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  /* --- Master layout: scrollable single column --- */
+  .wr {
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 100dvh;
+    font-size: 14px;
+  }
+
+  .wr-main {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    overflow: visible;
+    gap: 6px;
+    padding: 0 4px;
+  }
+
+  /* Dissolve column wrappers — panels join the single-column flow */
+  .wr-col,
+  .wr-center-lower {
+    display: contents;
+  }
+
+  /* --- Panel ordering: intelligence-first --- */
+  .wr-briefing-pnl   { order: 1; }
+  .wr-team-intel-pnl  { order: 1; }  /* replaces briefing when team selected */
+  .wr-wire-pnl        { order: 2; }
+  .wr-matches-pnl     { order: 3; }
+  .wr-standings-pnl   { order: 4; }
+  .wr-pulse-pnl       { order: 5; }
+  .wr-caps-pnl        { order: 6; }
+  .wr-scenarios-pnl   { order: 7; }
+  .wr-log-pnl         { order: 8; }
+
+  /* --- Panel sizing: natural height instead of flex-fill --- */
+  .wr-pnl {
+    flex-shrink: 0;
+    min-height: 0;
+  }
+  .wr-briefing-pnl,
+  .wr-team-intel-pnl {
+    max-height: 70vh;
+  }
+  .wr-wire-pnl,
+  .wr-log-pnl {
+    max-height: 60vh;
+    flex: none !important;
+  }
+  .wr-caps-pnl {
+    max-height: 50vh;
+    flex: none !important;
+  }
+  .wr-pulse-pnl {
+    min-height: 220px;
+    height: 260px;
+    flex: none !important;
+  }
+  .wr-matches-pnl {
+    max-height: 50vh;
+    flex: none;
+  }
+  .wr-scenarios-pnl {
+    max-height: 55vh;
+    flex: none;
+  }
+  .wr-standings-pnl {
+    flex-shrink: 0;
+  }
+
+  /* --- Top bar: compact, pills scroll horizontally --- */
+  .wr-top {
+    height: auto;
+    min-height: 42px;
+    flex-wrap: wrap;
+    padding: 6px 10px;
+    gap: 6px;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+  }
+
+  .wr-pills {
+    flex-shrink: 1;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    max-width: 100%;
+    padding-bottom: 2px;
+  }
+  .wr-pills::-webkit-scrollbar { display: none; }
+  .wr-pill {
+    height: 32px;
+    line-height: 32px;
+    padding: 0 10px;
+    font-size: 10px;
+  }
+
+  /* Ticker: own row below logo + pills */
+  .wr-tkr {
+    flex-basis: 100%;
+    order: 10;
+    height: 28px;
+    min-height: 28px;
+  }
+
+  /* Clock stays compact */
+  .wr-top-r {
+    margin-left: auto;
+  }
+
+  /* --- Standings: horizontal scroll for dense grid --- */
+  .wr-standings-pnl {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .wr-st-hdr, .wr-st-row {
+    min-width: 340px;
+  }
+
+  /* --- Season Pulse: reduce wasteful padding --- */
+  .wr-pulse-canvas {
+    position: relative;
+  }
+  .wr-pulse-svg {
+    position: relative;
+    height: 200px;
+  }
+
+  /* --- Briefing match header: stack on narrow --- */
+  .wr-br-mh {
+    flex-wrap: wrap;
+  }
+  .wr-br-mh-center {
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid var(--wr-b1);
+    flex-basis: 100%;
+    order: 3;
+    padding: 8px;
+  }
+  .wr-br-mh-stats {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+  .wr-br-mh-name {
+    font-size: 15px;
+  }
+
+  /* --- Briefing/TeamIntel grids: single column --- */
+  .wr-br-grid,
+  .wr-ti-grid,
+  .wr-ti-cols,
+  .wr-scout-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .wr-br-main,
+  .wr-ti-main,
+  .wr-ti-col:first-child,
+  .wr-scout-grid > .wr-dos-team-col:first-child {
+    border-right: none !important;
+    border-bottom: 1px solid var(--wr-b1);
+  }
+
+  /* --- Font size floor: nothing below 10px --- */
+  .wr-st-hdr,
+  .wr-st-pos,
+  .wr-cap-rank,
+  .wr-cap-inn,
+  .wr-cap-team,
+  .wr-log-tag,
+  .wr-tkr-tag,
+  .wr-pg-label,
+  .wr-playoff-label,
+  .wr-axis-label,
+  .wr-br-mh-stat-lbl,
+  .wr-br-mh-record,
+  .wr-sc-risk,
+  .wr-wire-cat,
+  .wr-wire-team,
+  .wr-wire-sev,
+  .wr-dos-role,
+  .wr-ti-buffer-tag,
+  .wr-ti-elim-badge,
+  .wr-cap-footer,
+  .wr-bot {
+    font-size: 10px;
+  }
+
+  /* Boost body text for readability */
+  .wr-wire-headline   { font-size: 14px; }
+  .wr-wire-body,
+  .wr-wire-teaser,
+  .wr-log-headline     { font-size: 13px; }
+  .wr-log-snippet,
+  .wr-br-item,
+  .wr-br-edge-text,
+  .wr-br-ground-note,
+  .wr-br-battle-insight,
+  .wr-br-mu-insight,
+  .wr-si-arc-body,
+  .wr-ti-hero-body,
+  .wr-ti-hero-bullet,
+  .wr-ti-dispatch-hl,
+  .wr-sc-brief-body,
+  .wr-sc-math-fact,
+  .wr-sc-card-body,
+  .wr-ti-elim-body,
+  .wr-ti-tonight-impact,
+  .wr-dos-insight,
+  .wr-br-stake-impact,
+  .wr-ti-ms-note,
+  .wr-ti-next-ctx,
+  .wr-br-htw-item      { font-size: 13px; }
+
+  /* --- Match timeline: hide stub to save space --- */
+  .wr-tmc-sep   { display: none; }
+  .wr-tmc-stub  { width: auto; padding: 6px 10px; }
+
+  /* --- Scroll-fade masks: keep but smaller --- */
+  .wr-matches-wrap,
+  .wr-scenarios-scroll,
+  .wr-briefing-scroll,
+  .wr-team-intel-scroll,
+  .wr-log-scroll,
+  .wr-wire-scroll {
+    --sf-size: 14px;
+  }
+
+  /* --- Bottom bar: simplified --- */
+  .wr-bot {
+    height: auto;
+    min-height: 26px;
+    padding: 6px 10px;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* --- Panel headers: taller tap targets --- */
+  .wr-ph {
+    height: 40px;
+    font-size: 12px;
+  }
+
+  /* --- Cap/Briefing tabs: scrollable --- */
+  .wr-cap-tabs,
+  .wr-log-filters {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+  }
+  .wr-cap-tabs::-webkit-scrollbar,
+  .wr-log-filters::-webkit-scrollbar {
+    display: none;
+  }
+  .wr-cap-tab,
+  .wr-log-filter {
+    font-size: 10px;
+    padding: 10px 10px 9px;
+    white-space: nowrap;
+  }
+  .wr-briefing-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+  }
+  .wr-briefing-tabs::-webkit-scrollbar { display: none; }
+  .wr-briefing-tabs .wr-cap-tab {
+    padding: 5px 12px;
+    font-size: 10px;
+  }
+
+  /* --- Live scores: stack vertically --- */
+  .wr-live-scores {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .wr-live-vs { margin: 2px 0; }
+}
