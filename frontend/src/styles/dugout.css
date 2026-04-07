@@ -2733,16 +2733,23 @@ body {
   letter-spacing: 2px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
 }
 .wr-bot-gh {
-  color: var(--wr-t3);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--wr-t2);
   text-decoration: none;
-  font-size: 11px;
+  font: 500 9px 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
   transition: color 0.2s;
 }
+.wr-bot-gh svg {
+  flex-shrink: 0;
+}
 .wr-bot-gh:hover {
-  color: var(--wr-brand);
+  color: var(--wr-t);
 }
 
 /* ═══════════════════════════════════════════════════════════
