@@ -8,6 +8,22 @@ permissions:
 
 on:
   workflow_dispatch:
+    inputs:
+      tiers:
+        description: 'Tier override (hot, warm, cool, all). Leave empty for auto.'
+        required: false
+        type: string
+        default: ''
+      panel:
+        description: 'Single panel to sync (e.g. briefing, standings). Overrides tiers.'
+        required: false
+        type: string
+        default: ''
+      force:
+        description: 'Bypass pipeline caches'
+        required: false
+        type: boolean
+        default: false
   schedule:
     # Hot tier: every 30 min during match window (UTC 12-18 ~ IST 17:30-23:30)
     - cron: '*/30 12-18 * 3-5 *'
@@ -26,11 +42,34 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tiers: ${{ steps.tier.outputs.tiers }}
+      panel: ${{ steps.tier.outputs.panel }}
       update_db: ${{ steps.tier.outputs.update_db }}
+      force: ${{ steps.tier.outputs.force }}
     steps:
-      - name: Resolve tier from schedule time
+      - name: Resolve tier from inputs or schedule time
         id: tier
         run: |
+          # Manual override: single panel
+          if [ -n "${{ inputs.panel }}" ]; then
+            echo "tiers=all" >> "$GITHUB_OUTPUT"
+            echo "panel=${{ inputs.panel }}" >> "$GITHUB_OUTPUT"
+            echo "update_db=false" >> "$GITHUB_OUTPUT"
+            echo "force=${{ inputs.force }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Manual override: tier selection
+          if [ -n "${{ inputs.tiers }}" ]; then
+            echo "tiers=${{ inputs.tiers }}" >> "$GITHUB_OUTPUT"
+            echo "panel=" >> "$GITHUB_OUTPUT"
+            echo "update_db=false" >> "$GITHUB_OUTPUT"
+            echo "force=${{ inputs.force }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "panel=" >> "$GITHUB_OUTPUT"
+          echo "force=false" >> "$GITHUB_OUTPUT"
+
           HOUR=$(date -u +%-H)
           MINUTE=$(date -u +%-M)
 
@@ -61,6 +100,8 @@ jobs:
     uses: ./.github/workflows/sync-deploy.yml
     with:
       tiers: ${{ needs.resolve.outputs.tiers }}
+      panel: ${{ needs.resolve.outputs.panel }}
       update_cricket_db: ${{ needs.resolve.outputs.update_db == 'true' }}
+      force: ${{ needs.resolve.outputs.force == 'true' }}
     secrets:
       CT_LLM_API_KEY: ${{ secrets.CT_LLM_API_KEY }}

@@ -7,6 +7,11 @@ on:
         description: 'Comma-separated tiers: hot, warm, cool, all'
         required: true
         type: string
+      panel:
+        description: 'Single panel to sync (overrides tiers for pipeline)'
+        required: false
+        type: string
+        default: ''
       update_cricket_db:
         description: 'Run duckworth-mcp update+enrich before sync'
         required: false
@@ -27,6 +32,11 @@ on:
         required: true
         default: 'all'
         type: string
+      panel:
+        description: 'Single panel to sync (overrides tiers for pipeline)'
+        required: false
+        type: string
+        default: ''
       update_cricket_db:
         description: 'Run duckworth-mcp update+enrich before sync'
         required: false
@@ -129,7 +139,7 @@ jobs:
           cp -a frontend/public/api/ipl/war-room/*.json data/war-room/ 2>/dev/null || true
 
       # ── Pipeline sync ────────────────────────────────────────────
-      - name: Sync pipeline (${{ inputs.tiers }})
+      - name: Sync pipeline (${{ inputs.panel || inputs.tiers }})
         env:
           CT_LLM_API_KEY: ${{ secrets.CT_LLM_API_KEY }}
           CT_LLM_VERTEX: 'true'
@@ -141,7 +151,11 @@ jobs:
           GOOGLE_CLOUD_LOCATION: ${{ vars.CT_LLM_GCP_LOCATION }}
           CRICKET_DB_PATH: data/cricket.duckdb
         run: |
-          ARGS="--tiers ${{ inputs.tiers }}"
+          if [ -n "${{ inputs.panel }}" ]; then
+            ARGS="--panel ${{ inputs.panel }}"
+          else
+            ARGS="--tiers ${{ inputs.tiers }}"
+          fi
           if [ "${{ inputs.force }}" = "true" ]; then
             ARGS="$ARGS --force"
           fi
