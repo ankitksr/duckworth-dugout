@@ -115,6 +115,19 @@ jobs:
           key: enrichment-db
           restore-keys: enrichment-db
 
+      # ── Restore prior panel data (partial syncs layer on top) ───
+      - name: Restore API data from last sync
+        uses: actions/cache/restore@v4
+        with:
+          path: frontend/public/api/ipl/war-room
+          key: api-data
+          restore-keys: api-data
+
+      - name: Seed data/war-room from cached API data
+        run: |
+          mkdir -p data/war-room
+          cp -a frontend/public/api/ipl/war-room/*.json data/war-room/ 2>/dev/null || true
+
       # ── Pipeline sync ────────────────────────────────────────────
       - name: Sync pipeline (${{ inputs.tiers }})
         env:

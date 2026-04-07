@@ -15,8 +15,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: live-score
-  cancel-in-progress: true
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   update:
