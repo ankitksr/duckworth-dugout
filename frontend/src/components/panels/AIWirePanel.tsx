@@ -83,11 +83,17 @@ export function AIWirePanel() {
                 )}
               </div>
               <div className="wr-wire-headline">{item.headline}</div>
-              <div className="wr-wire-teaser">{item.text}</div>
-              <div className="wr-wire-expand">
-                <div className="wr-wire-body">{item.text}</div>
-                <div className="wr-wire-time">{timeAgo(item.generated_at)}</div>
-              </div>
+              {isOpen && (
+                <div className="wr-wire-expand" style={{ display: "block" }}>
+                  <div className="wr-wire-body">{item.text}</div>
+                  <div className="wr-wire-time">{timeAgo(item.generated_at)}</div>
+                </div>
+              )}
+              {!isOpen && (
+                <div className="wr-wire-time" style={{ marginTop: 4, borderTop: "none", paddingTop: 0 }}>
+                  {timeAgo(item.generated_at)}
+                </div>
+              )}
             </div>
           );
         })}

@@ -1639,7 +1639,6 @@ body {
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.04);
-  border-left: 3px solid var(--wr-tm);
   transition: opacity 0.2s, background 0.2s, border-color 0.2s, padding 0.15s;
   position: relative;
 }
@@ -1662,7 +1661,6 @@ body {
   border-radius: 6px;
   background: rgba(253, 185, 19, 0.05);
   border-color: rgba(253, 185, 19, 0.1);
-  border-left: 3px solid var(--wr-brand);
 }
 .wr-wire-alarm {
   padding: 9px 12px 5px;
@@ -1671,7 +1669,6 @@ body {
   border-radius: 8px;
   background: rgba(239, 68, 68, 0.05);
   border-color: rgba(239, 68, 68, 0.12);
-  border-left: 3px solid var(--wr-loss);
 }
 
 /* Highlighted card (selected team involved) */
@@ -1688,13 +1685,13 @@ body {
   border-color: rgba(239, 68, 68, 0.12);
 }
 
-/* Alarm pulse animation — subtle full-card glow */
+/* Alarm pulse animation — subtle border glow */
 .wr-wire-alarm {
   animation: wire-alarm-pulse 2s ease-in-out 1;
 }
 @keyframes wire-alarm-pulse {
-  0%, 100% { border-left-color: var(--wr-loss); }
-  50% { border-left-color: rgba(239, 68, 68, 0.4); }
+  0%, 100% { border-color: rgba(239, 68, 68, 0.12); }
+  50% { border-color: rgba(239, 68, 68, 0.3); }
 }
 
 /* Top row: emoji + category + team chips */
@@ -1714,12 +1711,12 @@ body {
   font-size: 14px;
 }
 .wr-wire-cat {
-  font: 700 7px 'JetBrains Mono', monospace;
-  letter-spacing: 1.2px;
+  font: 700 8px 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--wr-t2);
-  background: rgba(255,255,255,0.06);
-  padding: 1px 5px;
+  color: var(--wr-t);
+  background: rgba(255,255,255,0.08);
+  padding: 2px 6px;
   border-radius: 2px;
 }
 .wr-wire-team {
@@ -1762,20 +1759,6 @@ body {
   color: #fca5a5;
 }
 
-/* Collapsed teaser — 2-line preview */
-.wr-wire-teaser {
-  font: 400 10px 'Inter', sans-serif;
-  color: var(--wr-t3);
-  margin-top: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.45;
-}
-.wr-wire-card.open .wr-wire-teaser {
-  display: none;
-}
 .wr-wire-card.open {
   padding: 8px 12px 6px;
   border-radius: 8px;
@@ -1789,14 +1772,6 @@ body {
 .wr-wire-card.open.wr-wire-alarm {
   padding: 10px 14px 6px;
   border-color: rgba(239, 68, 68, 0.16);
-}
-
-/* Expandable body wrapper — hidden by default */
-.wr-wire-expand {
-  display: none;
-}
-.wr-wire-card.open .wr-wire-expand {
-  display: block;
 }
 
 /* Body — muted detail paragraph */
@@ -2790,8 +2765,8 @@ body {
     grid-template-columns: 1fr;
     grid-template-rows: none;
     overflow: visible;
-    gap: 6px;
-    padding: 0 4px;
+    gap: 10px;
+    padding: 0 6px;
   }
 
   /* Dissolve column wrappers — panels join the single-column flow */
@@ -2818,11 +2793,15 @@ body {
   }
   .wr-briefing-pnl,
   .wr-team-intel-pnl {
-    max-height: 70vh;
+    max-height: 55vh;
   }
-  .wr-wire-pnl,
-  .wr-log-pnl {
+  .wr-wire-pnl {
     max-height: 60vh;
+    flex: none !important;
+  }
+  .wr-log-pnl {
+    max-height: none;
+    height: 55vh;
     flex: none !important;
   }
   .wr-caps-pnl {
@@ -2849,10 +2828,10 @@ body {
   /* --- Top bar: compact, pills scroll horizontally --- */
   .wr-top {
     height: auto;
-    min-height: 42px;
+    min-height: 38px;
     flex-wrap: wrap;
-    padding: 6px 10px;
-    gap: 6px;
+    padding: 5px 10px;
+    gap: 5px;
     position: sticky;
     top: 0;
     z-index: 200;
@@ -2865,6 +2844,9 @@ body {
     scrollbar-width: none;
     max-width: 100%;
     padding-bottom: 2px;
+    /* Scroll affordance: fade edges to hint at hidden pills */
+    mask-image: linear-gradient(90deg, transparent, #000 8px, #000 calc(100% - 16px), transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8px, #000 calc(100% - 16px), transparent);
   }
   .wr-pills::-webkit-scrollbar { display: none; }
   .wr-pill {
@@ -2878,8 +2860,8 @@ body {
   .wr-tkr {
     flex-basis: 100%;
     order: 10;
-    height: 28px;
-    min-height: 28px;
+    height: 24px;
+    min-height: 24px;
   }
 
   /* Clock stays compact */
@@ -3051,6 +3033,51 @@ body {
   .wr-briefing-tabs .wr-cap-tab {
     padding: 5px 12px;
     font-size: 10px;
+  }
+
+  /* --- Briefing content tabs: sticky within panel --- */
+  .wr-briefing-content-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  .wr-bct {
+    padding: 6px 12px;
+    font-size: 10px;
+  }
+
+  /* --- Intel Feed: explicit height + visible scroll region --- */
+  .wr-log-pnl .wr-log-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+  }
+  .wr-log-pnl .wr-log-scroll {
+    /* Override absolute positioning — let it fill the wrap naturally */
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+  }
+  /* Scroll hint: bottom fade on Intel Feed to show there's more content */
+  .wr-log-pnl .wr-log-wrap::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(transparent, var(--wr-s1));
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* --- Bottom bar: dock to end of scroll --- */
+  .wr-bot {
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+    background: var(--wr-s1);
+    border-top: 1px solid var(--wr-b1);
   }
 
   /* --- Live scores: stack vertically --- */
