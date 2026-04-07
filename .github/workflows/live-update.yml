@@ -13,7 +13,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: live-score
   cancel-in-progress: true
 
 jobs:
@@ -50,39 +50,57 @@ jobs:
 
       # RSS-only live score update (~2 seconds)
       - name: Update live scores
-        run: uv run python -m pipeline live-update
+        id: live
+        run: |
+          set +e
+          OUTPUT=$(uv run python -m pipeline live-update 2>&1)
+          RC=$?
+          echo "$OUTPUT"
+          if [ $RC -ne 0 ]; then exit $RC; fi
+          if echo "$OUTPUT" | grep -q "No live IPL"; then
+            echo "has_updates=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_updates=true" >> "$GITHUB_OUTPUT"
+          fi
 
       # Save updated API data back
       - name: Update API data cache
+        if: steps.live.outputs.has_updates == 'true'
         run: gh cache delete api-data || true
         env:
           GH_TOKEN: ${{ github.token }}
 
       - name: Save API data cache
+        if: steps.live.outputs.has_updates == 'true'
         uses: actions/cache/save@v4
         with:
           path: frontend/public/api/ipl/war-room
           key: api-data
 
-      # Build + deploy
+      # Build + deploy (only when live scores changed)
       - uses: actions/setup-node@v4
+        if: steps.live.outputs.has_updates == 'true'
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install frontend
+        if: steps.live.outputs.has_updates == 'true'
         working-directory: frontend
         run: npm ci
 
       - name: Build
+        if: steps.live.outputs.has_updates == 'true'
         working-directory: frontend
         run: npm run build
 
       - uses: actions/upload-pages-artifact@v3
+        if: steps.live.outputs.has_updates == 'true'
         with:
           path: frontend/dist
 
       - name: Deploy
+        if: steps.live.outputs.has_updates == 'true'
         id: deploy
         uses: actions/deploy-pages@v4
