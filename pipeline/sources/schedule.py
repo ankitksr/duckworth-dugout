@@ -19,7 +19,7 @@ from pipeline.sources.rss import RSSFetcher
 
 console = Console()
 
-FIXTURES_DIR = DATA_DIR / "war-room"
+FIXTURES_DIR = DATA_DIR / "fixtures"
 
 # Team name → franchise ID (lowercased, includes historical names)
 _TEAM_LOOKUP: dict[str, str] = {}
