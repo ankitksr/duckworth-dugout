@@ -57,6 +57,18 @@ def _section_text(wikitext: str, names: tuple[str, ...]) -> str | None:
     return None
 
 
+# Transient Wikipedia result strings that indicate a live match, not a final result
+_TRANSIENT_RESULTS = re.compile(
+    r"innings break|in progress|match delayed|rain delay|strategic time-?out",
+    re.IGNORECASE,
+)
+
+
+def _is_transient_result(result_text: str | None) -> bool:
+    """True if result text describes an in-progress state, not a final outcome."""
+    return bool(result_text and _TRANSIENT_RESULTS.search(result_text))
+
+
 def _strip_cell(cell: str, *, strip_parens: bool = True) -> str:
     cell = re.sub(r"<ref[^>]*>.*?</ref>", "", cell, flags=re.IGNORECASE | re.DOTALL)
     cell = re.sub(r"<br\s*/?>", " ", cell, flags=re.IGNORECASE)
@@ -584,7 +596,12 @@ def parse_ipl_fixtures(wikitext: str) -> list[dict]:
                 "match_url": re.search(r"\[(https?://[^\s\]]+)", fields.get("report", "")),
                 "toss": _strip_cell(fields.get("toss", "")) or None,
                 "notes": _strip_cell(fields.get("notes", "")) or None,
-                "status": "completed" if score1 or score2 or result_text else "scheduled",
+                "status": (
+                    "completed"
+                    if (score1 or score2 or result_text)
+                    and not _is_transient_result(result_text)
+                    else "scheduled"
+                ),
             }
         )
         if fixtures[-1]["match_url"] is not None:

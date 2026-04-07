@@ -218,10 +218,18 @@ def overlay_live_scores(matches: list[ScheduleMatch]) -> list[ScheduleMatch]:
 
         for match in matches:
             if {t1, t2} == {match.team1, match.team2}:
-                # Don't downgrade a match already marked completed
-                # (e.g. by standings overlay for no-result / washout)
-                if match.status != "completed":
-                    match.status = "completed" if is_completed else "live"
+                # RSS live feed is authoritative for in-progress matches.
+                # A match in the live feed that isn't truly over (no winner
+                # detected) should correct premature "completed" from
+                # earlier overlays (e.g. Wikipedia "Innings break").
+                if is_completed:
+                    match.status = "completed"
+                elif match.status == "completed" and not match.winner:
+                    # Premature completion — correct it back to live
+                    match.status = "live"
+                    match.result = None
+                else:
+                    match.status = "live"
                 # Only update scores when data is available (pre-toss/rain
                 # delay entries have no scores — don't blank existing data)
                 if s1 or s2:

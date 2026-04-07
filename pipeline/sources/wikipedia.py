@@ -12,6 +12,7 @@ from pipeline.sources.caps import CapEntry, CapsData
 from pipeline.sources.standings import _standings_from_table_rows
 from pipeline.sources.wikipedia_fetch import fetch_personnel_wikitext, fetch_season_wikitext
 from pipeline.sources.wikipedia_parser import (
+    _is_transient_result,
     parse_ipl_fixtures,
     parse_ipl_match_summary,
     parse_ipl_points_table,
@@ -166,8 +167,12 @@ def overlay_wikipedia_fixtures(matches: list[ScheduleMatch], season: str) -> lis
         if not completed:
             continue
 
+        # Don't trust transient Wikipedia results (e.g. "Innings break")
+        # as completion signals — the match is still in progress
+        wiki_result = fixture.get("result")
+        transient = _is_transient_result(wiki_result) and not summary_result
         updated = False
-        if match.status == "scheduled":
+        if match.status == "scheduled" and not transient:
             match.status = "completed"
             updated = True
         if not match.score1 and fixture.get("score1"):
@@ -193,7 +198,7 @@ def overlay_wikipedia_fixtures(matches: list[ScheduleMatch], season: str) -> lis
             updated = True
         if not match.result:
             result_text = fixture.get("result") or summary_result
-            if result_text:
+            if result_text and not _is_transient_result(result_text):
                 match.result = result_text
                 updated = True
         if not match.winner:
