@@ -2,7 +2,7 @@
 
 # DUCKWORTH DUGOUT
 
-**IPL season war room. Standings, pulse, cap races, match intel — one screen, zero fluff.**
+**IPL season command center. Standings, pulse, cap races, match intel. One screen.**
 
 [![Live Site](https://img.shields.io/badge/Live_Site-ankitksr.github.io-fdb913?style=flat-square)](https://ankitksr.github.io/duckworth-dugout)
 [![License: MIT](https://img.shields.io/badge/License-MIT-white?style=flat-square)](LICENSE)
@@ -17,21 +17,21 @@
 
 <br>
 
-This is not a cricket score app. It's an analyst's war room — dark, dense, built for situational awareness. Glance at the Dugout and know who's winning, who's surging, what's at stake tonight, and what the numbers say about tomorrow.
+Not a cricket score app. An analyst's war room: dark, dense, built for situational awareness. Glance at the Dugout and know who's winning, who's surging, what's at stake tonight, and what the numbers say about tomorrow.
 
-The AI layer isn't decorative — it synthesizes signals humans would miss. Wire cards surface emerging patterns. Briefings combine H2H records, venue history, and squad news into pre-match tactical reads. Narratives track each franchise's season arc. The intelligence is specific, grounded in data, and never generic.
+The AI layer synthesizes signals humans would miss. Wire cards surface emerging patterns. Briefings combine H2H records, venue history, and squad news into pre-match tactical reads. Narratives track each franchise's season arc.
 
 ## The War Room
 
-- **Standings** — Points table with W/L/NRR and playoff qualification line. Who's in, who's hanging on, who's done.
-- **Season Pulse** — River chart tracing every franchise's rank trajectory. Momentum at a glance.
-- **Match Timeline** — Completed, live, and upcoming fixtures with scores and hero performances.
-- **Cap Race** — Orange Cap, Purple Cap, strike rate, economy, and MVP leaderboards.
-- **AI Wire** — LLM-generated editorial signals: emerging patterns, records watch, severity-tagged, daily reset.
-- **Briefing & Dossier** — Pre-match tactical read. H2H records, venue history, opposition threat profiles.
-- **Narratives** — Per-franchise season arc: mood, form, momentum, storylines.
-- **Intel Feed** — Aggregated cricket news from ESPNcricinfo, Wisden, CricketAddictor, CricTracker.
-- **Ticker** — Scrolling data-driven highlights: career stats, matchup history, impact context.
+- **Standings** · Points table with W/L/NRR and playoff qualification line
+- **Season Pulse** · River chart tracing every franchise's rank trajectory across the season
+- **Match Timeline** · Completed, live, and upcoming fixtures with scores and hero performances
+- **Cap Race** · Orange Cap, Purple Cap, strike rate, economy, and MVP leaderboards
+- **AI Wire** · LLM-generated editorial signals: emerging patterns, records watch, severity-tagged
+- **Briefing & Dossier** · Pre-match tactical read with H2H records, venue history, opposition threat profiles
+- **Narratives** · Per-franchise season arc covering mood, form, momentum, and storylines
+- **Intel Feed** · Aggregated cricket news from ESPNcricinfo, Wisden, CricketAddictor, CricTracker
+- **Ticker** · Scrolling data-driven highlights with career stats, matchup history, and impact context
 
 <br>
 
@@ -48,7 +48,7 @@ The AI layer isn't decorative — it synthesizes signals humans would miss. Wire
 <br>
 
 <details>
-<summary><strong>Architecture</strong> — How data flows from ball-by-ball feeds to your screen</summary>
+<summary><strong>Architecture</strong></summary>
 
 <br>
 
@@ -77,7 +77,7 @@ RSS Feeds (Wisden, ESPNcricinfo, CricTracker, CricketAddictor)
 
 <br>
 
-**Prerequisites:** Python 3.12+ with [uv](https://docs.astral.sh/uv/), Node.js 22+, Gemini API key (optional — data panels work without it)
+**Prerequisites:** Python 3.13+ with [uv](https://docs.astral.sh/uv/), Node.js 22+, Gemini API key (optional, data panels work without it)
 
 ```bash
 git clone https://github.com/ankitksr/duckworth-dugout.git
@@ -100,7 +100,7 @@ npm run dev                        # localhost:4321
 </details>
 
 <details>
-<summary><strong>Pipeline</strong> — Sync commands, tier system</summary>
+<summary><strong>Pipeline</strong></summary>
 
 <br>
 
@@ -125,7 +125,7 @@ uv run python -m pipeline sync --force                  # bypass caches
 </details>
 
 <details>
-<summary><strong>Configuration</strong> — Environment variables</summary>
+<summary><strong>Configuration</strong></summary>
 
 <br>
 
@@ -175,5 +175,5 @@ duckworth-dugout/
 <br>
 
 <div align="center">
-<sub>MIT License — Built by <a href="https://github.com/ankitksr">ankitksr</a></sub>
+<sub>MIT License · Built by <a href="https://github.com/ankitksr">ankitksr</a></sub>
 </div>

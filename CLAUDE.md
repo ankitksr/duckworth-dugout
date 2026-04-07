@@ -251,7 +251,7 @@ Supporting: `articles.py` (article store + body crawl), `extract.py` (entity ext
 
 ## Key Conventions
 
-- **Python 3.12+**, managed by `uv`
+- **Python 3.13+**, managed by `uv`
 - **DuckDB** with ATTACH pattern — cricket.duckdb (read-only) + enrichment.duckdb (read-write)
 - **Dataclasses** in `pipeline/models.py` for all panel output shapes
 - **Click CLI** — `sync` and `seed-sample` commands

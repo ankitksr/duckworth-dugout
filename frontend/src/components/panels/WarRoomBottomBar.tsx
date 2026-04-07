@@ -19,7 +19,7 @@ export function WarRoomBottomBar() {
       </span>
       <span className="wr-bot-brand">
         <a
-          href="https://github.com"
+          href="https://github.com/ankitksr/duckworth-dugout"
           target="_blank"
           rel="noopener noreferrer"
           className="wr-bot-gh"
