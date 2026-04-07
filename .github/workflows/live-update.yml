@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
   schedule:
     # Weekday evenings: 7 PM – 1 AM IST (UTC 13-19)
-    - cron: '*/2 13-19 * 3-5 1-5'
+    - cron: '*/5 13-19 * 3-5 1-5'
     # Weekends: day + evening games (3 PM – 1 AM IST, UTC 9-19)
-    - cron: '*/2 9-19 * 3-5 0,6'
+    - cron: '*/5 9-19 * 3-5 0,6'
 
 permissions:
   actions: write

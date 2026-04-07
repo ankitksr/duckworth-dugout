@@ -1,35 +1,64 @@
-"""Briefing panel — pre-match tactical brief (cool tier, match-day only)."""
+"""Briefing panel — pre-match tactical brief (cool tier).
+
+Looks ahead to the next upcoming match day, not just today. The cache
+key (team1+team2+date) prevents redundant LLM calls when the matchup
+hasn't changed.
+"""
 
 import asyncio
+import json
 from datetime import date, datetime, timezone
 
 from rich.console import Console
 
 from pipeline.context import SyncContext
+from pipeline.models import ScheduleMatch
 from pipeline.writer import write_panel
 
 console = Console()
 
 
 def sync(ctx: SyncContext) -> None:
-    """Generate pre-match briefings for today's scheduled matches."""
+    """Generate pre-match briefings for the next upcoming match(es)."""
     if ctx.db_conn is None:
         return
 
-    today_str = date.today().isoformat()
-    today_scheduled = [
-        m for m in ctx.today_matches
-        if m.date == today_str and m.status in ("scheduled", "live")
-    ] if ctx.today_matches else []
-
-    if not today_scheduled:
+    # Load full schedule — don't rely on ctx.today_matches
+    sched_path = ctx.public_dir / "schedule.json"
+    if not sched_path.exists():
         return
+
+    all_matches = json.loads(sched_path.read_text(encoding="utf-8"))
+    today_str = date.today().isoformat()
+
+    # Find next upcoming matches (scheduled/live, today or future)
+    upcoming = [
+        m for m in all_matches
+        if m.get("date", "") >= today_str
+        and m.get("status") in ("scheduled", "live")
+    ]
+    upcoming.sort(key=lambda m: (m["date"], m.get("time", "")))
+
+    if not upcoming:
+        return
+
+    # Take the next match day's worth (1-2 for double-headers)
+    next_date = upcoming[0]["date"]
+    next_matches = [m for m in upcoming if m["date"] == next_date]
+
+    targets = [
+        ScheduleMatch(**{
+            k: m[k]
+            for k in ("match_number", "date", "time", "venue", "city", "team1", "team2")
+        })
+        for m in next_matches
+    ]
 
     try:
         from pipeline.intel.briefing import generate_briefing
 
         briefings = []
-        for match in today_scheduled:
+        for match in targets:
             brief = asyncio.run(generate_briefing(ctx.db_conn, ctx.season, match))
             if brief:
                 briefings.append(brief)
@@ -43,6 +72,7 @@ def sync(ctx: SyncContext) -> None:
             ctx.meta["briefings"] = {
                 "synced_at": _now_iso(),
                 "count": len(briefings),
+                "next_date": next_date,
             }
     except Exception as e:
         console.print(f"  [yellow]Briefing skipped: {e}[/yellow]")

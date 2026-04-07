@@ -7,14 +7,18 @@ permissions:
   id-token: write
 
 on:
+  workflow_dispatch:
   schedule:
-    # Hot tier: every 45 min during match window (UTC 12-18 ~ IST 17:30-23:30)
-    - cron: '*/45 12-18 * 3-5 *'
+    # Hot tier: every 30 min during match window (UTC 12-18 ~ IST 17:30-23:30)
+    - cron: '*/30 12-18 * 3-5 *'
 
-    # Warm tier: 4x daily
-    - cron: '10 5,11,17,23 * 3-5 *'
+    # Hot tier: hourly off-peak (articles + wire stay fresh)
+    - cron: '0 0-11,19-23 * 3-5 *'
 
-    # Cool tier + DB update: daily at UTC 04:00 (IST 09:30)
+    # Warm + cool tier: 6x daily (every 4h)
+    - cron: '10 1,5,9,13,17,21 * 3-5 *'
+
+    # DB update: daily at UTC 04:00 (IST 09:30)
     - cron: '0 4 * 3-5 *'
 
 jobs:
@@ -30,25 +34,25 @@ jobs:
           HOUR=$(date -u +%-H)
           MINUTE=$(date -u +%-M)
 
-          # Cool + DB update: 04:00 UTC
+          # DB update: 04:00 UTC (IST 09:30)
           if [ "$HOUR" -eq 4 ] && [ "$MINUTE" -lt 10 ]; then
             echo "tiers=all" >> "$GITHUB_OUTPUT"
             echo "update_db=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          # Warm: :10 past at hours 5, 11, 17, 23
+          # Warm + cool: :10 past at hours 1, 5, 9, 13, 17, 21
           if [ "$MINUTE" -ge 5 ] && [ "$MINUTE" -lt 20 ]; then
             case "$HOUR" in
-              5|11|17|23)
-                echo "tiers=hot,warm" >> "$GITHUB_OUTPUT"
+              1|5|9|13|17|21)
+                echo "tiers=hot,warm,cool" >> "$GITHUB_OUTPUT"
                 echo "update_db=false" >> "$GITHUB_OUTPUT"
                 exit 0
                 ;;
             esac
           fi
 
-          # Default: hot tier
+          # Default: hot tier (match window every 30 min, off-peak hourly)
           echo "tiers=hot" >> "$GITHUB_OUTPUT"
           echo "update_db=false" >> "$GITHUB_OUTPUT"
 
