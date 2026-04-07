@@ -76,7 +76,7 @@ function MatchHeader({ briefing }: { briefing: WRBriefing }) {
           {tossField != null && (
             <div className="wr-br-mh-stat">
               <span className="wr-br-mh-stat-val">{tossField}%</span>
-              <span className="wr-br-mh-stat-lbl">FIELD</span>
+              <span className="wr-br-mh-stat-lbl">TOSS→FIELD</span>
             </div>
           )}
         </div>

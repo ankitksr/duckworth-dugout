@@ -2907,6 +2907,9 @@ body {
   .wr-br-mh {
     flex-wrap: wrap;
   }
+  .wr-br-mh-team {
+    flex: 1;
+  }
   .wr-br-mh-center {
     border-left: none;
     border-right: none;
