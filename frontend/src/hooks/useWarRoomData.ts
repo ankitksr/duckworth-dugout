@@ -16,7 +16,7 @@ import type {
 } from "../types/war-room";
 import { useWarRoomDispatch } from "./useWarRoom";
 
-const BASE = `${import.meta.env.BASE_URL}api/ipl/war-room`;
+const BASE = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/ipl/war-room`;
 
 async function fetchJson<T>(url: string): Promise<T | null> {
   try {
