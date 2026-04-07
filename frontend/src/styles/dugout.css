@@ -663,11 +663,13 @@ body {
 /* ── Briefing ── */
 
 .wr-br { padding: 0; }
+.wr-br-shell .wr-br { padding-top: 10px; }
+.wr-br-shell .wr-br + .wr-br { border-top: 1px solid var(--wr-b1); }
 
 /* Two-column grid: main (editorial) + sidebar (context) */
 .wr-br-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.9fr);
   gap: 0;
   min-height: 0;
 }
@@ -682,6 +684,204 @@ body {
 @media (max-width: 1000px) {
   .wr-br-grid { grid-template-columns: 1fr; }
   .wr-br-main { border-right: none; }
+  .wr-br-hero { grid-template-columns: 1fr; }
+  .wr-br-hero-title { max-width: none; }
+  .wr-br-match-hero { grid-template-columns: 1fr; }
+}
+
+.wr-br-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(260px, 0.95fr);
+  gap: 14px;
+  margin: 0 14px 14px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at top left, rgba(253, 185, 19, 0.09), transparent 36%),
+    linear-gradient(135deg, rgba(17, 22, 34, 0.92), rgba(12, 14, 19, 0.98));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.wr-br-hero-copy { min-width: 0; }
+.wr-br-hero-eyebrow {
+  font: 700 8px 'JetBrains Mono', monospace;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--wr-brand);
+  margin-bottom: 8px;
+}
+.wr-br-hero-title {
+  font: 800 24px 'Anybody', sans-serif;
+  letter-spacing: 0.4px;
+  color: var(--wr-t);
+  line-height: 1.05;
+  max-width: 16ch;
+}
+.wr-br-hero-body {
+  margin-top: 10px;
+  max-width: 58ch;
+  font: 400 13px 'Inter', sans-serif;
+  color: var(--wr-t2);
+  line-height: 1.7;
+}
+.wr-br-hero-aside { min-width: 0; }
+.wr-br-facts,
+.wr-br-signal-stack {
+  display: grid;
+  gap: 8px;
+}
+.wr-br-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.wr-br-fact.accent {
+  background: rgba(253, 185, 19, 0.08);
+  border-color: rgba(253, 185, 19, 0.2);
+}
+.wr-br-fact.good {
+  background: rgba(0, 230, 118, 0.08);
+  border-color: rgba(0, 230, 118, 0.14);
+}
+.wr-br-fact.warn {
+  background: rgba(43, 188, 224, 0.08);
+  border-color: rgba(43, 188, 224, 0.14);
+}
+.wr-br-fact-label {
+  font: 600 7px 'JetBrains Mono', monospace;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--wr-tm);
+}
+.wr-br-fact-value {
+  font: 700 18px 'Anybody', sans-serif;
+  line-height: 1;
+  color: var(--wr-t);
+}
+.wr-br-fact-detail {
+  font: 400 10.5px 'Inter', sans-serif;
+  line-height: 1.45;
+  color: var(--wr-t3);
+}
+.wr-br-note-grid {
+  display: grid;
+  gap: 10px;
+}
+.wr-br-note {
+  padding: 12px 14px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+.wr-br-note-label {
+  font: 600 7px 'JetBrains Mono', monospace;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--wr-brand);
+  margin-bottom: 7px;
+}
+.wr-br-note-body {
+  font: 400 11px 'Inter', sans-serif;
+  color: var(--wr-t2);
+  line-height: 1.65;
+}
+
+.wr-br-match-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.95fr);
+  gap: 14px;
+  margin: 12px 14px 0;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at top left, rgba(43, 188, 224, 0.12), transparent 34%),
+    linear-gradient(135deg, rgba(17, 22, 34, 0.94), rgba(12, 14, 19, 0.98));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.wr-br-match-headline,
+.wr-br-match-rail { min-width: 0; }
+.wr-br-match-kicker {
+  font: 700 8px 'JetBrains Mono', monospace;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: #7bd5ea;
+  margin-bottom: 8px;
+}
+.wr-br-match-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  font: 800 28px 'Anybody', sans-serif;
+  line-height: 1;
+  letter-spacing: 0.4px;
+}
+.wr-br-match-vs {
+  font: 600 12px 'JetBrains Mono', monospace;
+  letter-spacing: 1.6px;
+  color: var(--wr-tm);
+  text-transform: uppercase;
+}
+.wr-br-match-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  font: 500 9px 'JetBrains Mono', monospace;
+  color: var(--wr-t3);
+  letter-spacing: 0.6px;
+}
+.wr-br-match-meta span {
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.04);
+}
+.wr-br-match-summary {
+  margin-top: 12px;
+  max-width: 62ch;
+  font: 400 12px 'Inter', sans-serif;
+  color: var(--wr-t2);
+  line-height: 1.65;
+}
+.wr-br-match-teamcards {
+  display: grid;
+  gap: 8px;
+}
+.wr-br-match-teamcard {
+  padding: 10px 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.035);
+}
+.wr-br-match-teamrow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.wr-br-match-team {
+  font: 700 14px 'Anybody', sans-serif;
+  letter-spacing: 0.4px;
+}
+.wr-br-match-record {
+  font: 600 8px 'JetBrains Mono', monospace;
+  color: var(--wr-tm);
+}
+.wr-br-match-formline {
+  margin-top: 5px;
+  font: 500 9px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+  letter-spacing: 0.3px;
+}
+.wr-br-match-stats {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 /* ── Combined Match Header: teams + venue stats in one strip ── */
@@ -998,6 +1198,17 @@ body {
   gap: 8px;
   flex-wrap: wrap;
 }
+.wr-br-form-mini {
+  display: flex;
+  gap: 8px;
+  margin-top: 5px;
+  font: 500 8px 'JetBrains Mono', monospace;
+  letter-spacing: 0.6px;
+  color: var(--wr-tm);
+}
+.wr-br-form-mini-tone.up { color: var(--wr-win); }
+.wr-br-form-mini-tone.flat { color: var(--wr-t3); }
+.wr-br-form-mini-tone.down { color: var(--wr-loss); }
 .wr-br-form-team {
   font: 700 11px 'Anybody', sans-serif;
   letter-spacing: 0.5px;
@@ -1139,6 +1350,23 @@ body {
   opacity: 0.55;
 }
 .wr-br-item:last-child { border-bottom: none; }
+.wr-br-item-grid {
+  display: grid;
+  gap: 10px;
+}
+.wr-br-item-card {
+  padding: 12px 12px 8px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+}
+.wr-br-item-kicker {
+  font: 600 7px 'JetBrains Mono', monospace;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--wr-brand);
+  margin-bottom: 6px;
+}
 
 /* ── How to Win (promoted from dossier) ── */
 .wr-br-htw-item {
@@ -1187,6 +1415,10 @@ body {
 
 /* ── Preview Link Cards ── */
 .wr-br-links { padding-bottom: 12px; }
+.wr-br-link-grid {
+  display: grid;
+  gap: 8px;
+}
 .wr-br-link-card {
   display: flex;
   align-items: center;
@@ -1219,6 +1451,22 @@ body {
   flex-shrink: 0;
 }
 .wr-br-link-card:hover .wr-br-link-arrow { color: var(--wr-brand); }
+.wr-br-link-card.featured {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 6px 10px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, rgba(43, 188, 224, 0.08), rgba(255,255,255,0.035));
+  border-color: rgba(43, 188, 224, 0.18);
+}
+.wr-br-link-kicker {
+  grid-column: 1 / -1;
+  font: 600 7px 'JetBrains Mono', monospace;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: #7bd5ea;
+}
 
 /* ── Matches ── */
 
@@ -1606,11 +1854,34 @@ body {
 .wr-briefing-pnl {
   display: flex;
   flex-direction: column;
+  height: 100%;
   min-height: 0;
+  overflow: hidden;
+}
+.wr-briefing-frame {
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  width: min(100%, 1120px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 .wr-briefing-scroll {
   flex: 1;
+  height: 100%;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+.wr-br-shell {
+  width: min(100%, 1040px);
+  margin: 0 auto;
+  padding-bottom: 14px;
+  display: grid;
+  gap: 16px;
 }
 /* On double-header days the tab bar sits between header and scroll */
 .wr-briefing-tabs {
@@ -2372,6 +2643,19 @@ body {
 
 /* Threat summary (unit-level, no per-player) */
 .wr-dos-threat-summary { padding: 0 14px; margin-bottom: 6px; }
+.wr-dos-meter {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: -2px 0 10px;
+}
+.wr-dos-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--wr-brand), var(--wr-loss));
+}
 
 /* Batting / Bowling groups (legacy per-player, kept for compat) */
 .wr-dos-group { margin-bottom: 10px; padding: 0 14px; }
@@ -2482,7 +2766,7 @@ body {
   font: 600 8px 'JetBrains Mono', monospace;
   letter-spacing: 1.2px;
   text-transform: uppercase;
-  color: var(--wr-win);
+  color: var(--wr-brand);
   opacity: 0.8;
   margin-bottom: 6px;
 }
@@ -2491,7 +2775,7 @@ body {
   gap: 8px;
   padding: 4px 0;
   font: 400 10px 'Inter', sans-serif;
-  color: var(--wr-t2);
+  color: var(--wr-t3);
   line-height: 1.5;
   border-bottom: 1px solid rgba(255, 255, 255, 0.025);
 }
@@ -2499,7 +2783,7 @@ body {
 .wr-dos-win-num {
   flex-shrink: 0;
   font: 700 9px 'JetBrains Mono', monospace;
-  color: var(--wr-win);
+  color: var(--wr-brand);
   opacity: 0.7;
   min-width: 12px;
 }
@@ -2743,6 +3027,9 @@ body {
   text-decoration: none;
   font: 500 9px 'JetBrains Mono', monospace;
   letter-spacing: 0.5px;
+  padding: 0 8px;
+  border-left: 1px solid var(--wr-b2);
+  border-right: 1px solid var(--wr-b2);
   transition: color 0.2s;
 }
 .wr-bot-gh svg {
@@ -2937,6 +3224,27 @@ body {
   }
   .wr-br-mh-name {
     font-size: 15px;
+  }
+  .wr-briefing-frame,
+  .wr-br-shell {
+    width: 100%;
+  }
+  .wr-br-match-hero {
+    margin: 8px 8px 0;
+    padding: 14px;
+  }
+  .wr-br-match-title {
+    font-size: 22px;
+  }
+  .wr-br-hero {
+    margin: 0 8px 10px;
+    padding: 14px;
+  }
+  .wr-br-hero-title {
+    font-size: 20px;
+  }
+  .wr-br-hero-body {
+    font-size: 13px;
   }
 
   /* --- Briefing/TeamIntel grids: single column --- */

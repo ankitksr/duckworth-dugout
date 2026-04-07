@@ -11,16 +11,13 @@ export function WarRoomBottomBar() {
   return (
     <footer className="wr-bot">
       <span>
-        SYNCED {lastSync} &middot; CRICSHEET &middot; ESPNCRICINFO &middot;
-        WISDEN &middot; GEMINI &middot; DUCKWORTH-MCP
+        SYNCED {lastSync} &middot; DUCKWORTH-MCP &middot; CRICSHEET &middot; ESPNCRICINFO &middot;
+        WISDEN &middot; CRICKETADDICTOR &middot; CRICTRACKER &middot; WIKIPEDIA &middot; GEMINI
       </span>
       <span style={{ color: "var(--wr-t3)" }}>
         IPL {meta?.season ?? "2026"} &middot; {meta?.panels?.schedule?.fixtures ?? 0} FIXTURES
       </span>
       <span className="wr-bot-brand">
-        {selectedTeam
-          ? `${selectedTeam.toUpperCase()} — IPL MONITOR`
-          : "IPL MONITOR"}
         <a
           href="https://github.com/ankitksr/duckworth-dugout"
           target="_blank"
@@ -33,6 +30,9 @@ export function WarRoomBottomBar() {
           </svg>
           ankitksr
         </a>
+        {selectedTeam
+          ? `${selectedTeam.toUpperCase()} — IPL MONITOR`
+          : "IPL MONITOR"}
       </span>
     </footer>
   );
