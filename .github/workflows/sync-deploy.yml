@@ -65,14 +65,22 @@ jobs:
       - name: Install pipeline dependencies
         run: uv sync
 
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
+      - name: Restore Playwright browsers
+        id: pw-cache
+        uses: actions/cache/restore@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+          key: playwright-chromium
 
       - name: Install Playwright Chromium
         run: uv run playwright install chromium --with-deps
+
+      - name: Save Playwright cache
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium
 
       # ── cricket.duckdb (from duckworth-mcp) ──────────────────────
       - name: Restore cricket.duckdb cache
