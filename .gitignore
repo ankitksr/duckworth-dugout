@@ -12,8 +12,8 @@ uv.lock
 # Data (built by pipeline)
 data/*.duckdb
 
-# Cache
-cache/
+# Cache (runtime only — not pipeline/cache/ which is a Python module)
+/cache/
 
 # Node
 frontend/node_modules/

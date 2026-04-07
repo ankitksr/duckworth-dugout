@@ -168,12 +168,11 @@ def _count_recent_articles(
 ) -> int:
     """Count IPL articles published in the last N hours."""
     row = conn.execute(
-        """
+        f"""
         SELECT COUNT(*) FROM war_room_articles
         WHERE is_ipl = TRUE
-          AND published >= (now() - INTERVAL ? HOUR)
+          AND published >= (now() - INTERVAL '{int(hours)} hours')
         """,
-        [hours],
     ).fetchone()
     return row[0] if row else 0
 

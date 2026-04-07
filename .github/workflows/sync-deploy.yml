@@ -113,6 +113,9 @@ jobs:
           CT_LLM_VERTEX: 'true'
           CT_LLM_GCP_PROJECT: ${{ vars.CT_LLM_GCP_PROJECT }}
           CT_LLM_GCP_LOCATION: ${{ vars.CT_LLM_GCP_LOCATION }}
+          # google-genai SDK reads these directly for Vertex AI routing
+          GOOGLE_CLOUD_PROJECT: ${{ vars.CT_LLM_GCP_PROJECT }}
+          GOOGLE_CLOUD_LOCATION: ${{ vars.CT_LLM_GCP_LOCATION }}
           CRICKET_DB_PATH: data/cricket.duckdb
         run: |
           ARGS="--tiers ${{ inputs.tiers }}"
