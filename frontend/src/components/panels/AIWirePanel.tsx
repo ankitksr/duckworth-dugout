@@ -82,7 +82,10 @@ export function AIWirePanel() {
                   </span>
                 )}
               </div>
-              <div className="wr-wire-headline">{item.headline}</div>
+              <div className="wr-wire-hl-row">
+                <div className="wr-wire-headline">{item.headline}</div>
+                <span className={`wr-wire-chevron${isOpen ? " open" : ""}`}>&#x25B8;</span>
+              </div>
               {isOpen && (
                 <div className="wr-wire-expand" style={{ display: "block" }}>
                   <div className="wr-wire-body">{item.text}</div>
