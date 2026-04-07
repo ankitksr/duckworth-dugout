@@ -65,6 +65,14 @@ def sync_tiers(
         _fetch_feeds(ctx)
         _init_db_and_articles(ctx)
 
+    # Seed squad rosters (skips if already populated)
+    if ctx.db_conn is not None:
+        try:
+            from pipeline.sources.wikipedia import sync_squads
+            sync_squads(season, ctx.db_conn, force=force)
+        except Exception as e:
+            console.print(f"  [yellow]Squads: {e}[/yellow]")
+
     # If standings weren't synced but downstream panels need them, load from disk
     def _ensure_standings():
         if ctx.standings_rows is None:

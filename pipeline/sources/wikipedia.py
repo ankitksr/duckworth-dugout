@@ -10,11 +10,12 @@ from pipeline.ipl.franchise_metadata import IPL_FRANCHISES
 from pipeline.models import ScheduleMatch
 from pipeline.sources.caps import CapEntry, CapsData
 from pipeline.sources.standings import _standings_from_table_rows
-from pipeline.sources.wikipedia_fetch import fetch_season_wikitext
+from pipeline.sources.wikipedia_fetch import fetch_personnel_wikitext, fetch_season_wikitext
 from pipeline.sources.wikipedia_parser import (
     parse_ipl_fixtures,
     parse_ipl_match_summary,
     parse_ipl_points_table,
+    parse_ipl_squads,
     parse_ipl_statistics,
 )
 
@@ -246,3 +247,76 @@ def overlay_wikipedia_fixtures(matches: list[ScheduleMatch], season: str) -> lis
             f"  [green]Schedule: {count} match(es) enriched from Wikipedia[/green]"
         )
     return matches
+
+
+def sync_squads(season: str, conn, *, force: bool = False) -> int:
+    """Fetch IPL squads from Wikipedia and seed ipl_season_squad table.
+
+    Skips if data already exists for the season (squads don't change).
+    Use force=True to re-fetch.
+
+    Returns number of players inserted.
+    """
+    # Check if already seeded
+    try:
+        count = conn.execute(
+            "SELECT COUNT(*) FROM ipl_season_squad WHERE season = ?",
+            [season],
+        ).fetchone()[0]
+        if count > 0 and not force:
+            return count
+    except Exception:
+        pass  # table doesn't exist yet
+
+    wikitext = fetch_personnel_wikitext(int(season))
+    if not wikitext:
+        return 0
+
+    squads = parse_ipl_squads(wikitext, int(season))
+    if not squads:
+        console.print("  [dim]Squads: no squad data found on Wikipedia[/dim]")
+        return 0
+
+    # Create table if needed
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS ipl_season_squad (
+            franchise_id VARCHAR NOT NULL,
+            season VARCHAR NOT NULL,
+            player_name VARCHAR NOT NULL,
+            role VARCHAR,
+            is_captain BOOLEAN DEFAULT FALSE,
+            is_overseas BOOLEAN DEFAULT FALSE,
+            acquisition_type VARCHAR,
+            price_inr BIGINT,
+            is_retained BOOLEAN DEFAULT FALSE,
+            is_rtm BOOLEAN DEFAULT FALSE,
+            PRIMARY KEY (franchise_id, season, player_name)
+        )
+    """)
+
+    # Replace current season data
+    conn.execute(
+        "DELETE FROM ipl_season_squad WHERE season = ?",
+        [season],
+    )
+
+    for p in squads:
+        conn.execute(
+            """INSERT INTO ipl_season_squad
+               (franchise_id, season, player_name, role, is_captain,
+                is_overseas, acquisition_type, price_inr, is_retained, is_rtm)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            [
+                p["franchise_id"], str(p["season"]), p["player_name"],
+                p.get("role"), p.get("is_captain", False),
+                p.get("is_overseas", False), p.get("acquisition_type"),
+                p.get("price_inr"), p.get("is_retained", False),
+                p.get("is_rtm", False),
+            ],
+        )
+
+    console.print(
+        f"  [green]Squads: {len(squads)} players across"
+        f" {len({p['franchise_id'] for p in squads})} teams[/green]"
+    )
+    return len(squads)

@@ -114,3 +114,51 @@ def fetch_season_wikitext(
 
     cache.write_json("wikipedia", "ipl", cache_key, payload)
     return _extract_wikitext(payload)
+
+
+def fetch_personnel_wikitext(
+    season: int,
+    *,
+    force: bool = False,
+    cache: CacheManager | None = None,
+) -> str | None:
+    """Sync helper — fetch the IPL personnel changes Wikipedia page."""
+    cache = cache or CacheManager()
+    cache_key = f"personnel_{season}"
+    path = _cache_path(cache, cache_key)
+
+    if not force and path.exists():
+        return _extract_wikitext(cache.read_json("wikipedia", "ipl", cache_key))
+
+    title = WIKIPEDIA_IPL_PERSONNEL_TEMPLATE.format(year=season)
+    with httpx.Client(
+        timeout=httpx.Timeout(
+            connect=REQUEST_TIMEOUT_CONNECT,
+            read=REQUEST_TIMEOUT_READ,
+            write=30.0,
+            pool=30.0,
+        ),
+        follow_redirects=True,
+        http2=True,
+        headers={
+            "User-Agent": "cricket-timeline/1.0 (+https://en.wikipedia.org/wiki/Main_Page)",
+            "Accept": "application/json",
+        },
+    ) as client:
+        response = client.get(
+            WIKIPEDIA_API_BASE,
+            params={
+                "action": "parse",
+                "page": title,
+                "prop": "wikitext",
+                "format": "json",
+            },
+        )
+        response.raise_for_status()
+        payload = response.json()
+
+    if isinstance(payload, dict) and "error" in payload:
+        return None
+
+    cache.write_json("wikipedia", "ipl", cache_key, payload)
+    return _extract_wikitext(payload)
