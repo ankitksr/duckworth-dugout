@@ -35,8 +35,8 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: frontend/public/api/ipl/war-room
-          key: api-data-
-          restore-keys: api-data-
+          key: api-data
+          restore-keys: api-data
 
       - name: Seed sample data (fallback)
         if: steps.api-cache.outputs.cache-hit != 'true'

@@ -100,11 +100,11 @@ jobs:
 
       # ── enrichment.duckdb (articles, wire, snapshots) ────────────
       - name: Restore enrichment.duckdb cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: data/enrichment.duckdb
-          key: enrichment-db-${{ github.run_id }}
-          restore-keys: enrichment-db-
+          key: enrichment-db
+          restore-keys: enrichment-db
 
       # ── Pipeline sync ────────────────────────────────────────────
       - name: Sync pipeline (${{ inputs.tiers }})
@@ -127,12 +127,18 @@ jobs:
           uv run python -m pipeline sync $ARGS
         timeout-minutes: 10
 
-      # ── Cache API data for deploy-on-push workflow ──────────────
+      # ── Cache pipeline output for deploy-on-push workflow ────────
+      - name: Save enrichment.duckdb cache
+        uses: actions/cache/save@v4
+        with:
+          path: data/enrichment.duckdb
+          key: enrichment-db
+
       - name: Save API data cache
         uses: actions/cache/save@v4
         with:
           path: frontend/public/api/ipl/war-room
-          key: api-data-${{ github.run_id }}
+          key: api-data
 
       # ── Frontend build + deploy ──────────────────────────────────
       - uses: actions/setup-node@v4
