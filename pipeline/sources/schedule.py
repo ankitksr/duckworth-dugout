@@ -209,16 +209,19 @@ def overlay_live_scores(matches: list[ScheduleMatch]) -> list[ScheduleMatch]:
             chase_winner = t1 if (b1 and _runs(s1) > _runs(s2)) else t2
 
         for match in matches:
-            if {t1, t2} == {match.team1, match.team2} and (s1 or s2):
+            if {t1, t2} == {match.team1, match.team2}:
                 # Don't downgrade a match already marked completed
                 # (e.g. by standings overlay for no-result / washout)
                 if match.status != "completed":
                     match.status = "completed" if is_completed else "live"
-                match.score1 = s1 if t1 == match.team1 else s2
-                match.score2 = s2 if t2 == match.team2 else s1
-                match.overs1 = ov1 if t1 == match.team1 else ov2
-                match.overs2 = ov2 if t2 == match.team2 else ov1
-                match.batting = t1 if b1 else t2 if b2 else None
+                # Only update scores when data is available (pre-toss/rain
+                # delay entries have no scores — don't blank existing data)
+                if s1 or s2:
+                    match.score1 = s1 if t1 == match.team1 else s2
+                    match.score2 = s2 if t2 == match.team2 else s1
+                    match.overs1 = ov1 if t1 == match.team1 else ov2
+                    match.overs2 = ov2 if t2 == match.team2 else ov1
+                    match.batting = t1 if b1 else t2 if b2 else None
                 match.status_text = status_text
                 match.match_url = item.link
                 if is_completed and chase_winner and not match.winner:
