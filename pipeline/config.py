@@ -55,8 +55,8 @@ USER_AGENTS = [
 # ── LLM Settings ──────────────────────────────────────────────────────────
 
 GEMINI_API_KEY = os.environ.get("CT_LLM_API_KEY", "")
-GEMINI_MODEL = os.environ.get("CT_LLM_MODEL", "gemini-2.5-flash")
-GEMINI_MODEL_PRO = os.environ.get("CT_LLM_MODEL_PRO", "gemini-2.5-pro")
+GEMINI_MODEL = os.environ.get("CT_LLM_MODEL") or "gemini-3-flash-preview"
+GEMINI_MODEL_PRO = os.environ.get("CT_LLM_MODEL_PRO") or "gemini-3.1-pro-preview"
 GEMINI_VERTEX = os.environ.get("CT_LLM_VERTEX", "").lower() in ("1", "true", "yes")
 GOOGLE_CLOUD_PROJECT = os.environ.get("CT_LLM_GCP_PROJECT", "")
 GOOGLE_CLOUD_LOCATION = os.environ.get("CT_LLM_GCP_LOCATION", "us-central1")
