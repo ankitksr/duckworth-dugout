@@ -67,6 +67,59 @@ def sync(
         sync_tiers(tier_list, season=season, panel=panel, force=force)
 
 
+@cli.command("live-update")
+@click.option("--season", default="2026", help="IPL season (default: 2026)")
+def live_update(season: str) -> None:
+    """Lightweight live score update — RSS only, no LLM or DB."""
+    import json
+    from pipeline.config import ROOT_DIR
+
+    DATA_DIR = ROOT_DIR / "data"
+    PUBLIC_API = ROOT_DIR / "frontend" / "public" / "api" / "ipl" / "war-room"
+    FIXTURES_DIR = DATA_DIR / "fixtures"
+
+    # Load current schedule from disk
+    sched_path = PUBLIC_API / "schedule.json"
+    if not sched_path.exists():
+        # Fall back to building from fixtures
+        from pipeline.sources.schedule import load_fixtures
+        matches = load_fixtures(season)
+        if not matches:
+            console.print("[red]No schedule data found[/red]")
+            return
+    else:
+        from pipeline.models import ScheduleMatch
+        raw = json.loads(sched_path.read_text(encoding="utf-8"))
+        matches = []
+        for m in raw:
+            fields = {k: m.get(k) for k in ScheduleMatch.__dataclass_fields__}
+            matches.append(ScheduleMatch(**fields))
+
+    # RSS live overlay only
+    from pipeline.sources.schedule import overlay_live_scores
+    matches = overlay_live_scores(matches)
+
+    live = [m for m in matches if m.status == "live"]
+    if not live:
+        console.print("[dim]No live IPL matches[/dim]")
+        return
+
+    # Write updated schedule
+    from dataclasses import asdict
+    data = [asdict(m) for m in matches]
+    for path in [PUBLIC_API / "schedule.json", DATA_DIR / "war-room" / "schedule.json"]:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+            f.write("\n")
+
+    for m in live:
+        console.print(
+            f"  [green]{m.team1.upper()} {m.score1 or '?'}"
+            f" vs {m.team2.upper()} {m.score2 or '?'}[/green]"
+        )
+
+
 @cli.command("seed-sample")
 def seed_sample() -> None:
     """Copy sample JSON files to frontend public directory."""
