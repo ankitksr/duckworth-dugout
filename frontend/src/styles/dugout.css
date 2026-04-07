@@ -694,7 +694,6 @@ body {
   border: 1px solid var(--wr-b1);
   border-bottom: 1px solid var(--wr-b2);
   background: var(--wr-s1);
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.15);
 }
 .wr-br-mh + .wr-briefing-content-tabs,
 .wr-br-mh + .wr-briefing-scroll {
@@ -1171,8 +1170,8 @@ body {
 .wr-br-stake {
   padding: 6px 8px;
   margin-bottom: 3px;
-  background: rgba(255, 255, 255, 0.03);
-  border-left: 2px solid var(--tc, var(--wr-b2));
+  background: rgba(255, 255, 255, 0.045);
+  border-left: 3px solid var(--tc, var(--wr-b2));
   border-radius: 1px;
 }
 .wr-br-stake-team {
@@ -1195,7 +1194,7 @@ body {
   gap: 8px;
   padding: 7px 10px;
   margin-bottom: 3px;
-  background: rgba(255,255,255,0.02);
+  background: rgba(255,255,255,0.04);
   border: 1px solid var(--wr-b1);
   border-radius: 2px;
   text-decoration: none;
@@ -1203,7 +1202,7 @@ body {
 }
 .wr-br-link-card:last-child { margin-bottom: 0; }
 .wr-br-link-card:hover {
-  background: rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.07);
   border-color: var(--wr-b2);
 }
 .wr-br-link-title {
@@ -1638,10 +1637,10 @@ body {
   padding: 10px 14px 9px;
   margin: 6px 5px 0;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.015);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.04);
-  box-shadow: 0 1px 2px -1px rgba(0, 0, 0, 0.3);
-  transition: opacity 0.2s, background 0.2s, border-color 0.2s, box-shadow 0.2s, padding 0.15s;
+  border-left: 3px solid var(--wr-tm);
+  transition: opacity 0.2s, background 0.2s, border-color 0.2s, padding 0.15s;
   position: relative;
 }
 .wr-wire-card::before {
@@ -1656,43 +1655,36 @@ body {
 }
 .wr-wire-card:hover {
   border-color: rgba(255, 255, 255, 0.08);
-  box-shadow:
-    0 2px 6px -1px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 .wr-wire-card:last-child { margin-bottom: 4px; }
 .wr-wire-alert {
   padding: 8px 12px 5px;
   border-radius: 6px;
-  background: rgba(253, 185, 19, 0.03);
+  background: rgba(253, 185, 19, 0.05);
   border-color: rgba(253, 185, 19, 0.1);
-  box-shadow:
-    0 1px 4px -1px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(253, 185, 19, 0.06);
+  border-left: 3px solid var(--wr-brand);
 }
 .wr-wire-alarm {
   padding: 9px 12px 5px;
   margin-top: 5px;
   margin-bottom: 2px;
   border-radius: 8px;
-  background: rgba(239, 68, 68, 0.03);
+  background: rgba(239, 68, 68, 0.05);
   border-color: rgba(239, 68, 68, 0.12);
-  box-shadow:
-    0 2px 6px -1px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(239, 68, 68, 0.06);
+  border-left: 3px solid var(--wr-loss);
 }
 
 /* Highlighted card (selected team involved) */
 .wr-wire-card.hl {
   background:
     linear-gradient(135deg, rgba(253,185,19,0.06) 0%, transparent 50%),
-    rgba(253, 185, 19, 0.03);
+    rgba(253, 185, 19, 0.05);
   border-color: rgba(253, 185, 19, 0.1);
 }
 .wr-wire-card.hl.wr-wire-alarm {
   background:
     linear-gradient(135deg, rgba(239,68,68,0.08) 0%, transparent 50%),
-    rgba(239, 68, 68, 0.04);
+    rgba(239, 68, 68, 0.06);
   border-color: rgba(239, 68, 68, 0.12);
 }
 
@@ -1701,8 +1693,8 @@ body {
   animation: wire-alarm-pulse 2s ease-in-out 1;
 }
 @keyframes wire-alarm-pulse {
-  0%, 100% { box-shadow: 0 1px 3px -1px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03); }
-  50% { box-shadow: 0 1px 3px -1px rgba(0,0,0,0.4), inset 0 0 16px -4px rgba(239,68,68,0.25); }
+  0%, 100% { border-left-color: var(--wr-loss); }
+  50% { border-left-color: rgba(239, 68, 68, 0.4); }
 }
 
 /* Top row: emoji + category + team chips */
@@ -1788,10 +1780,7 @@ body {
   padding: 8px 12px 6px;
   border-radius: 8px;
   border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.025);
-  box-shadow:
-    0 2px 8px -2px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.05);
 }
 .wr-wire-card.open.wr-wire-alert {
   padding: 9px 14px 6px;
@@ -2001,9 +1990,9 @@ body {
   display: flex;
   gap: 8px;
   padding: 7px 9px;
-  background: rgba(255, 255, 255, 0.015);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.04);
-  border-left: 2px solid var(--wr-t3);
+  border-left: 3px solid var(--wr-t3);
   border-radius: 2px;
   align-items: flex-start;
 }
@@ -2124,7 +2113,7 @@ body {
   border-radius: 2px;
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-left: 3px solid var(--wr-t3);
-  background: rgba(255, 255, 255, 0.015);
+  background: rgba(255, 255, 255, 0.04);
 }
 .wr-ti-elim.danger { border-left-color: var(--wr-loss); background: rgba(239, 68, 68, 0.04); }
 .wr-ti-elim.watch  { border-left-color: var(--wr-brand); background: rgba(253, 185, 19, 0.04); }
@@ -2194,7 +2183,7 @@ body {
 }
 .wr-ti-milestone {
   padding: 6px 8px;
-  background: rgba(255, 255, 255, 0.015);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 2px;
 }
@@ -2609,10 +2598,10 @@ body {
   text-decoration: none;
   color: inherit;
 }
-.wr-log-item:hover { background: rgba(255, 255, 255, 0.03); }
+.wr-log-item:hover { background: rgba(255, 255, 255, 0.05); }
 .wr-log-item.hl {
-  border-left: 2px solid rgba(253, 185, 19, 0.25);
-  background: rgba(253, 185, 19, 0.02);
+  border-left: 3px solid rgba(253, 185, 19, 0.4);
+  background: rgba(253, 185, 19, 0.04);
 }
 
 .wr-log-thumb {
