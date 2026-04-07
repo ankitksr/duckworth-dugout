@@ -95,6 +95,12 @@ def live_update(season: str) -> None:
             fields = {k: m.get(k) for k in ScheduleMatch.__dataclass_fields__}
             matches.append(ScheduleMatch(**fields))
 
+    # Reset stale "live" back to "scheduled" so RSS must re-confirm.
+    # Prevents stale live status persisting from a previous buggy run.
+    for m in matches:
+        if m.status == "live":
+            m.status = "scheduled"
+
     # RSS live overlay
     from pipeline.sources.schedule import overlay_live_scores
     matches = overlay_live_scores(matches)
