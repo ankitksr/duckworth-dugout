@@ -216,6 +216,10 @@ def overlay_live_scores(matches: list[ScheduleMatch]) -> list[ScheduleMatch]:
         if chaser_surpassed:
             chase_winner = t1 if (b1 and _runs(s1) > _runs(s2)) else t2
 
+        # Pre-match listing: RSS includes upcoming matches with no
+        # scores and nobody batting — don't promote to "live".
+        has_play = s1 or s2 or b1 or b2
+
         for match in matches:
             if {t1, t2} == {match.team1, match.team2}:
                 # RSS live feed is authoritative for in-progress matches.
@@ -228,17 +232,26 @@ def overlay_live_scores(matches: list[ScheduleMatch]) -> list[ScheduleMatch]:
                     # Premature completion — correct it back to live
                     match.status = "live"
                     match.result = None
-                else:
+                elif has_play:
                     match.status = "live"
-                # Only update scores when data is available (pre-toss/rain
-                # delay entries have no scores — don't blank existing data)
+                # Only update fields when RSS provides non-null values;
+                # avoid blanking richer data from live_crawl.
                 if s1 or s2:
-                    match.score1 = s1 if t1 == match.team1 else s2
-                    match.score2 = s2 if t2 == match.team2 else s1
-                    match.overs1 = ov1 if t1 == match.team1 else ov2
-                    match.overs2 = ov2 if t2 == match.team2 else ov1
-                    match.batting = t1 if b1 else t2 if b2 else None
-                match.status_text = status_text
+                    new_s1 = s1 if t1 == match.team1 else s2
+                    new_s2 = s2 if t2 == match.team2 else s1
+                    if new_s1 is not None:
+                        match.score1 = new_s1
+                    if new_s2 is not None:
+                        match.score2 = new_s2
+                    new_ov1 = ov1 if t1 == match.team1 else ov2
+                    new_ov2 = ov2 if t2 == match.team2 else ov1
+                    if new_ov1 is not None:
+                        match.overs1 = new_ov1
+                    if new_ov2 is not None:
+                        match.overs2 = new_ov2
+                    match.batting = t1 if b1 else t2 if b2 else match.batting
+                if status_text is not None:
+                    match.status_text = status_text
                 match.match_url = item.link
                 if is_completed and chase_winner and not match.winner:
                     match.winner = chase_winner
