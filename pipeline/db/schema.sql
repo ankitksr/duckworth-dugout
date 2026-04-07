@@ -1,34 +1,42 @@
--- War Room schema — 3 tables for enrichment.duckdb
+-- War Room schema — enrichment.duckdb
+-- Idempotent: all statements use IF NOT EXISTS.
 
 -- Article store: RSS articles ingested for LLM context
 CREATE TABLE IF NOT EXISTS war_room_articles (
-    id VARCHAR PRIMARY KEY,
+    guid VARCHAR PRIMARY KEY,
     source VARCHAR NOT NULL,
     title VARCHAR NOT NULL,
-    url VARCHAR,
+    snippet TEXT,
     body TEXT,
-    published TIMESTAMP,
     teams VARCHAR[],
-    ingested_at TIMESTAMP DEFAULT current_timestamp
+    is_ipl BOOLEAN DEFAULT FALSE,
+    published TIMESTAMP,
+    ingested_at TIMESTAMP DEFAULT current_timestamp,
+    content_hash VARCHAR
 );
 
--- Wire dispatches: LLM-generated news wire items
+-- Wire dispatches: LLM-generated editorial items
 CREATE TABLE IF NOT EXISTS war_room_wire (
-    id VARCHAR PRIMARY KEY,
-    season VARCHAR NOT NULL,
+    id INTEGER PRIMARY KEY,
     headline VARCHAR NOT NULL,
-    body TEXT,
+    text TEXT,
+    emoji VARCHAR,
     category VARCHAR,
-    source_articles VARCHAR[],
+    severity VARCHAR,
+    teams VARCHAR[],
+    context_hash VARCHAR,
+    season VARCHAR NOT NULL,
+    match_day VARCHAR,
+    expired BOOLEAN DEFAULT FALSE,
     generated_at TIMESTAMP DEFAULT current_timestamp
 );
 
 -- Panel snapshots: versioned JSON for change detection
 CREATE TABLE IF NOT EXISTS war_room_snapshots (
+    id INTEGER PRIMARY KEY,
     panel VARCHAR NOT NULL,
+    payload JSON NOT NULL,
+    context_hash VARCHAR NOT NULL,
     season VARCHAR NOT NULL,
-    hash VARCHAR NOT NULL,
-    data JSON NOT NULL,
-    created_at TIMESTAMP DEFAULT current_timestamp,
-    PRIMARY KEY (panel, season, hash)
+    snapshot_at TIMESTAMP DEFAULT current_timestamp
 );
