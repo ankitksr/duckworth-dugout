@@ -368,8 +368,16 @@ def patch_schedule_with_live(results: list[LiveMatchData]) -> int:
                     m["overs2"] = f"{data.overs2} ov"
                 if data.batting:
                     m["batting"] = data.batting
+                if data.current_rr is not None:
+                    m["current_rr"] = data.current_rr
+                if data.required_rr is not None:
+                    m["required_rr"] = data.required_rr
+                if data.live_forecast:
+                    m["live_forecast"] = data.live_forecast
                 if data.status_text:
                     m["status_text"] = data.status_text
+                if data.toss and not m.get("toss"):
+                    m["toss"] = data.toss
                 if data.status == "completed":
                     m["status"] = "completed"
                 patched += 1

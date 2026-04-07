@@ -33,6 +33,24 @@ jobs:
       - name: Install dependencies
         run: uv sync --no-dev
 
+      - name: Restore Playwright browsers
+        id: pw-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium
+
+      - name: Install Playwright Chromium
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: uv run playwright install chromium --with-deps
+
+      - name: Save Playwright cache
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium
+
       # Restore latest API data from pipeline cache
       - name: Restore API data
         id: api-cache
@@ -48,7 +66,7 @@ jobs:
           echo "No API data cache — run Sync Pipeline & Deploy first"
           exit 1
 
-      # RSS-only live score update (~2 seconds)
+      # RSS + page crawl for rich live scores
       - name: Update live scores
         id: live
         run: |

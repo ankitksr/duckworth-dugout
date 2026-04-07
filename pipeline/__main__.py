@@ -70,18 +70,18 @@ def sync(
 @cli.command("live-update")
 @click.option("--season", default="2026", help="IPL season (default: 2026)")
 def live_update(season: str) -> None:
-    """Lightweight live score update — RSS only, no LLM or DB."""
+    """Live score update — RSS + page crawl for rich live data."""
     import json
+    from dataclasses import asdict
+
     from pipeline.config import ROOT_DIR
 
     DATA_DIR = ROOT_DIR / "data"
     PUBLIC_API = ROOT_DIR / "frontend" / "public" / "api" / "ipl" / "war-room"
-    FIXTURES_DIR = DATA_DIR / "fixtures"
 
     # Load current schedule from disk
     sched_path = PUBLIC_API / "schedule.json"
     if not sched_path.exists():
-        # Fall back to building from fixtures
         from pipeline.sources.schedule import load_fixtures
         matches = load_fixtures(season)
         if not matches:
@@ -95,7 +95,7 @@ def live_update(season: str) -> None:
             fields = {k: m.get(k) for k in ScheduleMatch.__dataclass_fields__}
             matches.append(ScheduleMatch(**fields))
 
-    # RSS live overlay only
+    # RSS live overlay
     from pipeline.sources.schedule import overlay_live_scores
     matches = overlay_live_scores(matches)
 
@@ -104,14 +104,29 @@ def live_update(season: str) -> None:
         console.print("[dim]No live IPL matches[/dim]")
         return
 
-    # Write updated schedule
-    from dataclasses import asdict
-    data = [asdict(m) for m in matches]
+    # Write schedule so live_crawl can read it
     for path in [PUBLIC_API / "schedule.json", DATA_DIR / "war-room" / "schedule.json"]:
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+            json.dump([asdict(m) for m in matches], f, ensure_ascii=False, indent=2)
             f.write("\n")
+
+    # Page crawl for rich live data (overs, CRR, RRR, forecast)
+    try:
+        from pipeline.sources.live_crawl import (
+            crawl_live_matches_sync,
+            patch_schedule_with_live,
+            write_live_archive,
+            write_live_snapshot,
+        )
+
+        results = crawl_live_matches_sync()
+        if results:
+            patch_schedule_with_live(results)
+            write_live_snapshot(results)
+            write_live_archive(results)
+    except Exception as e:
+        console.print(f"  [yellow]Live crawl: {e}[/yellow]")
 
     for m in live:
         console.print(
