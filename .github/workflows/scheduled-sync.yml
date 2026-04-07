@@ -1,5 +1,10 @@
 name: Scheduled Sync
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 on:
   schedule:
     # Hot tier: every 45 min during match window (UTC 12-18 ~ IST 17:30-23:30)
