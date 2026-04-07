@@ -168,7 +168,12 @@ def overlay_completed(matches: list[ScheduleMatch], season: str) -> list[Schedul
 
 
 def overlay_live_scores(matches: list[ScheduleMatch]) -> list[ScheduleMatch]:
-    """Overlay live scores from ESPNcricinfo RSS."""
+    """Overlay live scores from ESPNcricinfo RSS.
+
+    This is purely a live-state updater — it promotes scheduled matches
+    to "live" and patches scores/overs/status_text. Completion detection
+    is handled by other sources (live_crawl, Wikipedia, Cricsheet).
+    """
     items = RSSFetcher(FEEDS["livescores"]["url"]).fetch()
 
     live_count = 0
@@ -182,84 +187,42 @@ def overlay_live_scores(matches: list[ScheduleMatch]) -> list[ScheduleMatch]:
         if not t1 or not t2:
             continue
 
-        # Status text from after the dash: "MI need 14 from 10 balls"
         status_text = title_parts[1].strip() if len(title_parts) > 1 else None
 
-        # Detect if the match is actually completed:
-        # - Neither team is batting (no * indicator), OR
-        # - The chasing team is all out (/10), OR
-        # - The chasing team has surpassed the target (successful chase)
-        both_batted = bool(s1 and s2)
-        nobody_batting = not b1 and not b2
-        chaser_all_out = (
-            (b1 and s1 and "/10" in s1 and bool(s2))  # t1 chasing, all out
-            or (b2 and s2 and "/10" in s2 and bool(s1))  # t2 chasing, all out
-        )
-
-        # Chaser surpassed target — successful chase
-        def _runs(score: str | None) -> int:
-            if not score or "/" not in score:
-                return 0
-            try:
-                return int(score.split("/")[0])
-            except ValueError:
-                return 0
-
-        chaser_surpassed = (
-            (b1 and both_batted and _runs(s1) > _runs(s2))  # t1 chasing, beat t2's score
-            or (b2 and both_batted and _runs(s2) > _runs(s1))  # t2 chasing, beat t1's score
-        )
-        is_completed = both_batted and (nobody_batting or chaser_all_out or chaser_surpassed)
-
-        # Determine winner for successful chase
-        chase_winner: str | None = None
-        if chaser_surpassed:
-            chase_winner = t1 if (b1 and _runs(s1) > _runs(s2)) else t2
-
-        # Pre-match listing: RSS includes upcoming matches with no
-        # scores and nobody batting — don't promote to "live".
+        # Pre-match listing: no scores and nobody batting — skip.
         has_play = s1 or s2 or b1 or b2
 
         for match in matches:
-            if {t1, t2} == {match.team1, match.team2}:
-                # RSS live feed is authoritative for in-progress matches.
-                # A match in the live feed that isn't truly over (no winner
-                # detected) should correct premature "completed" from
-                # earlier overlays (e.g. Wikipedia "Innings break").
-                if is_completed:
-                    match.status = "completed"
-                elif match.status == "completed" and not match.winner:
-                    # Premature completion — correct it back to live
-                    match.status = "live"
-                    match.result = None
-                elif has_play:
-                    match.status = "live"
-                # Only update fields when RSS provides non-null values;
-                # avoid blanking richer data from live_crawl.
-                if s1 or s2:
-                    new_s1 = s1 if t1 == match.team1 else s2
-                    new_s2 = s2 if t2 == match.team2 else s1
-                    if new_s1 is not None:
-                        match.score1 = new_s1
-                    if new_s2 is not None:
-                        match.score2 = new_s2
-                    new_ov1 = ov1 if t1 == match.team1 else ov2
-                    new_ov2 = ov2 if t2 == match.team2 else ov1
-                    if new_ov1 is not None:
-                        match.overs1 = new_ov1
-                    if new_ov2 is not None:
-                        match.overs2 = new_ov2
-                    match.batting = t1 if b1 else t2 if b2 else match.batting
-                if status_text is not None:
-                    match.status_text = status_text
-                match.match_url = item.link
-                if is_completed and chase_winner and not match.winner:
-                    match.winner = chase_winner
-                    wkts = 10 - int((s1 if chase_winner == t1 else s2 or "0/0").split("/")[1])
-                    match.result = f"by {wkts} wickets"
-                if match.status == "live":
-                    live_count += 1
-                break
+            if {t1, t2} != {match.team1, match.team2}:
+                continue
+
+            # Only promote to live if there's actual play data
+            # and the match isn't already completed.
+            if match.status != "completed" and has_play:
+                match.status = "live"
+
+            # Update fields only when RSS provides non-null values;
+            # avoid blanking richer data from live_crawl.
+            if s1 or s2:
+                new_s1 = s1 if t1 == match.team1 else s2
+                new_s2 = s2 if t2 == match.team2 else s1
+                if new_s1 is not None:
+                    match.score1 = new_s1
+                if new_s2 is not None:
+                    match.score2 = new_s2
+                new_ov1 = ov1 if t1 == match.team1 else ov2
+                new_ov2 = ov2 if t2 == match.team2 else ov1
+                if new_ov1 is not None:
+                    match.overs1 = new_ov1
+                if new_ov2 is not None:
+                    match.overs2 = new_ov2
+                match.batting = t1 if b1 else t2 if b2 else match.batting
+            if status_text is not None:
+                match.status_text = status_text
+            match.match_url = item.link
+            if match.status == "live":
+                live_count += 1
+            break
 
     if live_count:
         console.print(f"  [green]Schedule: {live_count} live match(es)[/green]")
