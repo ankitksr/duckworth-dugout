@@ -39,6 +39,7 @@ on:
         default: false
 
 permissions:
+  actions: write
   contents: read
   pages: write
   id-token: write
@@ -73,6 +74,7 @@ jobs:
           key: playwright-chromium
 
       - name: Install Playwright Chromium
+        if: steps.pw-cache.outputs.cache-hit != 'true'
         run: uv run playwright install chromium --with-deps
 
       - name: Save Playwright cache
@@ -84,15 +86,14 @@ jobs:
 
       # ── cricket.duckdb (from duckworth-mcp) ──────────────────────
       - name: Restore cricket.duckdb cache
-        id: cache-cricket-db
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: data/cricket.duckdb
-          key: cricket-db-v1
-          restore-keys: cricket-db-v1
+          key: cricket-db
+          restore-keys: cricket-db
 
       - name: Bootstrap cricket.duckdb (first run)
-        if: steps.cache-cricket-db.outputs.cache-hit != 'true'
+        if: hashFiles('data/cricket.duckdb') == ''
         run: |
           uv pip install "duckworth-mcp @ git+https://github.com/ankitksr/duckworth-mcp.git"
           uv run duckworth-mcp ingest --db data/cricket.duckdb
@@ -123,7 +124,6 @@ jobs:
           CT_LLM_GCP_LOCATION: ${{ vars.CT_LLM_GCP_LOCATION }}
           CT_LLM_MODEL: ${{ vars.CT_LLM_MODEL }}
           CT_LLM_MODEL_PRO: ${{ vars.CT_LLM_MODEL_PRO }}
-          # google-genai SDK reads these directly for Vertex AI routing
           GOOGLE_CLOUD_PROJECT: ${{ vars.CT_LLM_GCP_PROJECT }}
           GOOGLE_CLOUD_LOCATION: ${{ vars.CT_LLM_GCP_LOCATION }}
           CRICKET_DB_PATH: data/cricket.duckdb
@@ -135,18 +135,45 @@ jobs:
           uv run python -m pipeline sync $ARGS
         timeout-minutes: 10
 
-      # ── Cache pipeline output for deploy-on-push workflow ────────
+      # ── Cache pipeline output ───────────────────────────────────
+      # GitHub Actions cache is immutable — delete then re-save to update
+      - name: Update enrichment.duckdb cache
+        run: |
+          gh cache delete enrichment-db || true
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - name: Save enrichment.duckdb cache
         uses: actions/cache/save@v4
         with:
           path: data/enrichment.duckdb
           key: enrichment-db
 
+      - name: Update API data cache
+        run: |
+          gh cache delete api-data || true
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - name: Save API data cache
         uses: actions/cache/save@v4
         with:
           path: frontend/public/api/ipl/war-room
           key: api-data
+
+      - name: Update cricket.duckdb cache
+        if: inputs.update_cricket_db
+        run: |
+          gh cache delete cricket-db || true
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Save cricket.duckdb cache
+        if: inputs.update_cricket_db
+        uses: actions/cache/save@v4
+        with:
+          path: data/cricket.duckdb
+          key: cricket-db
 
       # ── Frontend build + deploy ──────────────────────────────────
       - uses: actions/setup-node@v4

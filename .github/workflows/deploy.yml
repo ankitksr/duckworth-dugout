@@ -23,9 +23,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
 
@@ -41,9 +38,8 @@ jobs:
       - name: Seed sample data (fallback)
         if: steps.api-cache.outputs.cache-hit != 'true'
         run: |
-          cd ..
-          pip install uv && uv sync
-          uv run python -m pipeline seed-sample
+          mkdir -p frontend/public/api/ipl/war-room
+          cp data/sample/*.json frontend/public/api/ipl/war-room/
 
       - uses: actions/setup-node@v4
         with:
@@ -52,9 +48,11 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
+        working-directory: frontend
         run: npm ci
 
       - name: Build
+        working-directory: frontend
         run: npm run build
 
       - uses: actions/upload-pages-artifact@v3
