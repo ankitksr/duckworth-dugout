@@ -4,7 +4,10 @@ on:
   push:
     branches: [main]
     paths:
-      - 'frontend/**'
+      - 'frontend/src/**'
+      - 'frontend/package*.json'
+      - 'frontend/astro.config.*'
+      - 'frontend/tsconfig.json'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
@@ -25,6 +28,22 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
+
+      # ── Restore API data from last pipeline sync ─────────────
+      - name: Restore API data cache
+        id: api-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: frontend/public/api/ipl/war-room
+          key: api-data-
+          restore-keys: api-data-
+
+      - name: Seed sample data (fallback)
+        if: steps.api-cache.outputs.cache-hit != 'true'
+        run: |
+          cd ..
+          pip install uv && uv sync
+          uv run python -m pipeline seed-sample
 
       - uses: actions/setup-node@v4
         with:

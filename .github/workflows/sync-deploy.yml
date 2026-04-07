@@ -127,6 +127,13 @@ jobs:
           uv run python -m pipeline sync $ARGS
         timeout-minutes: 10
 
+      # ── Cache API data for deploy-on-push workflow ──────────────
+      - name: Save API data cache
+        uses: actions/cache/save@v4
+        with:
+          path: frontend/public/api/ipl/war-room
+          key: api-data-${{ github.run_id }}
+
       # ── Frontend build + deploy ──────────────────────────────────
       - uses: actions/setup-node@v4
         with:
