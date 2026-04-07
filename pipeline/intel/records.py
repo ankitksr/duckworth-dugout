@@ -36,10 +36,9 @@ def _get_active_players(season: str) -> set[str]:
         year = int(season.split("/")[0]) if "/" in season else int(season)
         conn = get_connection()
         rows = conn.execute("""
-            SELECT DISTINCT p.name
-            FROM ipl_season_xi xi
-            JOIN cricket.players p ON xi.player_id = p.id
-            WHERE xi.season = ?
+            SELECT DISTINCT player_name
+            FROM ipl_season_squad
+            WHERE season = ?
         """, [year]).fetchall()
         return {r[0] for r in rows}
     except Exception as e:
@@ -55,18 +54,21 @@ def _get_player_franchises(season: str) -> dict[str, str]:
     """
     try:
         from pipeline.db.connection import get_connection
+        from pipeline.ipl.franchise_metadata import IPL_FRANCHISES
 
         year = int(season.split("/")[0]) if "/" in season else int(season)
         conn = get_connection()
         rows = conn.execute("""
-            SELECT p.name, f.short_name
-            FROM ipl_season_xi xi
-            JOIN cricket.players p ON xi.player_id = p.id
-            JOIN ipl_franchise f ON xi.franchise_id = f.id
-            WHERE xi.season = ?
+            SELECT player_name, franchise_id
+            FROM ipl_season_squad
+            WHERE season = ?
         """, [year]).fetchall()
         # Key by last name (same convention as _filter_active)
-        return {name.split()[-1].lower(): short for name, short in rows}
+        return {
+            name.split()[-1].lower(): IPL_FRANCHISES[fid]["short_name"]
+            for name, fid in rows
+            if fid in IPL_FRANCHISES
+        }
     except Exception as e:
         console.print(f"  [dim]Records: franchise lookup failed: {e}[/dim]")
         return {}

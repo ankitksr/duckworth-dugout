@@ -59,19 +59,19 @@ def _get_current_squad(
     franchise_id: str,
     season: str,
 ) -> tuple[set[str], list[str]]:
-    """Get player IDs and names from ipl_season_xi for the current season.
+    """Get player IDs and names from ipl_season_squad for the current season.
 
     Uses the existing connection (enrichment.duckdb with cricket ATTACHed).
+    Resolves names to Cricsheet player IDs via cricket.players join.
     Returns (set of player IDs, list of player names). Empty on failure.
     """
     try:
         year = int(season.split("/")[0]) if "/" in season else int(season)
         rows = conn.execute("""
-            SELECT xi.player_id, p.name
-            FROM ipl_season_xi xi
-            JOIN cricket.players p ON xi.player_id = p.id
-            WHERE xi.franchise_id = ? AND xi.season = ?
-            ORDER BY xi.batting_position
+            SELECT p.id, sq.player_name
+            FROM ipl_season_squad sq
+            JOIN cricket.players p ON p.name = sq.player_name
+            WHERE sq.franchise_id = ? AND sq.season = ?
         """, [franchise_id, year]).fetchall()
         return ({r[0] for r in rows}, [r[1] for r in rows])
     except Exception as e:

@@ -429,11 +429,9 @@ def _get_squad_names_for_match(
         year = int(season.split("/")[0]) if "/" in season else int(season)
         for fid in (match.team1, match.team2):
             rows = conn.execute("""
-                SELECT p.name
-                FROM ipl_season_xi xi
-                JOIN cricket.players p ON xi.player_id = p.id
-                WHERE xi.franchise_id = ? AND xi.season = ?
-                ORDER BY xi.batting_position
+                SELECT player_name
+                FROM ipl_season_squad
+                WHERE franchise_id = ? AND season = ?
             """, [fid, year]).fetchall()
             result[_short(fid)] = [r[0] for r in rows]
     except Exception as e:
