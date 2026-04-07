@@ -127,6 +127,13 @@ export function MatchTimeline() {
               {m.team2.toUpperCase()} {m.score2}{m.overs2 ? ` (${m.overs2})` : ""}
             </div>
           )}
+          {(m.current_rr || m.live_forecast) && (
+            <div className="wr-tmc-detail wr-tmc-forecast">
+              {m.current_rr && <span>CRR {m.current_rr.toFixed(1)}</span>}
+              {m.live_forecast && <span> · ↗ {m.live_forecast}</span>}
+              {m.required_rr && <span> · RRR {m.required_rr.toFixed(1)}</span>}
+            </div>
+          )}
           {m.status_text && (
             <div className="wr-tmc-detail" style={{ color: "var(--wr-win)" }}>{m.status_text}</div>
           )}

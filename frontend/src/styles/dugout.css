@@ -1411,6 +1411,11 @@ body {
   box-shadow: 0 0 6px var(--wr-win), 0 0 12px rgba(0, 230, 118, 0.3);
   animation: wr-lp 2s ease-in-out infinite;
 }
+.wr-tmc-forecast {
+  font: 500 9px 'JetBrains Mono', monospace;
+  color: var(--wr-brand);
+  opacity: 0.7;
+}
 .wr-live-scores {
   display: flex;
   justify-content: space-between;

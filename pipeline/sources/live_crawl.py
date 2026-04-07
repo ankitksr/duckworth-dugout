@@ -115,11 +115,12 @@ _CURRENT_OVER_RE = re.compile(r"Current Over\s+(\d+)")
 def _extract_match_zone(markdown: str, team1: str, team2: str) -> str:
     """Extract just the match-specific content, excluding sidebar scores."""
     lines = markdown.split("\n")
-    # Find the match title line: "# KKR vs PBKS, 12th Match..."
+    # Find the match title line: "# RR vs MI, 13th Match..."
+    # Must be a heading (starts with #) to avoid matching sidebar links
     t1u, t2u = team1.upper(), team2.upper()
     start = 0
     for i, line in enumerate(lines):
-        if t1u in line.upper() and t2u in line.upper() and "Match" in line:
+        if line.startswith("#") and t1u in line.upper() and t2u in line.upper():
             start = i
             break
 

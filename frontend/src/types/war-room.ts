@@ -46,6 +46,9 @@ export interface WRFixture {
   overs1: string | null;
   overs2: string | null;
   status_text: string | null;
+  current_rr: number | null;
+  required_rr: number | null;
+  live_forecast: string | null;
 }
 
 // ── caps.json ──

@@ -94,6 +94,9 @@ class ScheduleMatch:
     overs1: str | None = None         # "18.2 ov"
     overs2: str | None = None         # "20 ov"
     status_text: str | None = None    # "MI need 14 from 10 balls"
+    current_rr: float | None = None   # current run rate
+    required_rr: float | None = None  # required run rate
+    live_forecast: str | None = None  # "RR 135"
 
 
 @dataclass

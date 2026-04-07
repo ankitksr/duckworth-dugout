@@ -98,6 +98,16 @@ def sync(ctx: SyncContext) -> None:
                                 m.score1 = r.score1
                             if r.score2:
                                 m.score2 = r.score2
+                            if r.current_rr:
+                                m.current_rr = r.current_rr
+                            if r.required_rr:
+                                m.required_rr = r.required_rr
+                            if r.live_forecast:
+                                m.live_forecast = r.live_forecast
+                            if r.toss and not m.toss:
+                                m.toss = r.toss
+                            if r.batting:
+                                m.batting = r.batting
         except Exception as e:
             console.print(f"  [yellow]Live crawl: {e}[/yellow]")
 
