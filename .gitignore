@@ -29,6 +29,9 @@ frontend/.astro/
 .DS_Store
 Thumbs.db
 
+# Playwright
+.playwright-cli/
+
 # Env
 .env
 .env.local
