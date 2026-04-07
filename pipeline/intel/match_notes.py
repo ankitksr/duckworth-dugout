@@ -106,6 +106,8 @@ async def generate_match_notes(season: str) -> dict[int, str] | None:
             line += ")"
         if m.get("toss"):
             line += f"\n  Toss: {m['toss']}"
+        if m.get("wiki_notes"):
+            line += f"\n  Wikipedia notes: {m['wiki_notes']}"
         b1 = m.get("top_batter1")
         w1 = m.get("top_bowler1")
         if b1 or w1:

@@ -193,8 +193,8 @@ def overlay_wikipedia_fixtures(matches: list[ScheduleMatch], season: str) -> lis
         if not match.match_url and fixture.get("match_url"):
             match.match_url = fixture["match_url"]
             updated = True
-        if not match.note and fixture.get("notes"):
-            match.note = fixture["notes"]
+        if not match.wiki_notes and fixture.get("notes"):
+            match.wiki_notes = fixture["notes"]
             updated = True
         if not match.result:
             result_text = fixture.get("result") or summary_result
@@ -206,8 +206,8 @@ def overlay_wikipedia_fixtures(matches: list[ScheduleMatch], season: str) -> lis
             if winner:
                 match.winner = winner
                 updated = True
-        if summary and summary.get("dls") and not match.note:
-            match.note = "DLS method"
+        if summary and summary.get("dls") and not match.wiki_notes:
+            match.wiki_notes = "DLS method"
             updated = True
 
         # Per-innings highlights (always overwrite — Wikipedia is the

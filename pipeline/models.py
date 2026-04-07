@@ -82,7 +82,8 @@ class ScheduleMatch:
     result: str | None = None         # "RCB won by 6 wickets"
     hero_name: str | None = None      # "V Kohli"
     hero_stat: str | None = None      # "69*(38)"
-    note: str | None = None           # editorial one-liner
+    note: str | None = None           # editorial one-liner (LLM-generated)
+    wiki_notes: str | None = None     # factoid trivia from Wikipedia (milestones, debuts, DLS)
     # Per-innings highlights (from Wikipedia fixtures)
     toss: str | None = None           # "RCB won the toss and elected to field"
     home_team: str | None = None      # franchise ID of home team
