@@ -62,14 +62,127 @@ def _format_squad_line(short: str, players: list[tuple]) -> str:
     return f"{short}: {', '.join(shown)}, +{len(names) - 5} more"
 
 
-def _format_full_squad(short: str, players: list[tuple]) -> str:
+def _build_squad_name_index(
+    conn: duckdb.DuckDBPyConnection,
+    season: str,
+) -> dict[str, str]:
+    """Build a surname-based index mapping external names to squad names.
+
+    Cricsheet uses initials ("AR Patel"), ESPNcricinfo uses full names
+    ("Axar Patel"), squad table uses registration names ("Axar Patel").
+    This maps all variants to the squad name via surname matching.
+    """
+    try:
+        rows = conn.execute(
+            "SELECT player_name FROM ipl_season_squad WHERE season = ?",
+            [int(season)],
+        ).fetchall()
+    except Exception:
+        return {}
+
+    squad_names = [r[0] for r in rows]
+
+    # surname → list of squad names with that surname
+    by_surname: dict[str, list[str]] = {}
+    for name in squad_names:
+        surname = name.split()[-1].lower().rstrip(".")
+        by_surname.setdefault(surname, []).append(name)
+
+    return by_surname
+
+
+def _resolve_to_squad_name(
+    raw_name: str,
+    by_surname: dict[str, list[str]],
+) -> str:
+    """Map an external player name to its squad table equivalent."""
+    # Exact match first
+    for candidates in by_surname.values():
+        if raw_name in candidates:
+            return raw_name
+
+    surname = raw_name.split()[-1].lower().rstrip(".")
+    candidates = by_surname.get(surname)
+    if not candidates:
+        return raw_name
+    if len(candidates) == 1:
+        return candidates[0]
+    # Multiple players with same surname — try first-initial match
+    initial = raw_name[0].upper()
+    matches = [c for c in candidates if c[0].upper() == initial]
+    if len(matches) == 1:
+        return matches[0]
+    # Still ambiguous — return raw name to avoid wrong attribution
+    return raw_name
+
+
+def _query_appearances(
+    conn: duckdb.DuckDBPyConnection,
+    season: str,
+) -> dict[str, int]:
+    """Count IPL match appearances per player this season.
+
+    Merges two non-overlapping sources:
+    - Cricsheet (canonical, full playing XI, but lags 1-6 days)
+    - ESPNcricinfo scorecard crawl (gap-filler for matches Cricsheet doesn't have)
+    Summed because they cover different matches. Names are normalized
+    to squad table names via surname matching.
+    """
+    by_surname = _build_squad_name_index(conn, season)
+
+    # Cricsheet: canonical, accurate, may lag
+    sql = """
+        SELECT p.name, COUNT(DISTINCT x.match_id) AS appearances
+        FROM (
+            SELECT match_id, player_id FROM cricket.batting_scorecard
+            UNION
+            SELECT match_id, player_id FROM cricket.bowling_scorecard
+        ) x
+        JOIN cricket.players p ON x.player_id = p.id
+        JOIN cricket.matches m ON x.match_id = m.id
+        WHERE m.event_name = 'Indian Premier League'
+          AND m.season = ?
+        GROUP BY p.name
+    """
+    result: dict[str, int] = {}
+    try:
+        rows = conn.execute(sql, [season]).fetchall()
+        for name, count in rows:
+            squad_name = _resolve_to_squad_name(name, by_surname)
+            result[squad_name] = result.get(squad_name, 0) + count
+    except Exception:
+        pass
+
+    # Scorecard crawl: fills the gap for matches Cricsheet hasn't published
+    try:
+        from pipeline.sources.scorecard_crawl import crawl_missing_scorecards
+
+        crawled = crawl_missing_scorecards(season, conn)
+        for name, count in crawled.items():
+            squad_name = _resolve_to_squad_name(name, by_surname)
+            result[squad_name] = result.get(squad_name, 0) + count
+    except Exception:
+        pass
+
+    return result
+
+
+def _format_full_squad(
+    short: str,
+    players: list[tuple],
+    appearances: dict[str, int] | None = None,
+) -> str:
     """Full squad block for a team."""
     lines = [f"{short} SQUAD ({len(players)} players):"]
     for fid, name, is_cap, is_ovs, price, acq in players:
         tag = _format_player(name, is_cap, is_ovs)
         price_cr = f"₹{price / 1e7:.1f}Cr" if price else ""
         acq_tag = f"[{acq}]" if acq and acq != "auction" else ""
-        parts = [f"  {tag}", price_cr, acq_tag]
+        played = ""
+        if appearances is not None:
+            n = appearances.get(name, 0)
+            played = f"({n} matches)" if n else "(yet to play)"
+        parts = [f"  {tag}", price_cr, acq_tag, played]
         lines.append(" ".join(p for p in parts if p))
     return "\n".join(lines)
 
@@ -104,12 +217,13 @@ def for_match(
 
     Use for: briefing, dossier.
     """
+    appearances = _query_appearances(conn, season)
     parts = []
     for fid in (team1, team2):
         players = _query_squad(conn, season, fid)
         short = _SHORT.get(fid, fid.upper())
         if players:
-            parts.append(_format_full_squad(short, players))
+            parts.append(_format_full_squad(short, players, appearances))
         else:
             parts.append(f"{short}: (no squad data)")
     return "\n\n".join(parts)
@@ -124,6 +238,7 @@ def all_squads(conn: duckdb.DuckDBPyConnection, season: str) -> str:
     if not rows:
         return ""
 
+    appearances = _query_appearances(conn, season)
     by_team: dict[str, list[tuple]] = {}
     for r in rows:
         by_team.setdefault(r[0], []).append(r)
@@ -131,7 +246,7 @@ def all_squads(conn: duckdb.DuckDBPyConnection, season: str) -> str:
     parts = [f"CURRENT ROSTERS (IPL {season}):"]
     for fid in sorted(by_team, key=lambda f: _SHORT.get(f, f)):
         short = _SHORT.get(fid, fid.upper())
-        parts.append(_format_full_squad(short, by_team[fid]))
+        parts.append(_format_full_squad(short, by_team[fid], appearances))
     return "\n\n".join(parts)
 
 
@@ -140,10 +255,11 @@ def for_team(conn: duckdb.DuckDBPyConnection, season: str, team: str) -> str:
 
     Use for: narrative (per-team), dossier (opposition).
     """
+    appearances = _query_appearances(conn, season)
     players = _query_squad(conn, season, team)
     short = _SHORT.get(team, team.upper())
     if players:
-        return _format_full_squad(short, players)
+        return _format_full_squad(short, players, appearances)
     return f"{short}: (no squad data)"
 
 
