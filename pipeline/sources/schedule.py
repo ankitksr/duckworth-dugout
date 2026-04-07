@@ -62,6 +62,14 @@ def _parse_live_segment(segment: str) -> tuple[str | None, str | None, str | Non
     # Normalize bare runs (e.g. "15") to "15/0" for batting team
     if score and "/" not in score and is_batting:
         score = f"{score}/0"
+    # Reject impossible scores (wickets > 10 or runs > 500)
+    if score and "/" in score:
+        try:
+            r, w = score.split("/")
+            if int(w) > 10 or int(r) > 500:
+                score = None
+        except ValueError:
+            score = None
     first_match = _SCORE_RE.search(segment)
     team_str = segment[:first_match.start()].strip() if first_match else segment
     return _resolve_team(team_str), score, overs, is_batting

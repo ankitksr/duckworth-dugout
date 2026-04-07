@@ -95,6 +95,17 @@ class LiveMatchData:
 _HEADER_SCORE_RE = re.compile(
     r"(?:\((\d+\.?\d*)/\d+\s*[Oo]v\)\s*)?(\d{1,3}/\d{1,2})"
 )
+
+
+def _is_valid_cricket_score(score: str) -> bool:
+    """Reject impossible scores like 900/41."""
+    if "/" not in score:
+        return False
+    try:
+        runs, wkts = score.split("/")
+        return int(wkts) <= 10 and int(runs) <= 500
+    except ValueError:
+        return False
 _CRR_RE = re.compile(r"Current RR:\s*([\d.]+)")
 _RRR_RE = re.compile(r"Required RR:\s*([\d.]+)")
 _FORECAST_RE = re.compile(r"Live Forecast:\s*(\S.+)")
@@ -144,7 +155,8 @@ def _find_score_block(zone_lines: list[str], team_id: str) -> tuple[str | None, 
                 if m:
                     overs = m.group(1)
                     score = m.group(2)
-                    return score, overs
+                    if _is_valid_cricket_score(score):
+                        return score, overs
             # No score on the next line = team hasn't batted yet
             return None, None
     return None, None
@@ -253,13 +265,13 @@ def parse_live_match(
         if not lower or lower.startswith("[") or lower.startswith("!"):
             continue
         if "delayed" in lower and "rain" in lower:
-            data.status_text = line.strip()
+            data.status_text = re.sub(r"\*{1,2}", "", line.strip())
             break
         if "need" in lower and ("ball" in lower or "run" in lower):
             # Ensure it's about our teams
             t1u, t2u = team1.upper(), team2.upper()
             if t1u in line.upper() or t2u in line.upper():
-                data.status_text = line.strip()
+                data.status_text = re.sub(r"\*{1,2}", "", line.strip())
                 break
 
     # Detect completion — only in match zone header area (first 20 lines)
