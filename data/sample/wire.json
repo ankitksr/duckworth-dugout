@@ -1,0 +1,97 @@
+[
+  {
+    "headline": "CSK's Samson-Gaikwad experiment is officially a disaster.",
+    "text": "At 0-3 with a league-worst -2.467 NRR, CSK's season is already on life support. The root cause? A top order that simply isn't functioning. Sanju Samson and Ruturaj Gaikwad are misfiring, forcing the middle order to chase games from behind. They just leaked 250 to RCB. To reach the 16-point safety line, CSK now needs to win 72% of their remaining games. The math says they are nearly cooked in week two.",
+    "emoji": "💀",
+    "category": "roster_panic",
+    "severity": "alarm",
+    "teams": [
+      "csk"
+    ],
+    "generated_at": "2026-04-07 05:30:49.31291+05:30",
+    "match_day": "2026-04-07"
+  },
+  {
+    "headline": "The rain saved KKR from a 0-3 hole, but their math is already terrifying.",
+    "text": "A washout against PBKS gives KKR their first point of the season, but the underlying numbers are grim. They boast a -1.964 NRR and Angkrish Raghuvanshi (110 runs) is the only batter showing sustained resistance. Their upcoming fixtures against LSG and CSK aren't just early-season games; they are elimination bouts. If they drop either, they become mathematically irrelevant before May.",
+    "emoji": "🧨",
+    "category": "playoff_math",
+    "severity": "alert",
+    "teams": [
+      "kkr"
+    ],
+    "generated_at": "2026-04-07 05:30:49.318077+05:30",
+    "match_day": "2026-04-07"
+  },
+  {
+    "headline": "Captains are 0-for-12 after winning the toss. The chasing dogma is broken.",
+    "text": "In 10 of the first 12 matches, the toss-winning captain has elected to field. The win rate for toss-winners is exactly 0%. Teams are blindly following the historical T20 blueprint of chasing, completely ignoring that scoreboard pressure in 2026 is suffocating them. The first captain to realize the meta has shifted to batting first will gain an immediate structural advantage.",
+    "emoji": "🛸",
+    "category": "toss_trends",
+    "severity": "alert",
+    "teams": [],
+    "generated_at": "2026-04-07 05:30:49.306046+05:30",
+    "match_day": "2026-04-07"
+  },
+  {
+    "headline": "PBKS are top of the table by doing absolutely nothing flashy.",
+    "text": "Punjab Kings are 2-0 (plus a washout) and leading the IPL, entirely through unglamorous efficiency. Vijaykumar Vyshak has 5 wickets, Marco Jansen is going at 5.00 an over, and they just chased down 210 against CSK with zero panic. There are no superstars dominating the cap races here, just a ruthlessly balanced XI that is quietly accumulating points while the big market teams implode.",
+    "emoji": "🧊",
+    "category": "squad_dynamics",
+    "severity": "signal",
+    "teams": [
+      "pbks"
+    ],
+    "generated_at": "2026-04-07 05:30:49.32156+05:30",
+    "match_day": "2026-04-07"
+  },
+  {
+    "headline": "Sameer Rizvi wearing the Orange Cap is the breakout story of the season.",
+    "text": "Delhi Capitals are quietly sitting at 2-0, largely because Sameer Rizvi is currently the best batter in the tournament. With 160 runs—capped by a breathtaking 90(51) against MI—Rizvi has transformed DC's middle order from a historical vulnerability into their biggest weapon. He isn't just accumulating; he's dictating terms to international attacks.",
+    "emoji": "🚀",
+    "category": "breakout_star",
+    "severity": "signal",
+    "teams": [
+      "dc"
+    ],
+    "generated_at": "2026-04-07 05:30:49.31972+05:30",
+    "match_day": "2026-04-07"
+  },
+  {
+    "headline": "RCB's title defense is being built on Jacob Duffy, not just the batters.",
+    "text": "Everyone is looking at Devdutt Padikkal's 111 runs and Virat Kohli's 181.60 strike rate. But the real reason RCB is 2-0 with a monstrous +2.415 NRR is Jacob Duffy. Sitting tied for the Purple Cap with 5 wickets at an economy of 5.50, Duffy has finally given Bengaluru the reliable powerplay enforcement they've historically lacked. They are defending champions playing like it.",
+    "emoji": "🏗️",
+    "category": "title_defense",
+    "severity": "signal",
+    "teams": [
+      "rcb"
+    ],
+    "generated_at": "2026-04-07 05:30:49.316396+05:30",
+    "match_day": "2026-04-07"
+  },
+  {
+    "headline": "Heinrich Klaasen is playing a different sport, but SRH is still sinking.",
+    "text": "Klaasen has piled up 145 runs and is sitting second in the Orange Cap race, while Travis Head is striking at 190.00. Yet SRH is 1-2. When your international engine room is firing this hot and you're still losing games to LSG, it points to a catastrophic imbalance in the domestic bowling core. Klaasen's brilliance is masking a squad construction failure.",
+    "emoji": "🎭",
+    "category": "lone_warrior",
+    "severity": "signal",
+    "teams": [
+      "srh"
+    ],
+    "generated_at": "2026-04-07 05:30:49.314715+05:30",
+    "match_day": "2026-04-07"
+  },
+  {
+    "headline": "Rohit's 205 strike rate meets Archer's 4.75 economy. Something breaks tonight.",
+    "text": "Tonight's RR vs MI clash in Guwahati features the ultimate immovable object against an unstoppable force. Rohit Sharma (SR 205.3) and Ishan Kishan (SR 200.0) are obliterating powerplays. Waiting for them is Jofra Archer, operating at a microscopic 4.75 economy, backed by Ravi Bishnoi's 5 wickets. If MI's openers survive the powerplay without sacrificing their strike rate, RR's +2.233 NRR fortress will crumble.",
+    "emoji": "⚔️",
+    "category": "matchup_preview",
+    "severity": "signal",
+    "teams": [
+      "rr",
+      "mi"
+    ],
+    "generated_at": "2026-04-07 05:30:49.311083+05:30",
+    "match_day": "2026-04-07"
+  }
+]

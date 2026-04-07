@@ -1,0 +1,146 @@
+name: Sync Pipeline & Deploy
+
+on:
+  workflow_call:
+    inputs:
+      tiers:
+        description: 'Comma-separated tiers: hot, warm, cool, all'
+        required: true
+        type: string
+      update_cricket_db:
+        description: 'Run duckworth-mcp update+enrich before sync'
+        required: false
+        type: boolean
+        default: false
+      force:
+        description: 'Force regeneration (bypass pipeline caches)'
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      CT_LLM_API_KEY:
+        required: true
+  workflow_dispatch:
+    inputs:
+      tiers:
+        description: 'Comma-separated tiers: hot, warm, cool, all'
+        required: true
+        default: 'all'
+        type: string
+      update_cricket_db:
+        description: 'Run duckworth-mcp update+enrich before sync'
+        required: false
+        type: boolean
+        default: false
+      force:
+        description: 'Force regeneration (bypass pipeline caches)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  sync-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── Python + pipeline ────────────────────────────────────────
+      - name: Setup Python 3.13 + uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: '3.13'
+
+      - name: Install pipeline dependencies
+        run: uv sync
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+
+      - name: Install Playwright Chromium
+        run: uv run playwright install chromium --with-deps
+
+      # ── cricket.duckdb (from duckworth-mcp) ──────────────────────
+      - name: Restore cricket.duckdb cache
+        id: cache-cricket-db
+        uses: actions/cache@v4
+        with:
+          path: data/cricket.duckdb
+          key: cricket-db-v1
+          restore-keys: cricket-db-v1
+
+      - name: Bootstrap cricket.duckdb (first run)
+        if: steps.cache-cricket-db.outputs.cache-hit != 'true'
+        run: |
+          uv pip install "duckworth-mcp @ git+https://github.com/ankitksr/duckworth-mcp.git"
+          uv run duckworth-mcp ingest --db data/cricket.duckdb
+        timeout-minutes: 5
+
+      - name: Update cricket.duckdb
+        if: inputs.update_cricket_db
+        run: |
+          uv pip install "duckworth-mcp @ git+https://github.com/ankitksr/duckworth-mcp.git"
+          uv run duckworth-mcp update --db data/cricket.duckdb
+          uv run duckworth-mcp enrich --db data/cricket.duckdb
+        timeout-minutes: 3
+
+      # ── enrichment.duckdb (articles, wire, snapshots) ────────────
+      - name: Restore enrichment.duckdb cache
+        uses: actions/cache@v4
+        with:
+          path: data/enrichment.duckdb
+          key: enrichment-db-${{ github.run_id }}
+          restore-keys: enrichment-db-
+
+      # ── Pipeline sync ────────────────────────────────────────────
+      - name: Sync pipeline (${{ inputs.tiers }})
+        env:
+          CT_LLM_API_KEY: ${{ secrets.CT_LLM_API_KEY }}
+          CT_LLM_VERTEX: 'true'
+          CT_LLM_GCP_PROJECT: ${{ vars.CT_LLM_GCP_PROJECT }}
+          CT_LLM_GCP_LOCATION: ${{ vars.CT_LLM_GCP_LOCATION }}
+          CRICKET_DB_PATH: data/cricket.duckdb
+        run: |
+          ARGS="--tiers ${{ inputs.tiers }}"
+          if [ "${{ inputs.force }}" = "true" ]; then
+            ARGS="$ARGS --force"
+          fi
+          uv run python -m pipeline sync $ARGS
+        timeout-minutes: 10
+
+      # ── Frontend build + deploy ──────────────────────────────────
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

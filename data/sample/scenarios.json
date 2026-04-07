@@ -1,0 +1,63 @@
+{
+  "matches_played": 12,
+  "situation_brief": "CSK and KKR face a critical 0-3 and 0-2 deficit with NRR below -1.900. The top four remain unbeaten, creating a massive 4-point gap that forces the bottom half into a must-win cycle.",
+  "elimination_watch": [
+    {
+      "team": "CSK",
+      "risk": "danger",
+      "key_metric": "8W from 11 left",
+      "insight": "With 0 points and a league-worst -2.467 NRR, CSK must win 72% of remaining games to reach the 16-point safety line. Their NRR is effectively a one-game penalty in tie-break scenarios."
+    },
+    {
+      "team": "KKR",
+      "risk": "danger",
+      "key_metric": "8W from 12 left",
+      "insight": "Winless after two games with a -1.964 NRR, KKR needs a drastic turnaround. Their upcoming LSG and CSK fixtures are mandatory wins to avoid early mathematical irrelevance."
+    },
+    {
+      "team": "RCB",
+      "risk": "safe",
+      "key_metric": "+2.415 NRR",
+      "insight": "Two wins from two with the highest NRR in the league provides a massive cushion. They can afford three losses while remaining ahead of the mid-table pack on tie-breakers."
+    },
+    {
+      "team": "GT",
+      "risk": "watch",
+      "key_metric": "8W from 12 left",
+      "insight": "Zero points from two games is manageable, but their -0.424 NRR is better than other winless teams. A win against DC is vital to prevent falling two games behind the top four."
+    }
+  ],
+  "qualification_math": [
+    {
+      "tag": "SAFETY LINE",
+      "fact": "Teams reaching 16 points have a 94% historical qualification rate, requiring 8 wins from the 14-game schedule."
+    },
+    {
+      "tag": "WIN RATE",
+      "fact": "CSK requires a 0.727 win percentage for the remainder of the season to reach the 16-point benchmark."
+    },
+    {
+      "tag": "NRR",
+      "fact": "The 4.882 NRR spread between RCB and CSK creates a virtual 2-point advantage for the leaders in any points deadlock."
+    },
+    {
+      "tag": "POINTS",
+      "fact": "A win for RR tonight would make them the third team to reach 6 points, potentially creating a 6-point gulf between the top and bottom of the table."
+    }
+  ],
+  "if_tonight": [
+    {
+      "match": "RR vs MI",
+      "scenarios": [
+        {
+          "result": "RR win",
+          "impact": "RR moves to 6 points, joining PBKS at the top and pushing MI into a 1-2 record with negative NRR."
+        },
+        {
+          "result": "MI win",
+          "impact": "MI levels at 4 points with RR, DC, and RCB, creating a five-way congestion at the top of the table."
+        }
+      ]
+    }
+  ]
+}

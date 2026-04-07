@@ -1,0 +1,35 @@
+{
+  "name": "duckworth-dugout",
+  "description": "IPL season command center — live standings, match intel & season pulse",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ankitksr/duckworth-dugout"
+  },
+  "homepage": "https://ankitksr.github.io/duckworth-dugout",
+  "author": "Ankit Singh",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/react": "^5.0.0",
+    "astro": "^6.0.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.8",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,94 @@
+[
+  {
+    "match": "RR vs MI",
+    "h2h": {
+      "total": 30,
+      "RR_wins": 14,
+      "MI_wins": 16,
+      "note": "Mumbai holds a slight historical edge, but Rajasthan's recent dominance at home and current table-topping form shifts the psychological advantage to the Royals."
+    },
+    "form": {
+      "RR": {
+        "wins": 2,
+        "losses": 0,
+        "nrr": "+2.233",
+        "position": 3,
+        "last5": [
+          "W",
+          "W"
+        ],
+        "trend": "Riding high on a perfect start to the season, RR's bowling attack recently showed immense character by defending a high total under pressure against GT."
+      },
+      "MI": {
+        "wins": 1,
+        "losses": 1,
+        "nrr": "-0.206",
+        "position": 6,
+        "last5": [
+          "W",
+          "L"
+        ],
+        "trend": "Struggling to find consistency early on, MI bounced back from an opening win with a loss to DC, highlighting vulnerabilities when defending tricky totals."
+      }
+    },
+    "squad_news": [
+      "Hardik Pandya is expected to return to the MI lineup after missing their previous game against Delhi Capitals (ESPNcricinfo).",
+      "Vaibhav Suryavanshi is set to face a massive test against Jasprit Bumrah at the top of the order, a key narrative heading into the match (ESPNcricinfo)."
+    ],
+    "key_matchups": [
+      {
+        "player1": "V Suryavanshi",
+        "player1_team": "RR",
+        "player1_role": "opener",
+        "player2": "JJ Bumrah",
+        "player2_team": "MI",
+        "player2_role": "pace",
+        "insight": "The young sensation faces the ultimate test against Bumrah's new-ball variations. Surviving this spell is crucial for RR to set a platform."
+      },
+      {
+        "player1": "RG Sharma",
+        "player1_team": "MI",
+        "player1_role": "opener",
+        "player2": "JC Archer",
+        "player2_team": "RR",
+        "player2_role": "pace",
+        "insight": "A blockbuster clash at the top. Archer's raw pace and bounce against Rohit's aggressive powerplay intent will dictate the momentum of MI's innings."
+      }
+    ],
+    "tactical_edge": "RR holds the advantage due to their balanced bowling attack and home conditions, especially if they can post a score above the critical 180-run threshold.",
+    "favoured": "RR",
+    "preview_links": [
+      {
+        "title": "Sooryavanshi meets Bumrah as RR eye top of the table",
+        "url": "https://www.espncricinfo.com/story/ipl-2026-rr-vs-mi-vaibhav-sooryavanshi-meets-jasprit-bumrah-as-rr-eye-top-of-the-table-1530755"
+      }
+    ],
+    "team1_id": "rr",
+    "team2_id": "mi",
+    "date": "2026-04-07",
+    "time": "19:30 IST",
+    "match_number": 13,
+    "venue_stats": {
+      "name": "Barsapara Cricket Stadium",
+      "city": "Guwahati",
+      "matches": 6,
+      "avg_1st_inn": 167,
+      "avg_2nd_inn": 156,
+      "highest": 199,
+      "lowest": 127,
+      "toss_field_pct": 83,
+      "chase_win_pct": 50,
+      "avg_1st_inn_recent": 167,
+      "defend_under_160_pct": 0,
+      "defend_180_pct": 100,
+      "last_5_1st_inn": [
+        127,
+        182,
+        151,
+        144,
+        199
+      ],
+      "note": ""
+    }
+  }
+]

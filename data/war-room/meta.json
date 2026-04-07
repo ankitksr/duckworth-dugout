@@ -1,0 +1,66 @@
+{
+  "season": "2026",
+  "last_sync": "2026-04-07T12:04:53.177734+00:00",
+  "panels": {
+    "intel_log": {
+      "synced_at": "2026-04-07T12:04:18.090090+00:00",
+      "items": 200
+    },
+    "standings": {
+      "synced_at": "2026-04-07T12:04:18.099193+00:00",
+      "teams": 10,
+      "source": "wisden"
+    },
+    "caps": {
+      "synced_at": "2026-04-07T12:04:20.282818+00:00",
+      "orange": 10,
+      "purple": 10,
+      "best_sr": 3,
+      "best_econ": 3,
+      "source": "wisden"
+    },
+    "schedule": {
+      "synced_at": "2026-04-07T12:04:26.143026+00:00",
+      "fixtures": 70,
+      "completed": 12,
+      "live_matches": 0
+    },
+    "pulse": {
+      "synced_at": "2026-04-07T12:04:26.162248+00:00",
+      "teams": 10,
+      "source": "schedule+cricsheet"
+    },
+    "wire": {
+      "synced_at": "2026-04-07T12:04:53.131434+00:00",
+      "items": 8
+    },
+    "ticker": {
+      "synced_at": "2026-04-07T12:04:53.136520+00:00",
+      "items": 10
+    },
+    "scenarios": {
+      "synced_at": "2026-04-07T12:04:53.142254+00:00",
+      "status": "generated"
+    },
+    "records": {
+      "synced_at": "2026-04-07T12:04:53.148708+00:00",
+      "status": "generated"
+    },
+    "briefings": {
+      "synced_at": "2026-04-07T12:04:53.169864+00:00",
+      "count": 1
+    },
+    "narratives": {
+      "synced_at": "2026-04-07T12:04:53.174089+00:00",
+      "count": 10
+    },
+    "dossiers": {
+      "synced_at": "2026-04-07T12:04:53.176295+00:00",
+      "count": 2
+    },
+    "match_notes": {
+      "synced_at": "2026-04-07T12:04:53.177730+00:00",
+      "count": 12
+    }
+  }
+}

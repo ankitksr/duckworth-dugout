@@ -1,0 +1,94 @@
+[
+  {
+    "match": "RR vs MI",
+    "h2h": {
+      "total": 30,
+      "RR_wins": 14,
+      "MI_wins": 16,
+      "note": "Mumbai holds a slight historical edge, but Rajasthan's current unbeaten momentum and home advantage in Guwahati could level the playing field."
+    },
+    "form": {
+      "RR": {
+        "wins": 2,
+        "losses": 0,
+        "nrr": "+2.233",
+        "position": 3,
+        "last5": [
+          "W",
+          "W"
+        ],
+        "trend": "Flying high with an unbeaten start, RR's revamped squad under Riyan Parag is clicking perfectly, especially after defending tightly in nervy finishes."
+      },
+      "MI": {
+        "wins": 1,
+        "losses": 1,
+        "nrr": "-0.206",
+        "position": 6,
+        "last5": [
+          "W",
+          "L"
+        ],
+        "trend": "Looking to bounce back from a tricky chase loss to DC, MI's balance will be heavily boosted by the expected return of their captain."
+      }
+    },
+    "squad_news": [
+      "Hardik Pandya is expected to return for Mumbai Indians after missing their previous match against Delhi Capitals (ESPNcricinfo).",
+      "Rajasthan Royals are unlikely to tinker with their winning combination after a narrow six-run victory over GT, with Vaibhav Sooryavanshi continuing to draw attention at the top of the order."
+    ],
+    "key_matchups": [
+      {
+        "player1": "V Suryavanshi",
+        "player1_team": "RR",
+        "player1_role": "opener",
+        "player2": "JJ Bumrah",
+        "player2_team": "MI",
+        "player2_role": "pace",
+        "insight": "The headline clash features the young sensation Sooryavanshi taking on the veteran Bumrah in the powerplay, a true trial by fire that could dictate RR's start."
+      },
+      {
+        "player1": "SA Yadav",
+        "player1_team": "MI",
+        "player1_role": "middle-order",
+        "player2": "Ravi Bishnoi",
+        "player2_team": "RR",
+        "player2_role": "spin",
+        "insight": "Suryakumar's ability to manipulate spin in the middle overs will be heavily challenged by Bishnoi, who is coming off a match-winning defensive spell against GT."
+      }
+    ],
+    "tactical_edge": "RR holds the slight tactical edge due to their superior spin attack and current winning momentum, though MI's returning captain could shift the balance in the middle overs.",
+    "favoured": "RR",
+    "preview_links": [
+      {
+        "title": "Sooryavanshi meets Bumrah as RR eye top of the table",
+        "url": "https://www.espncricinfo.com/story/ipl-2026-rr-vs-mi-vaibhav-sooryavanshi-meets-jasprit-bumrah-as-rr-eye-top-of-the-table-1530755"
+      }
+    ],
+    "team1_id": "rr",
+    "team2_id": "mi",
+    "date": "2026-04-07",
+    "time": "19:30 IST",
+    "match_number": 13,
+    "venue_stats": {
+      "name": "Barsapara Cricket Stadium",
+      "city": "Guwahati",
+      "matches": 6,
+      "avg_1st_inn": 167,
+      "avg_2nd_inn": 156,
+      "highest": 199,
+      "lowest": 127,
+      "toss_field_pct": 83,
+      "chase_win_pct": 50,
+      "avg_1st_inn_recent": 167,
+      "defend_under_160_pct": 0,
+      "defend_180_pct": 100,
+      "last_5_1st_inn": [
+        127,
+        182,
+        151,
+        144,
+        199
+      ],
+      "note": ""
+    }
+  }
+]

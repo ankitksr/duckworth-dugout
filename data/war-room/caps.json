@@ -1,0 +1,238 @@
+{
+  "orange_cap": [
+    {
+      "rank": 1,
+      "player": "Sameer Rizvi",
+      "team": "dc",
+      "team_short": "DC",
+      "stat": "160 runs"
+    },
+    {
+      "rank": 2,
+      "player": "Heinrich Klaasen",
+      "team": "srh",
+      "team_short": "SRH",
+      "stat": "145 runs"
+    },
+    {
+      "rank": 3,
+      "player": "Rohit Sharma",
+      "team": "mi",
+      "team_short": "MI",
+      "stat": "113 runs"
+    },
+    {
+      "rank": 4,
+      "player": "Devdutt Padikkal",
+      "team": "rcb",
+      "team_short": "RCB",
+      "stat": "111 runs"
+    },
+    {
+      "rank": 5,
+      "player": "Angkrish Raghuvanshi",
+      "team": "kkr",
+      "team_short": "KKR",
+      "stat": "110 runs"
+    },
+    {
+      "rank": 6,
+      "player": "Cooper Connolly",
+      "team": "pbks",
+      "team_short": "PBKS",
+      "stat": "108 runs"
+    },
+    {
+      "rank": 7,
+      "player": "Sarfaraz Khan",
+      "team": "csk",
+      "team_short": "CSK",
+      "stat": "99 runs"
+    },
+    {
+      "rank": 8,
+      "player": "Virat Kohli",
+      "team": "rcb",
+      "team_short": "RCB",
+      "stat": "97 runs"
+    },
+    {
+      "rank": 9,
+      "player": "Nitish Kumar Reddy",
+      "team": "srh",
+      "team_short": "SRH",
+      "stat": "96 runs"
+    },
+    {
+      "rank": 10,
+      "player": "Ishan Kishan",
+      "team": "srh",
+      "team_short": "SRH",
+      "stat": "95 runs"
+    }
+  ],
+  "purple_cap": [
+    {
+      "rank": 1,
+      "player": "Jacob Duffy",
+      "team": "rcb",
+      "team_short": "RCB",
+      "stat": "5 wkts"
+    },
+    {
+      "rank": 2,
+      "player": "Anshul Kamboj",
+      "team": "csk",
+      "team_short": "CSK",
+      "stat": "5 wkts"
+    },
+    {
+      "rank": 3,
+      "player": "Ravi Bishnoi",
+      "team": "rr",
+      "team_short": "RR",
+      "stat": "5 wkts"
+    },
+    {
+      "rank": 4,
+      "player": "Vijaykumar Vyshak",
+      "team": "pbks",
+      "team_short": "PBKS",
+      "stat": "5 wkts"
+    },
+    {
+      "rank": 5,
+      "player": "Harsh Dubey",
+      "team": "srh",
+      "team_short": "SRH",
+      "stat": "4 wkts"
+    },
+    {
+      "rank": 6,
+      "player": "Bhuvneshwar Kumar",
+      "team": "rcb",
+      "team_short": "RCB",
+      "stat": "4 wkts"
+    },
+    {
+      "rank": 7,
+      "player": "Blessing Muzarabani",
+      "team": "kkr",
+      "team_short": "KKR",
+      "stat": "4 wkts"
+    },
+    {
+      "rank": 8,
+      "player": "T Natarajan",
+      "team": "dc",
+      "team_short": "DC",
+      "stat": "4 wkts"
+    },
+    {
+      "rank": 9,
+      "player": "Lungi Ngidi",
+      "team": "dc",
+      "team_short": "DC",
+      "stat": "4 wkts"
+    },
+    {
+      "rank": 10,
+      "player": "Prasidh Krishna",
+      "team": "gt",
+      "team_short": "GT",
+      "stat": "4 wkts"
+    }
+  ],
+  "best_sr": [
+    {
+      "rank": 1,
+      "player": "Rajat Patidar",
+      "team": "rcb",
+      "team_short": "RCB",
+      "stat": "SR 254.83"
+    },
+    {
+      "rank": 2,
+      "player": "Tim David",
+      "team": "rcb",
+      "team_short": "RCB",
+      "stat": "SR 245.71"
+    },
+    {
+      "rank": 3,
+      "player": "Priyansh Arya",
+      "team": "pbks",
+      "team_short": "PBKS",
+      "stat": "SR 242.10"
+    }
+  ],
+  "best_econ": [
+    {
+      "rank": 1,
+      "player": "Mohammed Shami",
+      "team": "lsg",
+      "team_short": "LSG",
+      "stat": "Econ 4.63"
+    },
+    {
+      "rank": 2,
+      "player": "Mohsin Khan",
+      "team": "lsg",
+      "team_short": "LSG",
+      "stat": "Econ 4.75"
+    },
+    {
+      "rank": 3,
+      "player": "Axar Patel",
+      "team": "dc",
+      "team_short": "DC",
+      "stat": "Econ 5.57"
+    }
+  ],
+  "mvp": [
+    {
+      "rank": 1,
+      "player": "Sameer Rizvi",
+      "team": "dc",
+      "team_short": "DC",
+      "stat": "190.66 pts"
+    },
+    {
+      "rank": 2,
+      "player": "Jacob Duffy",
+      "team": "rcb",
+      "team_short": "RCB",
+      "stat": "167.63 pts"
+    },
+    {
+      "rank": 3,
+      "player": "Harsh Dubey",
+      "team": "srh",
+      "team_short": "SRH",
+      "stat": "162.9 pts"
+    }
+  ],
+  "updated": "2026-04-07T04:10:00+00:00",
+  "sources": {
+    "orange": {
+      "via": "Wisden",
+      "updated": "2026-04-07T04:10:00+00:00"
+    },
+    "purple": {
+      "via": "Wisden",
+      "updated": "2026-04-07T04:10:00+00:00"
+    },
+    "mvp": {
+      "via": "ESPNcricinfo",
+      "updated": "2026-04-07T12:04:20.282818+00:00"
+    },
+    "sr": {
+      "via": "ESPNcricinfo",
+      "updated": "2026-04-07T12:04:20.282818+00:00"
+    },
+    "econ": {
+      "via": "ESPNcricinfo",
+      "updated": "2026-04-07T12:04:20.282818+00:00"
+    }
+  }
+}

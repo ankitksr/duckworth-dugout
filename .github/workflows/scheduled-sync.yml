@@ -1,0 +1,56 @@
+name: Scheduled Sync
+
+on:
+  schedule:
+    # Hot tier: every 45 min during match window (UTC 12-18 ~ IST 17:30-23:30)
+    - cron: '*/45 12-18 * 3-5 *'
+
+    # Warm tier: 4x daily
+    - cron: '10 5,11,17,23 * 3-5 *'
+
+    # Cool tier + DB update: daily at UTC 04:00 (IST 09:30)
+    - cron: '0 4 * 3-5 *'
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      tiers: ${{ steps.tier.outputs.tiers }}
+      update_db: ${{ steps.tier.outputs.update_db }}
+    steps:
+      - name: Resolve tier from schedule time
+        id: tier
+        run: |
+          HOUR=$(date -u +%-H)
+          MINUTE=$(date -u +%-M)
+
+          # Cool + DB update: 04:00 UTC
+          if [ "$HOUR" -eq 4 ] && [ "$MINUTE" -lt 10 ]; then
+            echo "tiers=all" >> "$GITHUB_OUTPUT"
+            echo "update_db=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Warm: :10 past at hours 5, 11, 17, 23
+          if [ "$MINUTE" -ge 5 ] && [ "$MINUTE" -lt 20 ]; then
+            case "$HOUR" in
+              5|11|17|23)
+                echo "tiers=hot,warm" >> "$GITHUB_OUTPUT"
+                echo "update_db=false" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+            esac
+          fi
+
+          # Default: hot tier
+          echo "tiers=hot" >> "$GITHUB_OUTPUT"
+          echo "update_db=false" >> "$GITHUB_OUTPUT"
+
+  sync:
+    needs: resolve
+    uses: ./.github/workflows/sync-deploy.yml
+    with:
+      tiers: ${{ needs.resolve.outputs.tiers }}
+      update_cricket_db: ${{ needs.resolve.outputs.update_db == 'true' }}
+    secrets:
+      CT_LLM_API_KEY: ${{ secrets.CT_LLM_API_KEY }}

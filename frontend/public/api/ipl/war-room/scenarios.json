@@ -1,0 +1,63 @@
+{
+  "matches_played": 12,
+  "situation_brief": "CSK and GT remain winless while four teams maintain perfect starts. CSK's -2.467 NRR necessitates a 73% win rate over their remaining 11 games to reach the 16-point safety threshold.",
+  "elimination_watch": [
+    {
+      "team": "CSK",
+      "risk": "danger",
+      "key_metric": "8W from 11 games",
+      "insight": "With zero points from three matches and a league-worst NRR, CSK must reverse their trajectory immediately; one more loss forces a near-impossible 80% win rate."
+    },
+    {
+      "team": "RCB",
+      "risk": "safe",
+      "key_metric": "+2.415 NRR",
+      "insight": "A massive NRR lead acts as an extra point in tie-break scenarios. They only need 6 wins from 12 matches to likely secure a top-four spot."
+    },
+    {
+      "team": "KKR",
+      "risk": "watch",
+      "key_metric": "8W from 12 games",
+      "insight": "Despite being winless, KKR has a game in hand over CSK. Their -1.964 NRR is the primary concern, requiring significant margin victories to offset early damage."
+    },
+    {
+      "team": "RR",
+      "risk": "safe",
+      "key_metric": "6W from 12 games",
+      "insight": "Starting 2-0 with a +2.233 NRR provides immense flexibility. They can afford to play at a 50% win rate for the rest of the season and still qualify."
+    }
+  ],
+  "qualification_math": [
+    {
+      "tag": "SAFETY LINE",
+      "fact": "16 points remains the historical benchmark for qualification, requiring 8 total wins across the 14-game schedule."
+    },
+    {
+      "tag": "WIN RATE",
+      "fact": "GT and CSK must win 66.7% of their remaining fixtures to reach 16 points, a sharp contrast to PBKS who only need a 45% success rate."
+    },
+    {
+      "tag": "NRR",
+      "fact": "The 4.882 NRR gap between RCB and CSK creates a functional two-win cushion for the Bangalore franchise in potential deadlock scenarios."
+    },
+    {
+      "tag": "MAGIC NO",
+      "fact": "Teams currently at 4 points require 6 more victories to mathematically distance themselves from the current bottom three."
+    }
+  ],
+  "if_tonight": [
+    {
+      "match": "RR vs MI",
+      "scenarios": [
+        {
+          "result": "RR win",
+          "impact": "RR moves to 6 points, potentially taking the top spot if they surpass PBKS's NRR, while MI remains stuck in the mid-table logjam at 2 points."
+        },
+        {
+          "result": "MI win",
+          "impact": "MI joins the 4-point cluster, creating a five-way tie for the top four spots and ending RR's undefeated streak."
+        }
+      ]
+    }
+  ]
+}

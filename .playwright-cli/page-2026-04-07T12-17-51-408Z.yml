@@ -1,0 +1,15 @@
+- main [ref=e2]:
+  - img [ref=e3]
+  - 'heading "404: Not found" [level=1] [ref=e7]'
+  - paragraph [ref=e8]:
+    - text: In your
+    - code [ref=e9]: site
+    - text: you have your base path set to
+    - link "/duckworth-dugout" [ref=e10] [cursor=pointer]:
+      - /url: /duckworth-dugout
+    - text: . Do you want to go there instead?
+  - paragraph [ref=e11]:
+    - text: Come to our
+    - link "Discord" [ref=e12] [cursor=pointer]:
+      - /url: https://astro.build/chat
+    - text: if you need help.

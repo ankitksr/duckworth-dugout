@@ -1,0 +1,304 @@
+[
+  {
+    "fid": "pbks",
+    "short": "PBKS",
+    "color": "#ff6b6b",
+    "current_rank": 1,
+    "points": 5,
+    "nrr": "+0.637",
+    "played": 3,
+    "snapshots": [
+      {
+        "match": 1,
+        "date": "2026-03-31",
+        "result": "W",
+        "rank": 4,
+        "points": 2,
+        "nrr": 0.509
+      },
+      {
+        "match": 2,
+        "date": "2026-04-03",
+        "result": "W",
+        "rank": 1,
+        "points": 4,
+        "nrr": 0.637
+      },
+      {
+        "match": 3,
+        "date": "2026-04-06",
+        "result": "NR",
+        "rank": 1,
+        "points": 5,
+        "nrr": 0.843
+      }
+    ]
+  },
+  {
+    "fid": "rcb",
+    "short": "RCB",
+    "color": "#e2231a",
+    "current_rank": 2,
+    "points": 4,
+    "nrr": "+2.415",
+    "played": 2,
+    "snapshots": [
+      {
+        "match": 1,
+        "date": "2026-03-28",
+        "result": "W",
+        "rank": 1,
+        "points": 2,
+        "nrr": 2.907
+      },
+      {
+        "match": 2,
+        "date": "2026-04-05",
+        "result": "W",
+        "rank": 1,
+        "points": 4,
+        "nrr": 2.415
+      }
+    ]
+  },
+  {
+    "fid": "rr",
+    "short": "RR",
+    "color": "#ea1a85",
+    "current_rank": 3,
+    "points": 4,
+    "nrr": "+2.233",
+    "played": 2,
+    "snapshots": [
+      {
+        "match": 1,
+        "date": "2026-03-30",
+        "result": "W",
+        "rank": 1,
+        "points": 2,
+        "nrr": 4.063
+      },
+      {
+        "match": 2,
+        "date": "2026-04-04",
+        "result": "W",
+        "rank": 1,
+        "points": 4,
+        "nrr": 1.825
+      }
+    ]
+  },
+  {
+    "fid": "dc",
+    "short": "DC",
+    "color": "#2bbce0",
+    "current_rank": 4,
+    "points": 4,
+    "nrr": "+1.170",
+    "played": 2,
+    "snapshots": [
+      {
+        "match": 1,
+        "date": "2026-04-01",
+        "result": "W",
+        "rank": 3,
+        "points": 2,
+        "nrr": 0.893
+      },
+      {
+        "match": 2,
+        "date": "2026-04-04",
+        "result": "W",
+        "rank": 2,
+        "points": 4,
+        "nrr": -0.02
+      }
+    ]
+  },
+  {
+    "fid": "srh",
+    "short": "SRH",
+    "color": "#ff822a",
+    "current_rank": 5,
+    "points": 2,
+    "nrr": "+0.275",
+    "played": 3,
+    "snapshots": [
+      {
+        "match": 1,
+        "date": "2026-03-28",
+        "result": "L",
+        "rank": 10,
+        "points": 0,
+        "nrr": -2.907
+      },
+      {
+        "match": 2,
+        "date": "2026-04-02",
+        "result": "W",
+        "rank": 6,
+        "points": 2,
+        "nrr": -0.82
+      },
+      {
+        "match": 3,
+        "date": "2026-04-05",
+        "result": "L",
+        "rank": 7,
+        "points": 2,
+        "nrr": -0.458
+      }
+    ]
+  },
+  {
+    "fid": "mi",
+    "short": "MI",
+    "color": "#4a90e8",
+    "current_rank": 6,
+    "points": 2,
+    "nrr": "-0.206",
+    "played": 2,
+    "snapshots": [
+      {
+        "match": 1,
+        "date": "2026-03-29",
+        "result": "W",
+        "rank": 2,
+        "points": 2,
+        "nrr": 0.687
+      },
+      {
+        "match": 2,
+        "date": "2026-04-04",
+        "result": "L",
+        "rank": 5,
+        "points": 2,
+        "nrr": 0.843
+      }
+    ]
+  },
+  {
+    "fid": "lsg",
+    "short": "LSG",
+    "color": "#c44885",
+    "current_rank": 7,
+    "points": 2,
+    "nrr": "-0.542",
+    "played": 2,
+    "snapshots": [
+      {
+        "match": 1,
+        "date": "2026-04-01",
+        "result": "L",
+        "rank": 8,
+        "points": 0,
+        "nrr": -0.893
+      },
+      {
+        "match": 2,
+        "date": "2026-04-05",
+        "result": "W",
+        "rank": 6,
+        "points": 2,
+        "nrr": -0.28
+      }
+    ]
+  },
+  {
+    "fid": "kkr",
+    "short": "KKR",
+    "color": "#9b7ed8",
+    "current_rank": 8,
+    "points": 1,
+    "nrr": "-1.964",
+    "played": 3,
+    "snapshots": [
+      {
+        "match": 1,
+        "date": "2026-03-29",
+        "result": "L",
+        "rank": 9,
+        "points": 0,
+        "nrr": -0.687
+      },
+      {
+        "match": 2,
+        "date": "2026-04-02",
+        "result": "L",
+        "rank": 9,
+        "points": 0,
+        "nrr": -0.906
+      },
+      {
+        "match": 3,
+        "date": "2026-04-06",
+        "result": "NR",
+        "rank": 8,
+        "points": 1,
+        "nrr": -1.254
+      }
+    ]
+  },
+  {
+    "fid": "gt",
+    "short": "GT",
+    "color": "#4dbfa8",
+    "current_rank": 9,
+    "points": 0,
+    "nrr": "-0.424",
+    "played": 2,
+    "snapshots": [
+      {
+        "match": 1,
+        "date": "2026-03-31",
+        "result": "L",
+        "rank": 7,
+        "points": 0,
+        "nrr": -0.509
+      },
+      {
+        "match": 2,
+        "date": "2026-04-04",
+        "result": "L",
+        "rank": 7,
+        "points": 0,
+        "nrr": -0.121
+      }
+    ]
+  },
+  {
+    "fid": "csk",
+    "short": "CSK",
+    "color": "#fdb913",
+    "current_rank": 10,
+    "points": 0,
+    "nrr": "-2.467",
+    "played": 3,
+    "snapshots": [
+      {
+        "match": 1,
+        "date": "2026-03-30",
+        "result": "L",
+        "rank": 10,
+        "points": 0,
+        "nrr": -4.063
+      },
+      {
+        "match": 2,
+        "date": "2026-04-03",
+        "result": "L",
+        "rank": 10,
+        "points": 0,
+        "nrr": -2.492
+      },
+      {
+        "match": 3,
+        "date": "2026-04-05",
+        "result": "L",
+        "rank": 10,
+        "points": 0,
+        "nrr": -2.416
+      }
+    ]
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "opponent": "MI",
+    "batting_threat": 8,
+    "bowling_threat": 6,
+    "weaknesses": [
+      "Pace bowling support for Bumrah is structurally deficient. With Shardul Thakur (career economy 9.46) and Hardik Pandya (economy 9.26) operating as the primary seam support, teams can afford to play out Bumrah's four overs and aggressively target the remaining pace quota.",
+      "Lack of elite middle-overs spin control. Relying on Mayank Markande (career economy 8.97) and the inexperienced AM Ghazanfar (economy 12.75 in limited exposure) leaves them vulnerable to strike rotation and boundary-hitting through overs 7-15.",
+      "Top-heavy batting reliance. While Rohit Sharma is in imperious form (113 runs early in the season) and SKY provides elite acceleration, early wickets expose a lower-middle order featuring Rutherford and Naman Dhir who lack consistent IPL finishing volume compared to elite sides."
+    ],
+    "how_to_win": [
+      "Neutralize the Bumrah threat by treating his spell as a test match session; accept a low strike rate against him and ruthlessly exploit the high-variance overs of Thakur and Pandya.",
+      "Deploy aggressive spin-hitters through the middle overs to unsettle Markande and Ghazanfar, preventing MI from establishing any sustained pressure between overs 7 and 15.",
+      "Test Hardik Pandya's match fitness and rhythm immediately upon his return. Force him to bowl under pressure early in his spell and challenge his lateral movement in the field."
+    ]
+  },
+  {
+    "opponent": "RR",
+    "batting_threat": 9,
+    "bowling_threat": 8,
+    "weaknesses": [
+      "Top-heavy reliance on extreme strike rates. V Suryavanshi (SR 218.7) and YBK Jaiswal (SR 151.7) dictate the tempo. Early disruption exposes a middle order that, while capable, lacks the sheer volume of runs to recover from a powerplay collapse.",
+      "Predictable death bowling structure. With Sandeep Sharma relying heavily on variations and Jofra Archer providing the raw pace, teams that preserve wickets can line up Sandeep's lack of high-end velocity in the final four overs.",
+      "Rigid spin matchups in the middle overs. The combination of Ravi Bishnoi and RA Jadeja provides control, but Jadeja's historical IPL average (16.8 with the bat) and reliance on favorable matchups makes him a target for right-handed power hitters."
+    ],
+    "how_to_win": [
+      "Deploy Jasprit Bumrah as a direct counter-measure to V Suryavanshi in the powerplay. Winning this marquee matchup early forces RR to abandon their hyper-aggressive template and consolidates pressure on Jaiswal.",
+      "Leverage Hardik Pandya's return to attack the middle-overs spin block. Pandya's ability to take down left-arm spin (Jadeja) and leg-spin (Bishnoi) will force RR into uncomfortable bowling changes.",
+      "Pace the innings for the Guwahati deck. With an average first innings score of 166, MI must avoid over-attacking in the powerplay and instead build a platform to exploit RR's secondary death bowling options."
+    ]
+  }
+]

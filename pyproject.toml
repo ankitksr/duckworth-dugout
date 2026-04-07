@@ -1,0 +1,46 @@
+[project]
+name = "duckworth-dugout"
+version = "0.1.0"
+description = "IPL season command center — real-time standings, intel, and LLM-powered analysis"
+readme = "README.md"
+requires-python = ">=3.13"
+license = "MIT"
+authors = [{ name = "Ankit Singh", email = "ankitksrdev@gmail.com" }]
+keywords = ["ipl", "cricket", "dashboard", "analytics"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Games/Entertainment",
+]
+dependencies = [
+    "click>=8.1",
+    "crawl4ai>=0.8.6",
+    "duckdb>=1.2",
+    "google-genai>=1.0",
+    "httpx[http2]>=0.28",
+    "lxml>=5.0",
+    "pydantic>=2.0",
+    "python-dotenv>=1.0",
+    "rich>=13.0",
+]
+
+[project.urls]
+Homepage = "https://ankitksr.github.io/duckworth-dugout"
+Repository = "https://github.com/ankitksr/duckworth-dugout"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.9",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

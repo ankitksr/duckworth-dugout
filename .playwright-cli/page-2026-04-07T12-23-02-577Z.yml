@@ -1,0 +1,1256 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]: DUGOUT
+      - link "←" [ref=e7] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e8]:
+        - button "PBKS" [ref=e9] [cursor=pointer]
+        - button "RCB" [ref=e10] [cursor=pointer]
+        - button "RR" [ref=e11] [cursor=pointer]
+        - button "DC" [ref=e12] [cursor=pointer]
+        - button "SRH" [ref=e13] [cursor=pointer]
+        - button "MI" [ref=e14] [cursor=pointer]
+        - button "LSG" [ref=e15] [cursor=pointer]
+        - button "KKR" [ref=e16] [cursor=pointer]
+        - button "GT" [ref=e17] [cursor=pointer]
+        - button "CSK" [ref=e18] [cursor=pointer]
+      - generic [ref=e20]:
+        - generic [ref=e21]: MILESTONEBhuvneshwar Kumar is 1 wicket away from becoming the second to reach 200 wickets
+        - generic [ref=e22]: FORMSameer Rizvi currently leads the Orange Cap race with 160 runs for Delhi
+        - generic [ref=e23]: EMERGINGUncapped Jacob Duffy leads the Purple Cap race after Royal Challengers' win
+        - generic [ref=e24]: SCENARIOCSK face their worst start in history after losing three consecutive matches
+        - generic [ref=e25]: RECORDVirat Kohli extends his all-time IPL scoring lead to 8,740 career runs
+        - generic [ref=e26]: H2HMumbai Indians hold a slim 16-14 historical advantage over Rajasthan Royals
+        - generic [ref=e27]: SCENARIORajasthan Royals can take the top spot in the table with a win over Mumbai
+        - generic [ref=e28]: FORMRohit Sharma enters tonight's match as the third-highest scorer of IPL 2026
+        - generic [ref=e29]: MILESTONESandeep Sharma needs 3 wickets to reach 150 career IPL wickets
+        - generic [ref=e30]: MILESTONESunil Narine needs 7 wickets to reach 200 career IPL wickets
+        - generic [ref=e31]: MILESTONEBhuvneshwar Kumar is 1 wicket away from becoming the second to reach 200 wickets
+        - generic [ref=e32]: FORMSameer Rizvi currently leads the Orange Cap race with 160 runs for Delhi
+        - generic [ref=e33]: EMERGINGUncapped Jacob Duffy leads the Purple Cap race after Royal Challengers' win
+        - generic [ref=e34]: SCENARIOCSK face their worst start in history after losing three consecutive matches
+        - generic [ref=e35]: RECORDVirat Kohli extends his all-time IPL scoring lead to 8,740 career runs
+        - generic [ref=e36]: H2HMumbai Indians hold a slim 16-14 historical advantage over Rajasthan Royals
+        - generic [ref=e37]: SCENARIORajasthan Royals can take the top spot in the table with a win over Mumbai
+        - generic [ref=e38]: FORMRohit Sharma enters tonight's match as the third-highest scorer of IPL 2026
+        - generic [ref=e39]: MILESTONESandeep Sharma needs 3 wickets to reach 150 career IPL wickets
+        - generic [ref=e40]: MILESTONESunil Narine needs 7 wickets to reach 200 career IPL wickets
+      - generic [ref=e42]: 17:53:02 IST
+    - main [ref=e43]:
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - generic [ref=e46]:
+            - text: Standings
+            - subscript [ref=e47]: IPL 2026
+          - generic [ref=e48]:
+            - generic [ref=e49]:
+              - generic [ref=e50]: "#"
+              - generic [ref=e51]: P
+              - generic [ref=e52]: W
+              - generic [ref=e53]: L
+              - generic [ref=e54]: Pts
+              - generic [ref=e55]: NRR
+            - generic [ref=e57]:
+              - generic [ref=e58]: "1"
+              - generic [ref=e60]: PBKS
+              - generic [ref=e61]: "3"
+              - generic [ref=e62]: "2"
+              - generic [ref=e63]: "0"
+              - generic [ref=e64]: "5"
+              - generic [ref=e65]: "+0.637"
+            - generic [ref=e67]:
+              - generic [ref=e68]: "2"
+              - generic [ref=e70]: RCB
+              - generic [ref=e71]: "2"
+              - generic [ref=e72]: "2"
+              - generic [ref=e73]: "0"
+              - generic [ref=e74]: "4"
+              - generic [ref=e75]: "+2.415"
+            - generic [ref=e77]:
+              - generic [ref=e78]: "3"
+              - generic [ref=e80]: RR
+              - generic [ref=e81]: "2"
+              - generic [ref=e82]: "2"
+              - generic [ref=e83]: "0"
+              - generic [ref=e84]: "4"
+              - generic [ref=e85]: "+2.233"
+            - generic [ref=e87]:
+              - generic [ref=e88]: "4"
+              - generic [ref=e90]: DC
+              - generic [ref=e91]: "2"
+              - generic [ref=e92]: "2"
+              - generic [ref=e93]: "0"
+              - generic [ref=e94]: "4"
+              - generic [ref=e95]: "+1.170"
+            - generic [ref=e98]:
+              - generic [ref=e99]: "5"
+              - generic [ref=e101]: SRH
+              - generic [ref=e102]: "3"
+              - generic [ref=e103]: "1"
+              - generic [ref=e104]: "2"
+              - generic [ref=e105]: "2"
+              - generic [ref=e106]: "+0.275"
+            - generic [ref=e108]:
+              - generic [ref=e109]: "6"
+              - generic [ref=e111]: MI
+              - generic [ref=e112]: "2"
+              - generic [ref=e113]: "1"
+              - generic [ref=e114]: "1"
+              - generic [ref=e115]: "2"
+              - generic [ref=e116]: "-0.206"
+            - generic [ref=e118]:
+              - generic [ref=e119]: "7"
+              - generic [ref=e121]: LSG
+              - generic [ref=e122]: "2"
+              - generic [ref=e123]: "1"
+              - generic [ref=e124]: "1"
+              - generic [ref=e125]: "2"
+              - generic [ref=e126]: "-0.542"
+            - generic [ref=e128]:
+              - generic [ref=e129]: "8"
+              - generic [ref=e131]: KKR
+              - generic [ref=e132]: "3"
+              - generic [ref=e133]: "0"
+              - generic [ref=e134]: "2"
+              - generic [ref=e135]: "1"
+              - generic [ref=e136]: "-1.964"
+            - generic [ref=e138]:
+              - generic [ref=e139]: "9"
+              - generic [ref=e141]: GT
+              - generic [ref=e142]: "2"
+              - generic [ref=e143]: "0"
+              - generic [ref=e144]: "2"
+              - generic [ref=e145]: "0"
+              - generic [ref=e146]: "-0.424"
+            - generic [ref=e148]:
+              - generic [ref=e149]: "10"
+              - generic [ref=e151]: CSK
+              - generic [ref=e152]: "3"
+              - generic [ref=e153]: "0"
+              - generic [ref=e154]: "3"
+              - generic [ref=e155]: "0"
+              - generic [ref=e156]: "-2.467"
+        - generic [ref=e157]:
+          - generic [ref=e158]:
+            - text: Matches
+            - subscript [ref=e159]: 58 UPCOMING · 12 PLAYED
+          - generic [ref=e160]:
+            - link "MAR 28 · 19:30 IST Bangalore · M1 ↗ RCBVSSRH 203/4 vs 201/9 RCB +6 wkts" [ref=e161] [cursor=pointer]:
+              - /url: http://espncricinfo.com/ci/engine/match/1527674.html
+              - generic [ref=e162]:
+                - generic [ref=e163]:
+                  - generic [ref=e164]: MAR 28 · 19:30 IST
+                  - generic [ref=e165]:
+                    - text: Bangalore ·
+                    - generic [ref=e166]: M1
+                  - text: ↗
+                - generic [ref=e168]:
+                  - generic [ref=e169]: RCBVSSRH
+                  - generic [ref=e170]: 203/4 vs 201/9
+                  - generic [ref=e171]: RCB +6 wkts
+            - link "MAR 29 · 19:30 IST Mumbai · M2 ↗ MIVSKKR 224/4 vs 220/4 MI +6 wkts" [ref=e172] [cursor=pointer]:
+              - /url: http://espncricinfo.com/ci/engine/match/1527675.html
+              - generic [ref=e173]:
+                - generic [ref=e174]:
+                  - generic [ref=e175]: MAR 29 · 19:30 IST
+                  - generic [ref=e176]:
+                    - text: Mumbai ·
+                    - generic [ref=e177]: M2
+                  - text: ↗
+                - generic [ref=e179]:
+                  - generic [ref=e180]: MIVSKKR
+                  - generic [ref=e181]: 224/4 vs 220/4
+                  - generic [ref=e182]: MI +6 wkts
+            - link "MAR 30 · 19:30 IST Guwahati · M3 ↗ RRVSCSK 128/2 vs 127/10 RR +8 wkts" [ref=e183] [cursor=pointer]:
+              - /url: http://espncricinfo.com/ci/engine/match/1527676.html
+              - generic [ref=e184]:
+                - generic [ref=e185]:
+                  - generic [ref=e186]: MAR 30 · 19:30 IST
+                  - generic [ref=e187]:
+                    - text: Guwahati ·
+                    - generic [ref=e188]: M3
+                  - text: ↗
+                - generic [ref=e190]:
+                  - generic [ref=e191]: RRVSCSK
+                  - generic [ref=e192]: 128/2 vs 127/10
+                  - generic [ref=e193]: RR +8 wkts
+            - link "MAR 31 · 19:30 IST New Chandigarh · M4 ↗ PBKSVSGT 165/7 vs 162/6 PBKS +3 wkts" [ref=e194] [cursor=pointer]:
+              - /url: http://espncricinfo.com/ci/engine/match/1527677.html
+              - generic [ref=e195]:
+                - generic [ref=e196]:
+                  - generic [ref=e197]: MAR 31 · 19:30 IST
+                  - generic [ref=e198]:
+                    - text: New Chandigarh ·
+                    - generic [ref=e199]: M4
+                  - text: ↗
+                - generic [ref=e201]:
+                  - generic [ref=e202]: PBKSVSGT
+                  - generic [ref=e203]: 165/7 vs 162/6
+                  - generic [ref=e204]: PBKS +3 wkts
+            - link "APR 1 · 19:30 IST Lucknow · M5 ↗ LSGVSDC 141/10 vs 145/4 DC +6 wkts" [ref=e205] [cursor=pointer]:
+              - /url: http://espncricinfo.com/ci/engine/match/1527678.html
+              - generic [ref=e206]:
+                - generic [ref=e207]:
+                  - generic [ref=e208]: APR 1 · 19:30 IST
+                  - generic [ref=e209]:
+                    - text: Lucknow ·
+                    - generic [ref=e210]: M5
+                  - text: ↗
+                - generic [ref=e212]:
+                  - generic [ref=e213]: LSGVSDC
+                  - generic [ref=e214]: 141/10 vs 145/4
+                  - generic [ref=e215]: DC +6 wkts
+            - link "APR 2 · 19:30 IST Kolkata · M6 ↗ KKRVSSRH 161/10 vs 226/8 SRH +65 runs" [ref=e216] [cursor=pointer]:
+              - /url: http://espncricinfo.com/ci/engine/match/1527679.html
+              - generic [ref=e217]:
+                - generic [ref=e218]:
+                  - generic [ref=e219]: APR 2 · 19:30 IST
+                  - generic [ref=e220]:
+                    - text: Kolkata ·
+                    - generic [ref=e221]: M6
+                  - text: ↗
+                - generic [ref=e223]:
+                  - generic [ref=e224]: KKRVSSRH
+                  - generic [ref=e225]: 161/10 vs 226/8
+                  - generic [ref=e226]: SRH +65 runs
+            - link "APR 3 · 19:30 IST Chennai · M7 ↗ CSKVSPBKS 209/5 vs 210/5 PBKS +5 wkts" [ref=e227] [cursor=pointer]:
+              - /url: http://espncricinfo.com/ci/engine/match/1527680.html
+              - generic [ref=e228]:
+                - generic [ref=e229]:
+                  - generic [ref=e230]: APR 3 · 19:30 IST
+                  - generic [ref=e231]:
+                    - text: Chennai ·
+                    - generic [ref=e232]: M7
+                  - text: ↗
+                - generic [ref=e234]:
+                  - generic [ref=e235]: CSKVSPBKS
+                  - generic [ref=e236]: 209/5 vs 210/5
+                  - generic [ref=e237]: PBKS +5 wkts
+            - link "APR 4 · 15:30 IST Delhi · M8 ↗ DCVSMI 162/6 vs 164/4 DC +6 wkts" [ref=e238] [cursor=pointer]:
+              - /url: http://espncricinfo.com/ci/engine/match/1527681.html
+              - generic [ref=e239]:
+                - generic [ref=e240]:
+                  - generic [ref=e241]: APR 4 · 15:30 IST
+                  - generic [ref=e242]:
+                    - text: Delhi ·
+                    - generic [ref=e243]: M8
+                  - text: ↗
+                - generic [ref=e245]:
+                  - generic [ref=e246]: DCVSMI
+                  - generic [ref=e247]: 162/6 vs 164/4
+                  - generic [ref=e248]: DC +6 wkts
+            - link "APR 4 · 19:30 IST Ahmedabad · M9 ↗ GTVSRR 210/6 vs 204/8 RR +6 runs" [ref=e249] [cursor=pointer]:
+              - /url: http://espncricinfo.com/ci/engine/match/1527682.html
+              - generic [ref=e250]:
+                - generic [ref=e251]:
+                  - generic [ref=e252]: APR 4 · 19:30 IST
+                  - generic [ref=e253]:
+                    - text: Ahmedabad ·
+                    - generic [ref=e254]: M9
+                  - text: ↗
+                - generic [ref=e256]:
+                  - generic [ref=e257]: GTVSRR
+                  - generic [ref=e258]: 210/6 vs 204/8
+                  - generic [ref=e259]: RR +6 runs
+            - link "APR 5 · 15:30 IST Hyderabad · M10 ↗ SRHVSLSG 156/9 vs 160/5 LSG +5 wkts" [ref=e260] [cursor=pointer]:
+              - /url: http://espncricinfo.com/ci/engine/match/1527683.html
+              - generic [ref=e261]:
+                - generic [ref=e262]:
+                  - generic [ref=e263]: APR 5 · 15:30 IST
+                  - generic [ref=e264]:
+                    - text: Hyderabad ·
+                    - generic [ref=e265]: M10
+                  - text: ↗
+                - generic [ref=e267]:
+                  - generic [ref=e268]: SRHVSLSG
+                  - generic [ref=e269]: 156/9 vs 160/5
+                  - generic [ref=e270]: LSG +5 wkts
+            - link "APR 5 · 19:30 IST Bangalore · M11 ↗ RCBVSCSK 250/3 vs 207 RCB +43 runs" [ref=e271] [cursor=pointer]:
+              - /url: http://espncricinfo.com/ci/engine/match/1527684.html
+              - generic [ref=e272]:
+                - generic [ref=e273]:
+                  - generic [ref=e274]: APR 5 · 19:30 IST
+                  - generic [ref=e275]:
+                    - text: Bangalore ·
+                    - generic [ref=e276]: M11
+                  - text: ↗
+                - generic [ref=e278]:
+                  - generic [ref=e279]: RCBVSCSK
+                  - generic [ref=e280]: 250/3 vs 207
+                  - generic [ref=e281]: RCB +43 runs
+            - link "APR 6 · 19:30 IST Kolkata · M12 ↗ KKRVSPBKS 25/2 vs No result" [ref=e282] [cursor=pointer]:
+              - /url: http://espncricinfo.com/ci/engine/match/1527685.html
+              - generic [ref=e283]:
+                - generic [ref=e284]:
+                  - generic [ref=e285]: APR 6 · 19:30 IST
+                  - generic [ref=e286]:
+                    - text: Kolkata ·
+                    - generic [ref=e287]: M12
+                  - text: ↗
+                - generic [ref=e289]:
+                  - generic [ref=e290]: KKRVSPBKS
+                  - generic [ref=e291]: 25/2 vs
+                  - generic [ref=e292]: No result
+            - generic [ref=e295]: ── UPCOMING ──
+            - generic [ref=e296]:
+              - generic [ref=e297]:
+                - generic [ref=e298]: APR 7 · 19:30 IST
+                - generic [ref=e299]:
+                  - text: Guwahati ·
+                  - generic [ref=e300]: M13
+              - generic [ref=e303]: RRVSMI
+            - generic [ref=e304]:
+              - generic [ref=e305]:
+                - generic [ref=e306]: APR 8 · 19:30 IST
+                - generic [ref=e307]:
+                  - text: Delhi ·
+                  - generic [ref=e308]: M14
+              - generic [ref=e311]: DCVSGT
+            - generic [ref=e312]:
+              - generic [ref=e313]:
+                - generic [ref=e314]: APR 9 · 19:30 IST
+                - generic [ref=e315]:
+                  - text: Kolkata ·
+                  - generic [ref=e316]: M15
+              - generic [ref=e319]: KKRVSLSG
+            - generic [ref=e320]:
+              - generic [ref=e321]:
+                - generic [ref=e322]: APR 10 · 19:30 IST
+                - generic [ref=e323]:
+                  - text: Guwahati ·
+                  - generic [ref=e324]: M16
+              - generic [ref=e327]: RRVSRCB
+            - generic [ref=e328]:
+              - generic [ref=e329]:
+                - generic [ref=e330]: APR 11 · 15:30 IST
+                - generic [ref=e331]:
+                  - text: New Chandigarh ·
+                  - generic [ref=e332]: M17
+              - generic [ref=e335]: PBKSVSSRH
+            - generic [ref=e336]:
+              - generic [ref=e337]:
+                - generic [ref=e338]: APR 11 · 19:30 IST
+                - generic [ref=e339]:
+                  - text: Chennai ·
+                  - generic [ref=e340]: M18
+              - generic [ref=e343]: CSKVSDC
+            - generic [ref=e344]:
+              - generic [ref=e345]:
+                - generic [ref=e346]: APR 12 · 15:30 IST
+                - generic [ref=e347]:
+                  - text: Lucknow ·
+                  - generic [ref=e348]: M19
+              - generic [ref=e351]: LSGVSGT
+            - generic [ref=e352]:
+              - generic [ref=e353]:
+                - generic [ref=e354]: APR 12 · 19:30 IST
+                - generic [ref=e355]:
+                  - text: Mumbai ·
+                  - generic [ref=e356]: M20
+              - generic [ref=e359]: MIVSRCB
+            - generic [ref=e360]:
+              - generic [ref=e361]:
+                - generic [ref=e362]: APR 13 · 19:30 IST
+                - generic [ref=e363]:
+                  - text: Hyderabad ·
+                  - generic [ref=e364]: M21
+              - generic [ref=e367]: SRHVSRR
+            - generic [ref=e368]:
+              - generic [ref=e369]:
+                - generic [ref=e370]: APR 14 · 19:30 IST
+                - generic [ref=e371]:
+                  - text: Chennai ·
+                  - generic [ref=e372]: M22
+              - generic [ref=e375]: CSKVSKKR
+            - generic [ref=e376]:
+              - generic [ref=e377]:
+                - generic [ref=e378]: APR 15 · 19:30 IST
+                - generic [ref=e379]:
+                  - text: Bangalore ·
+                  - generic [ref=e380]: M23
+              - generic [ref=e383]: RCBVSLSG
+            - generic [ref=e384]:
+              - generic [ref=e385]:
+                - generic [ref=e386]: APR 16 · 19:30 IST
+                - generic [ref=e387]:
+                  - text: Mumbai ·
+                  - generic [ref=e388]: M24
+              - generic [ref=e391]: MIVSPBKS
+            - generic [ref=e392]:
+              - generic [ref=e393]:
+                - generic [ref=e394]: APR 17 · 19:30 IST
+                - generic [ref=e395]:
+                  - text: Ahmedabad ·
+                  - generic [ref=e396]: M25
+              - generic [ref=e399]: GTVSKKR
+            - generic [ref=e400]:
+              - generic [ref=e401]:
+                - generic [ref=e402]: APR 18 · 15:30 IST
+                - generic [ref=e403]:
+                  - text: Bangalore ·
+                  - generic [ref=e404]: M26
+              - generic [ref=e407]: RCBVSDC
+            - generic [ref=e408]:
+              - generic [ref=e409]:
+                - generic [ref=e410]: APR 18 · 19:30 IST
+                - generic [ref=e411]:
+                  - text: Hyderabad ·
+                  - generic [ref=e412]: M27
+              - generic [ref=e415]: SRHVSCSK
+            - generic [ref=e416]:
+              - generic [ref=e417]:
+                - generic [ref=e418]: APR 19 · 15:30 IST
+                - generic [ref=e419]:
+                  - text: Kolkata ·
+                  - generic [ref=e420]: M28
+              - generic [ref=e423]: KKRVSRR
+            - generic [ref=e424]:
+              - generic [ref=e425]:
+                - generic [ref=e426]: APR 19 · 19:30 IST
+                - generic [ref=e427]:
+                  - text: New Chandigarh ·
+                  - generic [ref=e428]: M29
+              - generic [ref=e431]: PBKSVSLSG
+            - generic [ref=e432]:
+              - generic [ref=e433]:
+                - generic [ref=e434]: APR 20 · 19:30 IST
+                - generic [ref=e435]:
+                  - text: Ahmedabad ·
+                  - generic [ref=e436]: M30
+              - generic [ref=e439]: GTVSMI
+            - generic [ref=e440]:
+              - generic [ref=e441]:
+                - generic [ref=e442]: APR 21 · 19:30 IST
+                - generic [ref=e443]:
+                  - text: Hyderabad ·
+                  - generic [ref=e444]: M31
+              - generic [ref=e447]: SRHVSDC
+            - generic [ref=e448]:
+              - generic [ref=e449]:
+                - generic [ref=e450]: APR 22 · 19:30 IST
+                - generic [ref=e451]:
+                  - text: Lucknow ·
+                  - generic [ref=e452]: M32
+              - generic [ref=e455]: LSGVSRR
+            - generic [ref=e456]:
+              - generic [ref=e457]:
+                - generic [ref=e458]: APR 23 · 19:30 IST
+                - generic [ref=e459]:
+                  - text: Mumbai ·
+                  - generic [ref=e460]: M33
+              - generic [ref=e463]: MIVSCSK
+            - generic [ref=e464]:
+              - generic [ref=e465]:
+                - generic [ref=e466]: APR 24 · 19:30 IST
+                - generic [ref=e467]:
+                  - text: Bangalore ·
+                  - generic [ref=e468]: M34
+              - generic [ref=e471]: RCBVSGT
+            - generic [ref=e472]:
+              - generic [ref=e473]:
+                - generic [ref=e474]: APR 25 · 15:30 IST
+                - generic [ref=e475]:
+                  - text: Delhi ·
+                  - generic [ref=e476]: M35
+              - generic [ref=e479]: DCVSPBKS
+            - generic [ref=e480]:
+              - generic [ref=e481]:
+                - generic [ref=e482]: APR 25 · 19:30 IST
+                - generic [ref=e483]:
+                  - text: Jaipur ·
+                  - generic [ref=e484]: M36
+              - generic [ref=e487]: RRVSSRH
+            - generic [ref=e488]:
+              - generic [ref=e489]:
+                - generic [ref=e490]: APR 26 · 15:30 IST
+                - generic [ref=e491]:
+                  - text: Ahmedabad ·
+                  - generic [ref=e492]: M37
+              - generic [ref=e495]: GTVSCSK
+            - generic [ref=e496]:
+              - generic [ref=e497]:
+                - generic [ref=e498]: APR 26 · 19:30 IST
+                - generic [ref=e499]:
+                  - text: Lucknow ·
+                  - generic [ref=e500]: M38
+              - generic [ref=e503]: LSGVSKKR
+            - generic [ref=e504]:
+              - generic [ref=e505]:
+                - generic [ref=e506]: APR 27 · 19:30 IST
+                - generic [ref=e507]:
+                  - text: Delhi ·
+                  - generic [ref=e508]: M39
+              - generic [ref=e511]: DCVSRCB
+            - generic [ref=e512]:
+              - generic [ref=e513]:
+                - generic [ref=e514]: APR 28 · 19:30 IST
+                - generic [ref=e515]:
+                  - text: New Chandigarh ·
+                  - generic [ref=e516]: M40
+              - generic [ref=e519]: PBKSVSRR
+            - generic [ref=e520]:
+              - generic [ref=e521]:
+                - generic [ref=e522]: APR 29 · 19:30 IST
+                - generic [ref=e523]:
+                  - text: Mumbai ·
+                  - generic [ref=e524]: M41
+              - generic [ref=e527]: MIVSSRH
+            - generic [ref=e528]:
+              - generic [ref=e529]:
+                - generic [ref=e530]: APR 30 · 19:30 IST
+                - generic [ref=e531]:
+                  - text: Ahmedabad ·
+                  - generic [ref=e532]: M42
+              - generic [ref=e535]: GTVSRCB
+            - generic [ref=e536]:
+              - generic [ref=e537]:
+                - generic [ref=e538]: MAY 1 · 19:30 IST
+                - generic [ref=e539]:
+                  - text: Jaipur ·
+                  - generic [ref=e540]: M43
+              - generic [ref=e543]: RRVSDC
+            - generic [ref=e544]:
+              - generic [ref=e545]:
+                - generic [ref=e546]: MAY 2 · 19:30 IST
+                - generic [ref=e547]:
+                  - text: Chennai ·
+                  - generic [ref=e548]: M44
+              - generic [ref=e551]: CSKVSMI
+            - generic [ref=e552]:
+              - generic [ref=e553]:
+                - generic [ref=e554]: MAY 3 · 15:30 IST
+                - generic [ref=e555]:
+                  - text: Hyderabad ·
+                  - generic [ref=e556]: M45
+              - generic [ref=e559]: SRHVSKKR
+            - generic [ref=e560]:
+              - generic [ref=e561]:
+                - generic [ref=e562]: MAY 3 · 19:30 IST
+                - generic [ref=e563]:
+                  - text: Ahmedabad ·
+                  - generic [ref=e564]: M46
+              - generic [ref=e567]: GTVSPBKS
+            - generic [ref=e568]:
+              - generic [ref=e569]:
+                - generic [ref=e570]: MAY 4 · 19:30 IST
+                - generic [ref=e571]:
+                  - text: Mumbai ·
+                  - generic [ref=e572]: M47
+              - generic [ref=e575]: MIVSLSG
+            - generic [ref=e576]:
+              - generic [ref=e577]:
+                - generic [ref=e578]: MAY 5 · 19:30 IST
+                - generic [ref=e579]:
+                  - text: Delhi ·
+                  - generic [ref=e580]: M48
+              - generic [ref=e583]: DCVSCSK
+            - generic [ref=e584]:
+              - generic [ref=e585]:
+                - generic [ref=e586]: MAY 6 · 15:30 IST
+                - generic [ref=e587]:
+                  - text: Hyderabad ·
+                  - generic [ref=e588]: M49
+              - generic [ref=e591]: SRHVSPBKS
+            - generic [ref=e592]:
+              - generic [ref=e593]:
+                - generic [ref=e594]: MAY 7 · 19:30 IST
+                - generic [ref=e595]:
+                  - text: Lucknow ·
+                  - generic [ref=e596]: M50
+              - generic [ref=e599]: LSGVSRCB
+            - generic [ref=e600]:
+              - generic [ref=e601]:
+                - generic [ref=e602]: MAY 8 · 19:30 IST
+                - generic [ref=e603]:
+                  - text: Delhi ·
+                  - generic [ref=e604]: M51
+              - generic [ref=e607]: DCVSKKR
+            - generic [ref=e608]:
+              - generic [ref=e609]:
+                - generic [ref=e610]: MAY 9 · 19:30 IST
+                - generic [ref=e611]:
+                  - text: Jaipur ·
+                  - generic [ref=e612]: M52
+              - generic [ref=e615]: RRVSGT
+            - generic [ref=e616]:
+              - generic [ref=e617]:
+                - generic [ref=e618]: MAY 10 · 15:30 IST
+                - generic [ref=e619]:
+                  - text: Chennai ·
+                  - generic [ref=e620]: M53
+              - generic [ref=e623]: CSKVSLSG
+            - generic [ref=e624]:
+              - generic [ref=e625]:
+                - generic [ref=e626]: MAY 10 · 19:30 IST
+                - generic [ref=e627]:
+                  - text: St George's ·
+                  - generic [ref=e628]: M54
+              - generic [ref=e631]: RCBVSMI
+            - generic [ref=e632]:
+              - generic [ref=e633]:
+                - generic [ref=e634]: MAY 11 · 19:30 IST
+                - generic [ref=e635]:
+                  - text: HPCA Cricket Stadium ·
+                  - generic [ref=e636]: M55
+              - generic [ref=e639]: PBKSVSDC
+            - generic [ref=e640]:
+              - generic [ref=e641]:
+                - generic [ref=e642]: MAY 12 · 19:30 IST
+                - generic [ref=e643]:
+                  - text: Ahmedabad ·
+                  - generic [ref=e644]: M56
+              - generic [ref=e647]: GTVSSRH
+            - generic [ref=e648]:
+              - generic [ref=e649]:
+                - generic [ref=e650]: MAY 13 · 19:30 IST
+                - generic [ref=e651]:
+                  - text: St George's ·
+                  - generic [ref=e652]: M57
+              - generic [ref=e655]: RCBVSKKR
+            - generic [ref=e656]:
+              - generic [ref=e657]:
+                - generic [ref=e658]: MAY 14 · 19:30 IST
+                - generic [ref=e659]:
+                  - text: HPCA Cricket Stadium ·
+                  - generic [ref=e660]: M58
+              - generic [ref=e663]: PBKSVSMI
+            - generic [ref=e664]:
+              - generic [ref=e665]:
+                - generic [ref=e666]: MAY 15 · 19:30 IST
+                - generic [ref=e667]:
+                  - text: Lucknow ·
+                  - generic [ref=e668]: M59
+              - generic [ref=e671]: LSGVSCSK
+            - generic [ref=e672]:
+              - generic [ref=e673]:
+                - generic [ref=e674]: MAY 16 · 19:30 IST
+                - generic [ref=e675]:
+                  - text: Kolkata ·
+                  - generic [ref=e676]: M60
+              - generic [ref=e679]: KKRVSGT
+            - generic [ref=e680]:
+              - generic [ref=e681]:
+                - generic [ref=e682]: MAY 17 · 15:30 IST
+                - generic [ref=e683]:
+                  - text: HPCA Cricket Stadium ·
+                  - generic [ref=e684]: M61
+              - generic [ref=e687]: PBKSVSRCB
+            - generic [ref=e688]:
+              - generic [ref=e689]:
+                - generic [ref=e690]: MAY 17 · 19:30 IST
+                - generic [ref=e691]:
+                  - text: Delhi ·
+                  - generic [ref=e692]: M62
+              - generic [ref=e695]: DCVSRR
+            - generic [ref=e696]:
+              - generic [ref=e697]:
+                - generic [ref=e698]: MAY 18 · 19:30 IST
+                - generic [ref=e699]:
+                  - text: Chennai ·
+                  - generic [ref=e700]: M63
+              - generic [ref=e703]: CSKVSSRH
+            - generic [ref=e704]:
+              - generic [ref=e705]:
+                - generic [ref=e706]: MAY 19 · 19:30 IST
+                - generic [ref=e707]:
+                  - text: Jaipur ·
+                  - generic [ref=e708]: M64
+              - generic [ref=e711]: RRVSLSG
+            - generic [ref=e712]:
+              - generic [ref=e713]:
+                - generic [ref=e714]: MAY 20 · 19:30 IST
+                - generic [ref=e715]:
+                  - text: Kolkata ·
+                  - generic [ref=e716]: M65
+              - generic [ref=e719]: KKRVSMI
+            - generic [ref=e720]:
+              - generic [ref=e721]:
+                - generic [ref=e722]: MAY 21 · 19:30 IST
+                - generic [ref=e723]:
+                  - text: Chennai ·
+                  - generic [ref=e724]: M66
+              - generic [ref=e727]: CSKVSGT
+            - generic [ref=e728]:
+              - generic [ref=e729]:
+                - generic [ref=e730]: MAY 22 · 19:30 IST
+                - generic [ref=e731]:
+                  - text: Hyderabad ·
+                  - generic [ref=e732]: M67
+              - generic [ref=e735]: SRHVSRCB
+            - generic [ref=e736]:
+              - generic [ref=e737]:
+                - generic [ref=e738]: MAY 23 · 19:30 IST
+                - generic [ref=e739]:
+                  - text: Lucknow ·
+                  - generic [ref=e740]: M68
+              - generic [ref=e743]: LSGVSPBKS
+            - generic [ref=e744]:
+              - generic [ref=e745]:
+                - generic [ref=e746]: MAY 24 · 15:30 IST
+                - generic [ref=e747]:
+                  - text: Mumbai ·
+                  - generic [ref=e748]: M69
+              - generic [ref=e751]: MIVSRR
+            - generic [ref=e752]:
+              - generic [ref=e753]:
+                - generic [ref=e754]: MAY 24 · 19:30 IST
+                - generic [ref=e755]:
+                  - text: Kolkata ·
+                  - generic [ref=e756]: M70
+              - generic [ref=e759]: KKRVSDC
+        - generic [ref=e760]:
+          - generic [ref=e761]:
+            - text: Cap Race
+            - subscript [ref=e762]: LEADERBOARDS
+          - generic [ref=e763]:
+            - button "Orange" [ref=e764] [cursor=pointer]: Orange
+            - button "Purple" [ref=e766] [cursor=pointer]: Purple
+            - button "MVP" [ref=e768] [cursor=pointer]: MVP
+            - button "SR" [ref=e770] [cursor=pointer]: SR
+            - button "Econ" [ref=e772] [cursor=pointer]: Econ
+          - generic [ref=e774]:
+            - generic [ref=e775]:
+              - generic [ref=e776]: "1"
+              - generic [ref=e777]: Rajat PatidarRCB
+              - generic [ref=e778]:
+                - text: 254.83 SR
+                - generic [ref=e1414]: 2 inn
+            - generic [ref=e779]:
+              - generic [ref=e780]: "2"
+              - generic [ref=e781]: Tim DavidRCB
+              - generic [ref=e782]:
+                - text: 245.71 SR
+                - generic [ref=e1415]: 2 inn
+            - generic [ref=e783]:
+              - generic [ref=e784]: "3"
+              - generic [ref=e785]: Priyansh AryaPBKS
+              - generic [ref=e786]:
+                - text: 242.10 SR
+                - generic [ref=e1416]: 2 inn
+            - generic [ref=e795]: via ESPNcricinfo · 3m ago
+      - generic [ref=e796]:
+        - generic [ref=e797]:
+          - generic [ref=e798]:
+            - text: Season Pulse
+            - subscript [ref=e799]: RANK RIVER
+          - generic [ref=e800]:
+            - img [ref=e801]:
+              - generic [ref=e803]: M1
+              - generic [ref=e804]: M2
+              - generic [ref=e805]: M3
+            - generic [ref=e884] [cursor=pointer]:
+              - generic [ref=e885]: PBKS
+              - generic [ref=e886]: 5pts
+            - generic [ref=e887] [cursor=pointer]:
+              - generic [ref=e888]: RCB
+              - generic [ref=e889]: 4pts
+            - generic [ref=e890] [cursor=pointer]:
+              - generic [ref=e891]: RR
+              - generic [ref=e892]: 4pts
+            - generic [ref=e893] [cursor=pointer]:
+              - generic [ref=e894]: DC
+              - generic [ref=e895]: 4pts
+            - generic [ref=e896] [cursor=pointer]:
+              - generic [ref=e897]: SRH
+              - generic [ref=e898]: 2pts
+            - generic [ref=e899] [cursor=pointer]:
+              - generic [ref=e900]: MI
+              - generic [ref=e901]: 2pts
+            - generic [ref=e902] [cursor=pointer]:
+              - generic [ref=e903]: LSG
+              - generic [ref=e904]: 2pts
+            - generic [ref=e905] [cursor=pointer]:
+              - generic [ref=e906]: KKR
+              - generic [ref=e907]: 1pts
+            - generic [ref=e908] [cursor=pointer]:
+              - generic [ref=e909]: GT
+              - generic [ref=e910]: 0pts
+            - generic [ref=e911] [cursor=pointer]:
+              - generic [ref=e912]: CSK
+              - generic [ref=e913]: 0pts
+        - generic [ref=e915]:
+          - generic [ref=e916]:
+            - text: Briefing
+            - subscript [ref=e917]: PRE-MATCH
+          - generic [ref=e918]:
+            - generic [ref=e919]:
+              - generic [ref=e920]: RR
+              - generic [ref=e921]: 2W 0L · +2.233
+            - generic [ref=e925]:
+              - generic [ref=e926]:
+                - generic [ref=e927]:
+                  - generic [ref=e928]: "167"
+                  - generic [ref=e929]: PAR
+                - generic [ref=e930]:
+                  - generic [ref=e931]: 50%
+                  - generic [ref=e932]: CHASE
+                - generic [ref=e933]:
+                  - generic [ref=e934]: 14–16
+                  - generic [ref=e935]: H2H
+                - generic [ref=e936]:
+                  - generic [ref=e937]: 83%
+                  - generic [ref=e938]: FIELD
+              - generic [ref=e939]: Barsapara Cricket Stadium, Guwahati · 19:30 IST · M13
+            - generic [ref=e940]:
+              - generic [ref=e941]: MI
+              - generic [ref=e942]: 1W 1L · -0.206
+          - generic [ref=e946]:
+            - button "MATCHUP" [ref=e947] [cursor=pointer]
+            - button "INTEL" [ref=e948] [cursor=pointer]
+            - button "GROUND" [ref=e949] [cursor=pointer]
+            - button "SCOUT" [ref=e950] [cursor=pointer]
+          - generic [ref=e952]:
+            - generic [ref=e953]:
+              - generic [ref=e954]:
+                - generic [ref=e955]:
+                  - generic [ref=e956]: Tactical Edge
+                  - generic [ref=e957]: RR FAVOURED
+                - generic [ref=e958]: RR holds the advantage due to their balanced bowling attack and home conditions, especially if they can post a score above the critical 180-run threshold.
+              - generic [ref=e959]:
+                - generic [ref=e960]: Tonight’s Stakes
+                - generic [ref=e961]:
+                  - generic [ref=e962]: RR win
+                  - generic [ref=e963]: RR moves to 6 points, potentially taking the top spot if they surpass PBKS's NRR, while MI remains stuck in the mid-table logjam at 2 points.
+                - generic [ref=e964]:
+                  - generic [ref=e965]: MI win
+                  - generic [ref=e966]: MI joins the 4-point cluster, creating a five-way tie for the top four spots and ending RR's undefeated streak.
+            - generic [ref=e968]:
+              - generic [ref=e969]: Key Matchups
+              - generic [ref=e970]:
+                - generic [ref=e971]: "1"
+                - generic [ref=e972]:
+                  - generic [ref=e973]:
+                    - generic [ref=e974]:
+                      - generic [ref=e975]: V Suryavanshi
+                      - generic [ref=e976]: RR · opener
+                    - generic [ref=e977]: ×
+                    - generic [ref=e978]:
+                      - generic [ref=e979]: JJ Bumrah
+                      - generic [ref=e980]: MI · pace
+                  - generic [ref=e981]: The young sensation faces the ultimate test against Bumrah's new-ball variations. Surviving this spell is crucial for RR to set a platform.
+              - generic [ref=e982]:
+                - generic [ref=e983]: "2"
+                - generic [ref=e984]:
+                  - generic [ref=e985]:
+                    - generic [ref=e986]:
+                      - generic [ref=e987]: RG Sharma
+                      - generic [ref=e988]: MI · opener
+                    - generic [ref=e989]: ×
+                    - generic [ref=e990]:
+                      - generic [ref=e991]: JC Archer
+                      - generic [ref=e992]: RR · pace
+                  - generic [ref=e993]: A blockbuster clash at the top. Archer's raw pace and bounce against Rohit's aggressive powerplay intent will dictate the momentum of MI's innings.
+      - generic [ref=e994]:
+        - generic [ref=e995]:
+          - generic [ref=e996]:
+            - text: AI Wire
+            - subscript [ref=e997]: LLM INSIGHTS
+          - generic [ref=e998]:
+            - generic [ref=e999] [cursor=pointer]:
+              - generic [ref=e1000]:
+                - generic [ref=e1001]: 💀
+                - generic [ref=e1002]: playoff math
+                - generic [ref=e1003]: CSK
+                - generic [ref=e1004]: ALARM
+              - generic [ref=e1005]: CSK's mathematical death rattle is already ringing in week two.
+              - generic [ref=e1006]: Three games, three losses, and a catastrophic -2.467 NRR. Chennai haven't just lost; they've been dismantled, conceding 210 to Punjab and 250 to RCB. With Dhoni sidelined by a calf strain and the bowling attack leaking boundaries, they now need an absurd 73% win rate just to reach the 16-point safety threshold. The empire is crumbling in real time.
+              - generic [ref=e1007]:
+                - generic [ref=e1008]: Three games, three losses, and a catastrophic -2.467 NRR. Chennai haven't just lost; they've been dismantled, conceding 210 to Punjab and 250 to RCB. With Dhoni sidelined by a calf strain and the bowling attack leaking boundaries, they now need an absurd 73% win rate just to reach the 16-point safety threshold. The empire is crumbling in real time.
+                - generic [ref=e1009]: 18m ago
+            - generic [ref=e1010] [cursor=pointer]:
+              - generic [ref=e1011]:
+                - generic [ref=e1012]: 🔄
+                - generic [ref=e1013]: narrative flip
+                - generic [ref=e1014]: PBKS
+                - generic [ref=e1015]: ALERT
+              - generic [ref=e1016]: Punjab Kings have quietly become the most ruthless team in the league.
+              - generic [ref=e1017]: Top of the table. 3-0. Shreyas Iyer marshaling chases like a veteran, and Priyansh Arya striking at 242.10. They just chased down 209 against CSK with five wickets to spare. The franchise that spent a decade as the IPL's punchline has built a perfectly balanced unit that doesn't rely on a single superstar. Sehwag is right—they are legitimate title contenders.
+              - generic [ref=e1018]:
+                - generic [ref=e1019]: Top of the table. 3-0. Shreyas Iyer marshaling chases like a veteran, and Priyansh Arya striking at 242.10. They just chased down 209 against CSK with five wickets to spare. The franchise that spent a decade as the IPL's punchline has built a perfectly balanced unit that doesn't rely on a single superstar. Sehwag is right—they are legitimate title contenders.
+                - generic [ref=e1020]: 18m ago
+            - generic [ref=e1021] [cursor=pointer]:
+              - generic [ref=e1022]:
+                - generic [ref=e1023]: 🏗️
+                - generic [ref=e1024]: roster panic
+                - generic [ref=e1025]: KKR
+                - generic [ref=e1026]: ALERT
+              - generic [ref=e1027]: Cameron Green's IPL 2026 is a 25-crore structural disaster for KKR.
+              - generic [ref=e1028]: Scores of 18, 4, and 2. Zero overs bowled due to CA restrictions. KKR paid marquee all-rounder money for a top-order batter who looks completely tentative against the moving ball. With a -1.964 NRR and sitting at the bottom of the table, KKR's entire tactical blueprint is compromised because their most expensive piece is missing in action.
+              - generic [ref=e1029]:
+                - generic [ref=e1030]: Scores of 18, 4, and 2. Zero overs bowled due to CA restrictions. KKR paid marquee all-rounder money for a top-order batter who looks completely tentative against the moving ball. With a -1.964 NRR and sitting at the bottom of the table, KKR's entire tactical blueprint is compromised because their most expensive piece is missing in action.
+                - generic [ref=e1031]: 18m ago
+            - generic [ref=e1032] [cursor=pointer]:
+              - generic [ref=e1033]:
+                - generic [ref=e1034]: 🩺
+                - generic [ref=e1035]: powerplay choke
+                - generic [ref=e1036]: LSG
+                - generic [ref=e1037]: ALERT
+              - generic [ref=e1038]: Lucknow's pace duo is playing a different sport right now.
+              - generic [ref=e1039]: In a season where 200 is the new par and strike rates are exploding, Mohammed Shami and Mohsin Khan are operating at economies of 4.63 and 4.75 respectively. Shami's 2/9 against SRH completely suffocated a lineup that had just scored 226 against KKR. While everyone else is hunting for muscle, LSG is winning with a scalpel.
+              - generic [ref=e1040]:
+                - generic [ref=e1041]: In a season where 200 is the new par and strike rates are exploding, Mohammed Shami and Mohsin Khan are operating at economies of 4.63 and 4.75 respectively. Shami's 2/9 against SRH completely suffocated a lineup that had just scored 226 against KKR. While everyone else is hunting for muscle, LSG is winning with a scalpel.
+                - generic [ref=e1042]: 18m ago
+            - generic [ref=e1043] [cursor=pointer]:
+              - generic [ref=e1044]:
+                - generic [ref=e1045]: 🧨
+                - generic [ref=e1046]: tactical preview
+                - generic [ref=e1047]: MI
+                - generic [ref=e1048]: RR
+              - generic [ref=e1049]: Tonight's Guwahati clash is a defining test for Mumbai's leadership crisis.
+              - generic [ref=e1050]: MI roll into Barsapara tonight facing an undefeated RR side (2-0, +2.233 NRR). Rohit Sharma (113 runs) looks liberated, but Hardik Pandya's captaincy is under intense external fire. With Barsapara historically favoring the chasing team (50% win rate, 166 avg first innings), MI cannot afford tactical blunders at the toss or in the death overs against a red-hot Dhruv Jurel.
+              - generic [ref=e1051]:
+                - generic [ref=e1052]: MI roll into Barsapara tonight facing an undefeated RR side (2-0, +2.233 NRR). Rohit Sharma (113 runs) looks liberated, but Hardik Pandya's captaincy is under intense external fire. With Barsapara historically favoring the chasing team (50% win rate, 166 avg first innings), MI cannot afford tactical blunders at the toss or in the death overs against a red-hot Dhruv Jurel.
+                - generic [ref=e1053]: 18m ago
+            - generic [ref=e1054] [cursor=pointer]:
+              - generic [ref=e1055]:
+                - generic [ref=e1056]: 🎪
+                - generic [ref=e1057]: lone warrior
+                - generic [ref=e1058]: SRH
+              - generic [ref=e1059]: Heinrich Klaasen is trapped in a one-man rescue mission in Hyderabad.
+              - generic [ref=e1060]: Klaasen has 145 runs (second in the Orange Cap race) and just bludgeoned 62(41) against LSG, yet SRH are 1-2. The problem? Aside from Klaasen, the rest of the SRH batting card collapses under pressure. You can't ask your wicketkeeper to bail out a 150-run deficit every night. If Klaasen fails once, SRH are getting bowled out for 110.
+              - generic [ref=e1061]:
+                - generic [ref=e1062]: Klaasen has 145 runs (second in the Orange Cap race) and just bludgeoned 62(41) against LSG, yet SRH are 1-2. The problem? Aside from Klaasen, the rest of the SRH batting card collapses under pressure. You can't ask your wicketkeeper to bail out a 150-run deficit every night. If Klaasen fails once, SRH are getting bowled out for 110.
+                - generic [ref=e1063]: 18m ago
+            - generic [ref=e1064] [cursor=pointer]:
+              - generic [ref=e1065]:
+                - generic [ref=e1066]: 🚀
+                - generic [ref=e1067]: strike rate surge
+                - generic [ref=e1068]: RCB
+              - generic [ref=e1069]: RCB's middle overs have turned into a statistical war crime.
+              - generic [ref=e1070]: Rajat Patidar is striking at 254.83. Tim David is striking at 245.71. Their 250/3 against CSK wasn't just a win; it was a statement of terrifying intent. Most teams build innings; RCB is detonating them from over 7 onwards. With Jacob Duffy also leading the Purple Cap, Bengaluru's +2.415 NRR isn't a fluke—it's a warning.
+              - generic [ref=e1071]:
+                - generic [ref=e1072]: Rajat Patidar is striking at 254.83. Tim David is striking at 245.71. Their 250/3 against CSK wasn't just a win; it was a statement of terrifying intent. Most teams build innings; RCB is detonating them from over 7 onwards. With Jacob Duffy also leading the Purple Cap, Bengaluru's +2.415 NRR isn't a fluke—it's a warning.
+                - generic [ref=e1073]: 18m ago
+            - generic [ref=e1074] [cursor=pointer]:
+              - generic [ref=e1075]:
+                - generic [ref=e1076]: 🛸
+                - generic [ref=e1077]: auction value
+                - generic [ref=e1078]: DC
+              - generic [ref=e1079]: Sameer Rizvi is making a mockery of the auction mega-bids.
+              - generic [ref=e1080]: Delhi retained Rizvi for ₹0.9Cr. He is currently wearing the Orange Cap with 160 runs, including a match-winning 90(51) against Mumbai. Meanwhile, 20-crore overseas retentions are struggling to buy a boundary. DC's entire middle-order strategy is being carried by a player who costs less than most franchises spend on catering.
+              - generic [ref=e1081]:
+                - generic [ref=e1082]: Delhi retained Rizvi for ₹0.9Cr. He is currently wearing the Orange Cap with 160 runs, including a match-winning 90(51) against Mumbai. Meanwhile, 20-crore overseas retentions are struggling to buy a boundary. DC's entire middle-order strategy is being carried by a player who costs less than most franchises spend on catering.
+                - generic [ref=e1083]: 18m ago
+        - generic [ref=e1084]:
+          - generic [ref=e1085]:
+            - text: Intel Feed
+            - subscript [ref=e1086]: "200"
+          - generic [ref=e1087]:
+            - button "All" [ref=e1088] [cursor=pointer]
+            - button "ESPNcricinfo" [ref=e1089] [cursor=pointer]
+            - button "CricketAddictor" [ref=e1090] [cursor=pointer]
+            - button "CricTracker" [ref=e1091] [cursor=pointer]
+            - button "Reddit r/Cricket" [ref=e1092] [cursor=pointer]
+          - generic [ref=e1094]:
+            - link "C CricketAddictor KKR CSK SRH DC 22m ago Heinrich Klaasen drops blunt take on MS Dhoni’s role in CSK amid IPL 2026" [ref=e1095] [cursor=pointer]:
+              - /url: https://cricketaddictor.com/cricket-news/heinrich-klaasen-drops-blunt-take-on-ms-dhonis-role-in-csk-amid-ipl-2026-432268/
+              - generic [ref=e1097]: C
+              - generic [ref=e1098]:
+                - generic [ref=e1099]:
+                  - generic [ref=e1100]: CricketAddictor
+                  - generic [ref=e1101]: KKR
+                  - generic [ref=e1102]: CSK
+                  - generic [ref=e1103]: SRH
+                  - generic [ref=e1104]: DC
+                  - generic [ref=e1105]: 22m ago
+                - generic [ref=e1106]: Heinrich Klaasen drops blunt take on MS Dhoni’s role in CSK amid IPL 2026
+            - link "C CricketAddictor 34m ago Sunil Gavaskar questions availability and intent of overseas players amid IPL 2026" [ref=e1107] [cursor=pointer]:
+              - /url: https://cricketaddictor.com/cricket-news/sunil-gavaskar-questions-availability-and-intent-of-overseas-players-amid-ipl-2026-432234/
+              - generic [ref=e1109]: C
+              - generic [ref=e1110]:
+                - generic [ref=e1111]:
+                  - generic [ref=e1112]: CricketAddictor
+                  - generic [ref=e1113]: 34m ago
+                - generic [ref=e1114]: Sunil Gavaskar questions availability and intent of overseas players amid IPL 2026
+            - link "C CricketAddictor MI KKR 50m ago Not Hardik Pandya! EX-KKR star declares Rohit Sharma as the true leader of Mumbai Indians" [ref=e1115] [cursor=pointer]:
+              - /url: https://cricketaddictor.com/cricket-news/not-hardik-pandya-ex-kkr-star-declares-rohit-sharma-as-the-true-leader-of-mumbai-indians-432265/
+              - generic [ref=e1117]: C
+              - generic [ref=e1118]:
+                - generic [ref=e1119]:
+                  - generic [ref=e1120]: CricketAddictor
+                  - generic [ref=e1121]: MI
+                  - generic [ref=e1122]: KKR
+                  - generic [ref=e1123]: 50m ago
+                - generic [ref=e1124]: Not Hardik Pandya! EX-KKR star declares Rohit Sharma as the true leader of Mumbai Indians
+            - link "C CricketAddictor SRH 1h ago Aakash Chopra tells Ajit Agarkar to respect Mohammed Shami after IPL 2026 brilliance" [ref=e1125] [cursor=pointer]:
+              - /url: https://cricketaddictor.com/cricket-news/aakash-chopra-tells-ajit-agarkar-to-respect-mohammed-shami-after-ipl-2026-brilliance-432085/
+              - generic [ref=e1127]: C
+              - generic [ref=e1128]:
+                - generic [ref=e1129]:
+                  - generic [ref=e1130]: CricketAddictor
+                  - generic [ref=e1131]: SRH
+                  - generic [ref=e1132]: 1h ago
+                - generic [ref=e1133]: Aakash Chopra tells Ajit Agarkar to respect Mohammed Shami after IPL 2026 brilliance
+            - link "C CricketAddictor KKR PBKS 1h ago “He looks tentative” - Ex-Australia captain raises concerns over Cameron Green's struggles in IPL 2026" [ref=e1134] [cursor=pointer]:
+              - /url: https://cricketaddictor.com/cricket-news/he-looks-tentative-ex-australia-captain-raises-concerns-over-cameron-greens-struggles-in-ipl-2026-432095/
+              - generic [ref=e1136]: C
+              - generic [ref=e1137]:
+                - generic [ref=e1138]:
+                  - generic [ref=e1139]: CricketAddictor
+                  - generic [ref=e1140]: KKR
+                  - generic [ref=e1141]: PBKS
+                  - generic [ref=e1142]: 1h ago
+                - generic [ref=e1143]: “He looks tentative” - Ex-Australia captain raises concerns over Cameron Green's struggles in IPL 2026
+            - 'link "C CricketAddictor PBKS KKR 1h ago \"Punjab will win the final\": Virender Sehwag''s bold prediction for PBKS after KKR game washout in IPL 2026" [ref=e1144] [cursor=pointer]':
+              - /url: https://cricketaddictor.com/cricket-news/punjab-will-win-the-final-virender-sehwags-bold-prediction-for-pbks-after-kkr-game-washout-in-ipl-2026-432142/
+              - generic [ref=e1146]: C
+              - generic [ref=e1147]:
+                - generic [ref=e1148]:
+                  - generic [ref=e1149]: CricketAddictor
+                  - generic [ref=e1150]: PBKS
+                  - generic [ref=e1151]: KKR
+                  - generic [ref=e1152]: 1h ago
+                - generic [ref=e1153]: "\"Punjab will win the final\": Virender Sehwag's bold prediction for PBKS after KKR game washout in IPL 2026"
+            - 'link "C CricTracker 1h ago IPL 2026: ''There''s a bit of panic'' - Aaron Finch expresses concern on Cameron Green''s form" [ref=e1154] [cursor=pointer]':
+              - /url: https://www.crictracker.com/cricket-news/ipl-2026-theres-a-bit-of-panic-aaron-finch-expresses-concern-on-cameron-greens-form/
+              - generic [ref=e1156]: C
+              - generic [ref=e1157]:
+                - generic [ref=e1158]:
+                  - generic [ref=e1159]: CricTracker
+                  - generic [ref=e1160]: 1h ago
+                - generic [ref=e1161]: "IPL 2026: 'There's a bit of panic' - Aaron Finch expresses concern on Cameron Green's form"
+            - link "C CricketAddictor 1h ago 5 Big Players Flopping in IPL 2026 So Far - ft KL Rahul, Sanju Samson" [ref=e1162] [cursor=pointer]:
+              - /url: https://cricketaddictor.com/cricket-news/5-big-players-flopping-in-ipl-2026-so-far-ft-kl-rahul-sanju-samson-432144/
+              - generic [ref=e1164]: C
+              - generic [ref=e1165]:
+                - generic [ref=e1166]:
+                  - generic [ref=e1167]: CricketAddictor
+                  - generic [ref=e1168]: 1h ago
+                - generic [ref=e1169]: 5 Big Players Flopping in IPL 2026 So Far - ft KL Rahul, Sanju Samson
+            - link "C CricketAddictor RCB CSK DC 1h ago Kevin Pietersen expresses desire to join CSK as mentor with cheeky post" [ref=e1170] [cursor=pointer]:
+              - /url: https://cricketaddictor.com/cricket-news/kevin-pietersen-expresses-desire-to-join-csk-as-mentor-with-cheeky-post-432232/
+              - generic [ref=e1172]: C
+              - generic [ref=e1173]:
+                - generic [ref=e1174]:
+                  - generic [ref=e1175]: CricketAddictor
+                  - generic [ref=e1176]: RCB
+                  - generic [ref=e1177]: CSK
+                  - generic [ref=e1178]: DC
+                  - generic [ref=e1179]: 1h ago
+                - generic [ref=e1180]: Kevin Pietersen expresses desire to join CSK as mentor with cheeky post
+            - 'link "C CricketAddictor RR DC GT 1h ago Shubman Gill injury update: Gujarat Titans captain’s IPL 2026 comeback date revealed" [ref=e1181] [cursor=pointer]':
+              - /url: https://cricketaddictor.com/cricket-news/shubman-gill-injury-update-gujarat-titans-captains-ipl-2026-comeback-date-revealed-432211/
+              - generic [ref=e1183]: C
+              - generic [ref=e1184]:
+                - generic [ref=e1185]:
+                  - generic [ref=e1186]: CricketAddictor
+                  - generic [ref=e1187]: RR
+                  - generic [ref=e1188]: DC
+                  - generic [ref=e1189]: GT
+                  - generic [ref=e1190]: 1h ago
+                - generic [ref=e1191]: "Shubman Gill injury update: Gujarat Titans captain’s IPL 2026 comeback date revealed"
+            - link "C CricketAddictor CSK 1h ago Akeal Hosein joins MS Dhoni and Dewald Brevis in CSK’s injury list amid IPL 2026" [ref=e1192] [cursor=pointer]:
+              - /url: https://cricketaddictor.com/cricket-news/akeal-hosein-joins-ms-dhoni-and-dewald-brevis-in-csks-injury-list-amid-ipl-2026-432215/
+              - generic [ref=e1194]: C
+              - generic [ref=e1195]:
+                - generic [ref=e1196]:
+                  - generic [ref=e1197]: CricketAddictor
+                  - generic [ref=e1198]: CSK
+                  - generic [ref=e1199]: 1h ago
+                - generic [ref=e1200]: Akeal Hosein joins MS Dhoni and Dewald Brevis in CSK’s injury list amid IPL 2026
+            - 'link "C CricketAddictor RR MI 1h ago Vaibhav Sooryavanshi set to join Mumbai Indians: Ex-BCCI selector drops bombshell" [ref=e1201] [cursor=pointer]':
+              - /url: https://cricketaddictor.com/cricket-news/vaibhav-sooryavanshi-set-to-join-mumbai-indians-ex-bcci-selector-drops-bombshell-432224/
+              - generic [ref=e1203]: C
+              - generic [ref=e1204]:
+                - generic [ref=e1205]:
+                  - generic [ref=e1206]: CricketAddictor
+                  - generic [ref=e1207]: RR
+                  - generic [ref=e1208]: MI
+                  - generic [ref=e1209]: 1h ago
+                - generic [ref=e1210]: "Vaibhav Sooryavanshi set to join Mumbai Indians: Ex-BCCI selector drops bombshell"
+            - link "C CricketAddictor RCB 1h ago Why RCB are dominating IPL 2026? 3 colossal non-Virat Kohli reasons revealed" [ref=e1211] [cursor=pointer]:
+              - /url: https://cricketaddictor.com/cricket-news/why-rcb-are-dominating-ipl-2026-3-colossal-non-virat-kohli-reasons-revealed-432216/
+              - generic [ref=e1213]: C
+              - generic [ref=e1214]:
+                - generic [ref=e1215]:
+                  - generic [ref=e1216]: CricketAddictor
+                  - generic [ref=e1217]: RCB
+                  - generic [ref=e1218]: 1h ago
+                - generic [ref=e1219]: Why RCB are dominating IPL 2026? 3 colossal non-Virat Kohli reasons revealed
+            - link "C CricTracker RCB 1h ago ‘Coming back to RCB paved my path’ - Devdutt Padikkal opens up on career-defining IPL 2025 return" [ref=e1220] [cursor=pointer]:
+              - /url: https://www.crictracker.com/cricket-news/coming-back-to-rcb-paved-my-path-devdutt-padikkal-opens-up-on-career-defining-ipl-2025-return/
+              - generic [ref=e1222]: C
+              - generic [ref=e1223]:
+                - generic [ref=e1224]:
+                  - generic [ref=e1225]: CricTracker
+                  - generic [ref=e1226]: RCB
+                  - generic [ref=e1227]: 1h ago
+                - generic [ref=e1228]: ‘Coming back to RCB paved my path’ - Devdutt Padikkal opens up on career-defining IPL 2025 return
+            - 'link "C CricTracker CSK 2h ago IPL 2026: ''Waving his arms all the time'' - Michael Vaughan raises questions on CSK skipper Ruturaj Gaikwad" [ref=e1229] [cursor=pointer]':
+              - /url: https://www.crictracker.com/cricket-news/ipl-2026-waving-his-arms-all-the-time-michael-vaughan-raises-questions-csk-skipper-ruturaj-gaikwad/
+              - generic [ref=e1231]: C
+              - generic [ref=e1232]:
+                - generic [ref=e1233]:
+                  - generic [ref=e1234]: CricTracker
+                  - generic [ref=e1235]: CSK
+                  - generic [ref=e1236]: 2h ago
+                - generic [ref=e1237]: "IPL 2026: 'Waving his arms all the time' - Michael Vaughan raises questions on CSK skipper Ruturaj Gaikwad"
+            - 'link "ESPNcricinfo KKR 2h ago Finch: Green looks ''tentative'' but KKR shouldn''t ''push him down'' the order" [ref=e1238] [cursor=pointer]':
+              - /url: https://www.espncricinfo.com/story/ipl-2026-kkr-vs-pbks-aaron-finch-says-cameron-green-looks-tentative-but-kkr-shouldnt-push-him-down-the-order-1530793
+              - generic [ref=e1240]:
+                - generic [ref=e1241]:
+                  - generic [ref=e1242]: ESPNcricinfo
+                  - generic [ref=e1243]: KKR
+                  - generic [ref=e1244]: 2h ago
+                - generic [ref=e1245]: "Finch: Green looks 'tentative' but KKR shouldn't 'push him down' the order"
+            - 'link "C CricTracker MI DC GT 2h ago IPL 2026: DC vs GT Match 14 - Who will be Impact Players for today''s match?" [ref=e1246] [cursor=pointer]':
+              - /url: https://www.crictracker.com/cricket-appeal/ipl-2026-dc-vs-gt-match-14-who-will-be-impact-players-for-todays-match/
+              - generic [ref=e1248]: C
+              - generic [ref=e1249]:
+                - generic [ref=e1250]:
+                  - generic [ref=e1251]: CricTracker
+                  - generic [ref=e1252]: MI
+                  - generic [ref=e1253]: DC
+                  - generic [ref=e1254]: GT
+                  - generic [ref=e1255]: 2h ago
+                - generic [ref=e1256]: "IPL 2026: DC vs GT Match 14 - Who will be Impact Players for today's match?"
+            - link "C CricketAddictor RR GT 2h ago Dhruv Jurel named as future Rajasthan Royals captain after tactical brilliance vs GT in IPL 2026" [ref=e1257] [cursor=pointer]:
+              - /url: https://cricketaddictor.com/cricket-news/dhruv-jurel-named-as-future-rajasthan-royals-captain-after-tactical-brilliance-vs-gt-in-ipl-2026-431998/
+              - generic [ref=e1259]: C
+              - generic [ref=e1260]:
+                - generic [ref=e1261]:
+                  - generic [ref=e1262]: CricketAddictor
+                  - generic [ref=e1263]: RR
+                  - generic [ref=e1264]: GT
+                  - generic [ref=e1265]: 2h ago
+                - generic [ref=e1266]: Dhruv Jurel named as future Rajasthan Royals captain after tactical brilliance vs GT in IPL 2026
+            - link "C CricTracker SRH 2h ago 'It is easy to say our bowlers lack experience, but batters need to contribute more' - Heinrich Klaasen on SRH's dismal start in IPL 2026" [ref=e1267] [cursor=pointer]:
+              - /url: https://www.crictracker.com/cricket-news/it-is-easy-to-say-our-bowlers-lack-experience-but-batters-need-to-contribute-more-heinrich-klaasen-on-srhs-dismal-start-in-ipl-2026/
+              - generic [ref=e1269]: C
+              - generic [ref=e1270]:
+                - generic [ref=e1271]:
+                  - generic [ref=e1272]: CricTracker
+                  - generic [ref=e1273]: SRH
+                  - generic [ref=e1274]: 2h ago
+                - generic [ref=e1275]: "'It is easy to say our bowlers lack experience, but batters need to contribute more' - Heinrich Klaasen on SRH's dismal start in IPL 2026"
+            - 'link "C CricketAddictor KKR PBKS 3h ago “Stop biting everybody”: Aaron Finch stops Ajinkya Rahane from going on rants at haters" [ref=e1276] [cursor=pointer]':
+              - /url: https://cricketaddictor.com/cricket-news/stop-biting-everybody-aaron-finch-stops-ajinkya-rahane-from-going-on-rants-at-haters-431977/
+              - generic [ref=e1278]: C
+              - generic [ref=e1279]:
+                - generic [ref=e1280]:
+                  - generic [ref=e1281]: CricketAddictor
+                  - generic [ref=e1282]: KKR
+                  - generic [ref=e1283]: PBKS
+                  - generic [ref=e1284]: 3h ago
+                - generic [ref=e1285]: "“Stop biting everybody”: Aaron Finch stops Ajinkya Rahane from going on rants at haters"
+            - link "C CricketAddictor KKR SRH MI 3h ago Ajinkya Rahane, Abhishek Nayar should be sacked in IPL 2026! 3 reasons KKR need urgent change" [ref=e1286] [cursor=pointer]:
+              - /url: https://cricketaddictor.com/cricket-news/ajinkya-rahane-abhishek-nayar-should-be-sacked-in-ipl-2026-3-reasons-kkr-need-urgent-change-431976/
+              - generic [ref=e1288]: C
+              - generic [ref=e1289]:
+                - generic [ref=e1290]:
+                  - generic [ref=e1291]: CricketAddictor
+                  - generic [ref=e1292]: KKR
+                  - generic [ref=e1293]: SRH
+                  - generic [ref=e1294]: MI
+                  - generic [ref=e1295]: 3h ago
+                - generic [ref=e1296]: Ajinkya Rahane, Abhishek Nayar should be sacked in IPL 2026! 3 reasons KKR need urgent change
+            - link "C CricTracker MI RR 3h ago 'If Hardik Pandya comes in, obviously Deepak Chahar might be dropped' - Irfan Pathan predicts MI's playing XI vs RR" [ref=e1297] [cursor=pointer]:
+              - /url: https://www.crictracker.com/cricket-news/if-hardik-pandya-comes-in-obviously-deepak-chahar-might-be-dropped-irfan-pathan-predicts-mis-playing-xi-vs-rr/
+              - generic [ref=e1299]: C
+              - generic [ref=e1300]:
+                - generic [ref=e1301]:
+                  - generic [ref=e1302]: CricTracker
+                  - generic [ref=e1303]: MI
+                  - generic [ref=e1304]: RR
+                  - generic [ref=e1305]: 3h ago
+                - generic [ref=e1306]: "'If Hardik Pandya comes in, obviously Deepak Chahar might be dropped' - Irfan Pathan predicts MI's playing XI vs RR"
+            - 'link "C CricTracker DC 4h ago IPL 2026: Injured Mitchell Starc likely to miss three more DC games" [ref=e1307] [cursor=pointer]':
+              - /url: https://www.crictracker.com/cricket-news/ipl-2026-injured-mitchell-starc-likely-to-miss-three-more-dc-games/
+              - generic [ref=e1309]: C
+              - generic [ref=e1310]:
+                - generic [ref=e1311]:
+                  - generic [ref=e1312]: CricTracker
+                  - generic [ref=e1313]: DC
+                  - generic [ref=e1314]: 4h ago
+                - generic [ref=e1315]: "IPL 2026: Injured Mitchell Starc likely to miss three more DC games"
+            - link "C CricketAddictor KKR 4h ago Simon Doull INSULTS Rohit Sharma to defend Ajinkya Rahane amid criticism in IPL 2026" [ref=e1316] [cursor=pointer]:
+              - /url: https://cricketaddictor.com/cricket-news/simon-doull-insults-rohit-sharma-to-defend-ajinkya-rahane-amid-criticism-in-ipl-2026-432076/
+              - generic [ref=e1318]: C
+              - generic [ref=e1319]:
+                - generic [ref=e1320]:
+                  - generic [ref=e1321]: CricketAddictor
+                  - generic [ref=e1322]: KKR
+                  - generic [ref=e1323]: 4h ago
+                - generic [ref=e1324]: Simon Doull INSULTS Rohit Sharma to defend Ajinkya Rahane amid criticism in IPL 2026
+            - link "C CricTracker MI RR 5h ago 'When his time comes, he can win you two consecutive matches' - Irfan Pathan’s massive remark on RR star ahead of IPL 2026 clash vs MI" [ref=e1325] [cursor=pointer]:
+              - /url: https://www.crictracker.com/cricket-news/when-his-time-comes-he-can-win-you-two-consecutive-matches-irfan-pathans-massive-remark-on-rr-star-ahead-of-ipl-2026-clash-vs-mi/
+              - generic [ref=e1327]: C
+              - generic [ref=e1328]:
+                - generic [ref=e1329]:
+                  - generic [ref=e1330]: CricTracker
+                  - generic [ref=e1331]: MI
+                  - generic [ref=e1332]: RR
+                  - generic [ref=e1333]: 5h ago
+                - generic [ref=e1334]: "'When his time comes, he can win you two consecutive matches' - Irfan Pathan’s massive remark on RR star ahead of IPL 2026 clash vs MI"
+            - 'link "C CricTracker DC GT 5h ago DC vs GT: IPL 2026 Records and Stats at Arun Jaitley Stadium, New Delhi" [ref=e1335] [cursor=pointer]':
+              - /url: https://www.crictracker.com/cricket-stats-mania/dc-vs-gt-ipl-2026-records-and-stats-at-arun-jaitley-stadium-new-delhi-1030/
+              - generic [ref=e1337]: C
+              - generic [ref=e1338]:
+                - generic [ref=e1339]:
+                  - generic [ref=e1340]: CricTracker
+                  - generic [ref=e1341]: DC
+                  - generic [ref=e1342]: GT
+                  - generic [ref=e1343]: 5h ago
+                - generic [ref=e1344]: "DC vs GT: IPL 2026 Records and Stats at Arun Jaitley Stadium, New Delhi"
+            - link "C CricketAddictor KKR PBKS 5h ago Sourav Ganguly’s KKR comeback demand grows amid IPL 2026 after viral video with Shah Rukh Khan" [ref=e1345] [cursor=pointer]:
+              - /url: https://cricketaddictor.com/cricket-news/sourav-gangulys-kkr-comeback-demand-grows-amid-ipl-2026-after-viral-video-with-shah-rukh-khan-432061/
+              - generic [ref=e1347]: C
+              - generic [ref=e1348]:
+                - generic [ref=e1349]:
+                  - generic [ref=e1350]: CricketAddictor
+                  - generic [ref=e1351]: KKR
+                  - generic [ref=e1352]: PBKS
+                  - generic [ref=e1353]: 5h ago
+                - generic [ref=e1354]: Sourav Ganguly’s KKR comeback demand grows amid IPL 2026 after viral video with Shah Rukh Khan
+            - link "C CricTracker CSK GT MI RR 5h ago 'The biggest story of the IPL' - Aakash Chopra builds up to Vaibhav Sooryavanshi vs Jasprit Bumrah clash at RR vs MI match" [ref=e1355] [cursor=pointer]:
+              - /url: https://www.crictracker.com/cricket-news/the-biggest-story-of-the-ipl-aakash-chopra-builds-up-to-vaibhav-sooryavanshi-vs-jasprit-bumrah-clash-at-rr-vs-mi-match/
+              - generic [ref=e1357]: C
+              - generic [ref=e1358]:
+                - generic [ref=e1359]:
+                  - generic [ref=e1360]: CricTracker
+                  - generic [ref=e1361]: CSK
+                  - generic [ref=e1362]: GT
+                  - generic [ref=e1363]: MI
+                  - generic [ref=e1364]: RR
+                  - generic [ref=e1365]: 5h ago
+                - generic [ref=e1366]: "'The biggest story of the IPL' - Aakash Chopra builds up to Vaibhav Sooryavanshi vs Jasprit Bumrah clash at RR vs MI match"
+            - link "C CricketAddictor CSK 5h ago Controversy brewing? CSK’s benched star posts viral Instagram stories in support of PSL amid IPL 2026" [ref=e1367] [cursor=pointer]:
+              - /url: https://cricketaddictor.com/cricket-news/controversy-brewing-csks-benched-star-posts-viral-instagram-stories-in-support-of-psl-amid-ipl-2026-431918/
+              - generic [ref=e1369]: C
+              - generic [ref=e1370]:
+                - generic [ref=e1371]:
+                  - generic [ref=e1372]: CricketAddictor
+                  - generic [ref=e1373]: CSK
+                  - generic [ref=e1374]: 5h ago
+                - generic [ref=e1375]: Controversy brewing? CSK’s benched star posts viral Instagram stories in support of PSL amid IPL 2026
+            - link "C CricTracker LSG GT 6h ago 'BCCI gets 50 per cent' - Lalit Modi questions arrangement of home-and-away IPL matches" [ref=e1376] [cursor=pointer]:
+              - /url: https://www.crictracker.com/cricket-news/bcci-gets-50-per-cent-lalit-modi-questions-arrangement-of-home-and-away-ipl-matches/
+              - generic [ref=e1378]: C
+              - generic [ref=e1379]:
+                - generic [ref=e1380]:
+                  - generic [ref=e1381]: CricTracker
+                  - generic [ref=e1382]: LSG
+                  - generic [ref=e1383]: GT
+                  - generic [ref=e1384]: 6h ago
+                - generic [ref=e1385]: "'BCCI gets 50 per cent' - Lalit Modi questions arrangement of home-and-away IPL matches"
+    - contentinfo [ref=e1386]:
+      - generic [ref=e1387]: SYNCED 18m ago · CRICSHEET · ESPNCRICINFO · WISDEN · GEMINI · DUCKWORTH-MCP
+      - generic [ref=e1388]: IPL 2026 · 70 FIXTURES
+      - generic [ref=e1389]:
+        - link "★" [ref=e1390] [cursor=pointer]:
+          - /url: https://github.com
+        - text: IPL MONITOR
+  - generic [ref=e1393]:
+    - button "Menu" [ref=e1394]:
+      - img [ref=e1396]
+      - generic: Menu
+    - button "Inspect" [ref=e1400]:
+      - img [ref=e1402]
+      - generic: Inspect
+    - button "Audit" [ref=e1404]:
+      - img [ref=e1406]
+      - generic: Audit
+    - button "Settings" [ref=e1409]:
+      - img [ref=e1411]
+      - generic: Settings

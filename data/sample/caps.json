@@ -1,0 +1,291 @@
+{
+  "orange_cap": [
+    {
+      "rank": 1,
+      "player": "Sameer Rizvi",
+      "team": "dc",
+      "team_short": "DC",
+      "stat": "160 runs"
+    },
+    {
+      "rank": 2,
+      "player": "Heinrich Klaasen",
+      "team": "srh",
+      "team_short": "SRH",
+      "stat": "145 runs"
+    },
+    {
+      "rank": 3,
+      "player": "Rohit Sharma",
+      "team": "mi",
+      "team_short": "MI",
+      "stat": "113 runs"
+    },
+    {
+      "rank": 4,
+      "player": "Devdutt Padikkal",
+      "team": "rcb",
+      "team_short": "RCB",
+      "stat": "111 runs"
+    },
+    {
+      "rank": 5,
+      "player": "Angkrish Raghuvanshi",
+      "team": "kkr",
+      "team_short": "KKR",
+      "stat": "110 runs"
+    },
+    {
+      "rank": 6,
+      "player": "Cooper Connolly",
+      "team": "pbks",
+      "team_short": "PBKS",
+      "stat": "108 runs"
+    },
+    {
+      "rank": 7,
+      "player": "Sarfaraz Khan",
+      "team": "csk",
+      "team_short": "CSK",
+      "stat": "99 runs"
+    },
+    {
+      "rank": 8,
+      "player": "Virat Kohli",
+      "team": "rcb",
+      "team_short": "RCB",
+      "stat": "97 runs"
+    },
+    {
+      "rank": 9,
+      "player": "Nitish Kumar Reddy",
+      "team": "srh",
+      "team_short": "SRH",
+      "stat": "96 runs"
+    },
+    {
+      "rank": 10,
+      "player": "Ishan Kishan",
+      "team": "srh",
+      "team_short": "SRH",
+      "stat": "95 runs"
+    }
+  ],
+  "purple_cap": [
+    {
+      "rank": 1,
+      "player": "Jacob Duffy",
+      "team": "rcb",
+      "team_short": "RCB",
+      "stat": "5 wkts"
+    },
+    {
+      "rank": 2,
+      "player": "Anshul Kamboj",
+      "team": "csk",
+      "team_short": "CSK",
+      "stat": "5 wkts"
+    },
+    {
+      "rank": 3,
+      "player": "Ravi Bishnoi",
+      "team": "rr",
+      "team_short": "RR",
+      "stat": "5 wkts"
+    },
+    {
+      "rank": 4,
+      "player": "Vijaykumar Vyshak",
+      "team": "pbks",
+      "team_short": "PBKS",
+      "stat": "5 wkts"
+    },
+    {
+      "rank": 5,
+      "player": "Harsh Dubey",
+      "team": "srh",
+      "team_short": "SRH",
+      "stat": "4 wkts"
+    },
+    {
+      "rank": 6,
+      "player": "Bhuvneshwar Kumar",
+      "team": "rcb",
+      "team_short": "RCB",
+      "stat": "4 wkts"
+    },
+    {
+      "rank": 7,
+      "player": "Blessing Muzarabani",
+      "team": "kkr",
+      "team_short": "KKR",
+      "stat": "4 wkts"
+    },
+    {
+      "rank": 8,
+      "player": "T Natarajan",
+      "team": "dc",
+      "team_short": "DC",
+      "stat": "4 wkts"
+    },
+    {
+      "rank": 9,
+      "player": "Lungi Ngidi",
+      "team": "dc",
+      "team_short": "DC",
+      "stat": "4 wkts"
+    },
+    {
+      "rank": 10,
+      "player": "Prasidh Krishna",
+      "team": "gt",
+      "team_short": "GT",
+      "stat": "4 wkts"
+    }
+  ],
+  "best_sr": [
+    {
+      "rank": 1,
+      "player": "RG Sharma",
+      "team": "mi",
+      "team_short": "MI",
+      "stat": "SR 205.30"
+    },
+    {
+      "rank": 2,
+      "player": "Ishan Kishan",
+      "team": "srh",
+      "team_short": "SRH",
+      "stat": "SR 200.00"
+    },
+    {
+      "rank": 3,
+      "player": "TM Head",
+      "team": "srh",
+      "team_short": "SRH",
+      "stat": "SR 190.00"
+    },
+    {
+      "rank": 4,
+      "player": "RD Rickelton",
+      "team": "mi",
+      "team_short": "MI",
+      "stat": "SR 188.40"
+    },
+    {
+      "rank": 5,
+      "player": "V Kohli",
+      "team": "rcb",
+      "team_short": "RCB",
+      "stat": "SR 181.60"
+    },
+    {
+      "rank": 6,
+      "player": "A Raghuvanshi",
+      "team": "kkr",
+      "team_short": "KKR",
+      "stat": "SR 177.60"
+    },
+    {
+      "rank": 7,
+      "player": "C Connolly",
+      "team": "pbks",
+      "team_short": "PBKS",
+      "stat": "SR 163.60"
+    },
+    {
+      "rank": 8,
+      "player": "AM Rahane",
+      "team": "kkr",
+      "team_short": "KKR",
+      "stat": "SR 150.00"
+    },
+    {
+      "rank": 9,
+      "player": "Sameer Rizvi",
+      "team": "dc",
+      "team_short": "DC",
+      "stat": "SR 148.90"
+    },
+    {
+      "rank": 10,
+      "player": "RK Singh",
+      "team": "kkr",
+      "team_short": "KKR",
+      "stat": "SR 147.80"
+    }
+  ],
+  "best_econ": [
+    {
+      "rank": 1,
+      "player": "JC Archer",
+      "team": "rr",
+      "team_short": "RR",
+      "stat": "Econ 4.75"
+    },
+    {
+      "rank": 2,
+      "player": "Mohsin Khan",
+      "team": "lsg",
+      "team_short": "LSG",
+      "stat": "Econ 4.75"
+    },
+    {
+      "rank": 3,
+      "player": "M Jansen",
+      "team": "pbks",
+      "team_short": "PBKS",
+      "stat": "Econ 5.00"
+    },
+    {
+      "rank": 4,
+      "player": "Ravi Bishnoi",
+      "team": "rr",
+      "team_short": "RR",
+      "stat": "Econ 5.33"
+    },
+    {
+      "rank": 5,
+      "player": "JA Duffy",
+      "team": "rcb",
+      "team_short": "RCB",
+      "stat": "Econ 5.50"
+    },
+    {
+      "rank": 6,
+      "player": "Mukesh Kumar",
+      "team": "dc",
+      "team_short": "DC",
+      "stat": "Econ 5.67"
+    },
+    {
+      "rank": 7,
+      "player": "Brijesh Sharma",
+      "team": "rr",
+      "team_short": "RR",
+      "stat": "Econ 5.67"
+    },
+    {
+      "rank": 8,
+      "player": "KK Ahmed",
+      "team": "csk",
+      "team_short": "CSK",
+      "stat": "Econ 5.67"
+    },
+    {
+      "rank": 9,
+      "player": "AR Patel",
+      "team": "dc",
+      "team_short": "DC",
+      "stat": "Econ 5.67"
+    },
+    {
+      "rank": 10,
+      "player": "RA Jadeja",
+      "team": "rr",
+      "team_short": "RR",
+      "stat": "Econ 6.00"
+    }
+  ],
+  "updated": "2026-04-06T17:41:00+00:00"
+}

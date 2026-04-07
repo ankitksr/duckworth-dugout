@@ -1,0 +1,57 @@
+{
+  "imminent": [
+    {
+      "player": "Bhuvneshwar Kumar",
+      "team": "RCB",
+      "current": "199 wickets",
+      "target": "200 wickets",
+      "note": "Needs only 1 more wicket to become the second bowler in IPL history to reach the 200-wicket milestone."
+    },
+    {
+      "player": "Sandeep Sharma",
+      "team": "GT",
+      "current": "147 wickets",
+      "target": "150 wickets",
+      "note": "Requires 3 wickets to reach the 150-wicket mark."
+    },
+    {
+      "player": "Sunil Narine",
+      "team": "KKR",
+      "current": "193 wickets",
+      "target": "200 wickets",
+      "note": "Needs 7 wickets to join the 200-wicket club."
+    }
+  ],
+  "on_track": [
+    {
+      "player": "Virat Kohli",
+      "team": "RCB",
+      "current": "8740 runs",
+      "target": "9000 runs",
+      "note": "Needs 260 runs to become the first player to reach 9000 career IPL runs."
+    },
+    {
+      "player": "Sanju Samson",
+      "team": "CSK",
+      "current": "4710 runs",
+      "target": "5000 runs",
+      "note": "Needs 290 runs to reach the 5000-run milestone."
+    },
+    {
+      "player": "Jasprit Bumrah",
+      "team": "MI",
+      "current": "186 wickets",
+      "target": "200 wickets",
+      "note": "Needs 14 wickets to reach the 200-wicket milestone."
+    }
+  ],
+  "season_bests": [
+    {
+      "stat": "Highest Individual Score",
+      "holder": "Abhishek Sharma",
+      "value": "141",
+      "record": "175",
+      "record_holder": "Chris Gayle"
+    }
+  ]
+}

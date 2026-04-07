@@ -1,0 +1,102 @@
+[
+  {
+    "id": "csk",
+    "name": "Chennai Super Kings",
+    "short_name": "CSK",
+    "primary_color": "#FCCA06",
+    "war_room_color": "#fdb913",
+    "secondary_color": "#0081E9",
+    "accent_color": "#FFFFFF",
+    "founded_year": 2008
+  },
+  {
+    "id": "dc",
+    "name": "Delhi Capitals",
+    "short_name": "DC",
+    "primary_color": "#004C93",
+    "war_room_color": "#2bbce0",
+    "secondary_color": "#EF1B23",
+    "accent_color": "#FFFFFF",
+    "founded_year": 2008
+  },
+  {
+    "id": "kkr",
+    "name": "Kolkata Knight Riders",
+    "short_name": "KKR",
+    "primary_color": "#3A225D",
+    "war_room_color": "#9b7ed8",
+    "secondary_color": "#B3A123",
+    "accent_color": "#FFFFFF",
+    "founded_year": 2008
+  },
+  {
+    "id": "mi",
+    "name": "Mumbai Indians",
+    "short_name": "MI",
+    "primary_color": "#004BA0",
+    "war_room_color": "#4a90e8",
+    "secondary_color": "#D1AB3E",
+    "accent_color": "#FFFFFF",
+    "founded_year": 2008
+  },
+  {
+    "id": "pbks",
+    "name": "Punjab Kings",
+    "short_name": "PBKS",
+    "primary_color": "#ED1B24",
+    "war_room_color": "#ff6b6b",
+    "secondary_color": "#A7A9AC",
+    "accent_color": "#FFFFFF",
+    "founded_year": 2008
+  },
+  {
+    "id": "rr",
+    "name": "Rajasthan Royals",
+    "short_name": "RR",
+    "primary_color": "#EA1A85",
+    "war_room_color": "#ea1a85",
+    "secondary_color": "#254AA5",
+    "accent_color": "#FFFFFF",
+    "founded_year": 2008
+  },
+  {
+    "id": "rcb",
+    "name": "Royal Challengers Bengaluru",
+    "short_name": "RCB",
+    "primary_color": "#EC1C24",
+    "war_room_color": "#e2231a",
+    "secondary_color": "#2B2A29",
+    "accent_color": "#D4AF37",
+    "founded_year": 2008
+  },
+  {
+    "id": "srh",
+    "name": "Sunrisers Hyderabad",
+    "short_name": "SRH",
+    "primary_color": "#FF822A",
+    "war_room_color": "#ff822a",
+    "secondary_color": "#000000",
+    "accent_color": "#FFFFFF",
+    "founded_year": 2013
+  },
+  {
+    "id": "gt",
+    "name": "Gujarat Titans",
+    "short_name": "GT",
+    "primary_color": "#1C1C1C",
+    "war_room_color": "#4dbfa8",
+    "secondary_color": "#0B4973",
+    "accent_color": "#FFFFFF",
+    "founded_year": 2022
+  },
+  {
+    "id": "lsg",
+    "name": "Lucknow Super Giants",
+    "short_name": "LSG",
+    "primary_color": "#A72056",
+    "war_room_color": "#c44885",
+    "secondary_color": "#FFCC00",
+    "accent_color": "#FFFFFF",
+    "founded_year": 2022
+  }
+]

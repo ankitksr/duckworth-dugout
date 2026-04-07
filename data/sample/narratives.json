@@ -1,0 +1,212 @@
+[
+  {
+    "franchise_id": "pbks",
+    "title": "Unbeaten and Unbothered",
+    "mood": "rising",
+    "mood_symbol": "▲",
+    "narrative": "Punjab Kings find themselves at the summit, riding high on two victories and a fortunate washout against KKR. The emergence of C Connolly and the consistent wicket-taking form of Vijaykumar Vyshak have given them a balanced, winning formula. They look settled and confident as they navigate the early stages of the tournament.",
+    "key_question": "Can Punjab maintain this early momentum when the fixtures pile up and the pressure mounts?",
+    "buffer": "Sitting comfortably at the top with a solid NRR, PBKS has already built a crucial points cushion. Their unbeaten start allows them to play with freedom rather than desperation.",
+    "buffer_tag": "COMFORT ZONE",
+    "arc_bullets": [
+      "Early victories have established a strong foundation and a healthy points tally.",
+      "Vijaykumar Vyshak's form with the ball is a major positive, making him a genuine Purple Cap contender.",
+      "The true test of their depth will come when their top-order fails to fire in crunch games."
+    ],
+    "next_test": {
+      "opponent": "srh",
+      "match_number": 17,
+      "context": "Facing SRH offers PBKS a chance to solidify their dominance against a team struggling for consistency. A win here would further distance them from the chasing pack.",
+      "playoff_path": "With 5 points already, they are well on track and need roughly 6 more wins to secure a playoff berth."
+    }
+  },
+  {
+    "franchise_id": "rcb",
+    "title": "The Complete Package",
+    "mood": "dominant",
+    "mood_symbol": "★",
+    "narrative": "Royal Challengers Bengaluru have finally discovered the holy grail of T20 cricket: a bowling attack that complements their explosive batting. With Jacob Duffy tearing through lineups and Tim David finishing games, they look formidable. The ghosts of past bowling failures seem to have been exorcised.",
+    "key_question": "Will RCB's newfound bowling prowess hold up on flatter, less forgiving surfaces?",
+    "buffer": "RCB's astronomical +2.415 NRR acts as a virtual extra point in any tie-break scenario. They can afford the luxury of a few slip-ups while remaining firmly in control of their destiny.",
+    "buffer_tag": "BEST BUFFER",
+    "arc_bullets": [
+      "The massive NRR boost from their opening wins provides a structural safety net for the rest of the campaign.",
+      "Jacob Duffy's emergence as a reliable wicket-taker has transformed their historically weak bowling unit.",
+      "Their ability to defend sub-par totals remains the final frontier to conquer for a championship push."
+    ],
+    "next_test": {
+      "opponent": "rr",
+      "match_number": 16,
+      "context": "A clash of the titans against another unbeaten side in RR will be a true measure of RCB's title credentials. It's a battle for early supremacy at the top of the table.",
+      "playoff_path": "With 4 points and a massive NRR, they are in the safest position in the league and need 6 wins from 12."
+    }
+  },
+  {
+    "franchise_id": "rr",
+    "title": "Clinical and Ruthless",
+    "mood": "dominant",
+    "mood_symbol": "★",
+    "narrative": "Rajasthan Royals have seamlessly transitioned into the new season, picking up two commanding wins. Ravi Bishnoi is spinning webs around opposition batters, while their death bowling, led by Tushar Deshpande, has held its nerve in tight finishes. They are a well-oiled machine operating at peak efficiency.",
+    "key_question": "Can Rajasthan's batting order consistently deliver match-winning totals if their spinners have an off day?",
+    "buffer": "With a stellar +2.233 NRR, RR sits comfortably in the top tier, giving them a significant advantage in any mid-table logjam later in the season.",
+    "buffer_tag": "BEST BUFFER",
+    "arc_bullets": [
+      "Two clinical victories have established RR as a team with very few exploitable weaknesses.",
+      "Ravi Bishnoi's control and wicket-taking ability make him the linchpin of their bowling attack.",
+      "The middle-order's ability to accelerate against high-quality pace remains an area to watch."
+    ],
+    "next_test": {
+      "opponent": "mi",
+      "match_number": 13,
+      "context": "Facing a Mumbai Indians side bolstered by the return of Hardik Pandya will test RR's tactical flexibility. It's a high-profile matchup that could define their momentum.",
+      "playoff_path": "Undefeated and boasting a high NRR, they are firmly on course, needing 6 wins from their remaining 12 matches."
+    }
+  },
+  {
+    "franchise_id": "dc",
+    "title": "The Rizvi Show",
+    "mood": "rising",
+    "mood_symbol": "▲",
+    "narrative": "Delhi Capitals are soaring on the back of Sameer Rizvi's spectacular batting exploits. With two match-winning knocks, he has single-handedly propelled DC to an unbeaten start. The team looks energized and dangerous, feeding off the confidence of their new talisman.",
+    "key_question": "Is Delhi too reliant on Sameer Rizvi, and what happens when he inevitably faces a lean patch?",
+    "buffer": "Two wins and a healthy NRR place DC in a strong position, allowing them to build their campaign without the pressure of playing catch-up.",
+    "buffer_tag": "COMFORT ZONE",
+    "arc_bullets": [
+      "The perfect start has masked any underlying flaws in their bowling or lower-order batting.",
+      "Sameer Rizvi's explosive form is the story of the tournament so far, making him the man to watch.",
+      "The bowling unit needs to prove it can defend totals if the top order fails to fire."
+    ],
+    "next_test": {
+      "opponent": "gt",
+      "match_number": 14,
+      "context": "A match against a struggling GT side is an opportunity for DC to consolidate their position in the top four and further boost their NRR.",
+      "playoff_path": "With 4 points in the bag, they are well-positioned and require 6 wins from their remaining 12 games."
+    }
+  },
+  {
+    "franchise_id": "srh",
+    "title": "Flashes of Brilliance",
+    "mood": "volatile",
+    "mood_symbol": "◆",
+    "narrative": "Sunrisers Hyderabad are a team of extremes, capable of dismantling opponents or collapsing inexplicably. Heinrich Klaasen's power-hitting has been a bright spot, but off-field controversies and inconsistent bowling have hindered their progress. They remain a dangerous but unpredictable proposition.",
+    "key_question": "Can SRH find the consistency needed to string together a run of victories in a highly competitive league?",
+    "buffer": "Sitting mid-table with a slightly positive NRR, SRH has no margin for error if they want to keep pace with the early pacesetters.",
+    "buffer_tag": "BUILDING",
+    "arc_bullets": [
+      "Inconsistent results have prevented SRH from building any real momentum in the early stages.",
+      "Heinrich Klaasen remains their most potent weapon, capable of turning games single-handedly.",
+      "The bowling unit must find a way to contain opposition batters during the middle overs."
+    ],
+    "next_test": {
+      "opponent": "pbks",
+      "match_number": 17,
+      "context": "Taking on the league leaders will be a massive test of SRH's character and tactical acumen. A win here would be a huge statement of intent.",
+      "playoff_path": "Currently on 2 points, they need to win 7 of their remaining 11 matches to reach the safety mark."
+    }
+  },
+  {
+    "franchise_id": "mi",
+    "title": "Waiting for Liftoff",
+    "mood": "steady",
+    "mood_symbol": "▸",
+    "narrative": "Mumbai Indians have had a mixed start, securing a win but also suffering a defeat. The impending return of Hardik Pandya promises to add much-needed balance and leadership. Rohit Sharma has shown glimpses of his best, but the team is yet to fire on all cylinders.",
+    "key_question": "Will Hardik Pandya's return be the catalyst Mumbai needs to launch a sustained title challenge?",
+    "buffer": "With a negative NRR and a 50% win rate, MI is hovering in the middle of the pack. They need to start stringing wins together to avoid falling behind.",
+    "buffer_tag": "WATCH ZONE",
+    "arc_bullets": [
+      "A sluggish start is typical for MI, but they cannot afford to drop too many points early on.",
+      "Rohit Sharma's form at the top of the order is crucial for setting the tone of their innings.",
+      "The bowling attack needs to find a way to be more penetrative in the powerplay."
+    ],
+    "next_test": {
+      "opponent": "rr",
+      "match_number": 13,
+      "context": "Facing an unbeaten RR side will immediately test the impact of Hardik Pandya's return. It's a crucial juncture to gauge MI's true strength.",
+      "playoff_path": "With 2 points from 2 games, they need to secure 7 wins from their remaining 12 matches to qualify."
+    }
+  },
+  {
+    "franchise_id": "lsg",
+    "title": "Finding Their Feet",
+    "mood": "steady",
+    "mood_symbol": "▸",
+    "narrative": "Lucknow Super Giants have bounced back from an opening defeat with a gritty win over SRH. The team is still searching for its optimal combination, with rumors of squad changes swirling. They are a work in progress, relying on individual brilliance to pull them through.",
+    "key_question": "Can LSG settle on a stable playing XI and build a cohesive unit before the tournament slips away?",
+    "buffer": "A negative NRR puts LSG at a disadvantage in tie-break situations. They need to focus on decisive victories to improve their standing.",
+    "buffer_tag": "WATCH ZONE",
+    "arc_bullets": [
+      "The early results suggest a team that is still trying to find its identity and rhythm.",
+      "The potential arrival of Matheesha Pathirana could significantly bolster their death bowling options.",
+      "The top order needs to take more responsibility and bat deeper into the innings."
+    ],
+    "next_test": {
+      "opponent": "kkr",
+      "match_number": 15,
+      "context": "A matchup against a struggling KKR side presents a prime opportunity for LSG to secure back-to-back wins and build crucial momentum.",
+      "playoff_path": "Sitting on 2 points, they require 7 wins from their remaining 12 games to reach the 16-point threshold."
+    }
+  },
+  {
+    "franchise_id": "kkr",
+    "title": "Washed Out and Winless",
+    "mood": "falling",
+    "mood_symbol": "▼",
+    "narrative": "Kolkata Knight Riders are in dire straits, having suffered two defeats before a rain-curtailed match handed them their first point. Their NRR is severely dented, and the team looks bereft of confidence. Angkrish Raghuvanshi's batting has been the lone bright spot in an otherwise gloomy campaign.",
+    "key_question": "How quickly can KKR arrest this slide before their playoff hopes are mathematically extinguished?",
+    "buffer": "With a disastrous -1.964 NRR and no wins, KKR is in a perilous position. Every upcoming game is essentially a knockout fixture for them.",
+    "buffer_tag": "MUST-WIN ZONE",
+    "arc_bullets": [
+      "The early defeats have severely compromised their campaign, leaving them with a mountain to climb.",
+      "Angkrish Raghuvanshi has shown promise, but he needs support from the rest of the batting lineup.",
+      "The bowling attack must find a way to take early wickets and apply pressure on the opposition."
+    ],
+    "next_test": {
+      "opponent": "lsg",
+      "match_number": 15,
+      "context": "This is a must-win game for KKR. Another defeat against LSG would make their path to the playoffs almost insurmountable.",
+      "playoff_path": "With just 1 point and a terrible NRR, they need to win 8 of their remaining 11 games to have a realistic chance."
+    }
+  },
+  {
+    "franchise_id": "gt",
+    "title": "Slipping Standards",
+    "mood": "falling",
+    "mood_symbol": "▼",
+    "narrative": "Gujarat Titans are uncharacteristically winless after two games, plagued by erratic bowling and a lack of finishing power. The normally disciplined side is conceding too many extras and failing to clear the ropes. They need to rediscover the clinical edge that made them champions.",
+    "key_question": "Can GT's experienced core step up and rectify the uncharacteristic errors creeping into their game?",
+    "buffer": "While winless, their NRR is not as catastrophic as other struggling teams. However, they must start winning immediately to avoid falling too far behind.",
+    "buffer_tag": "WATCH ZONE",
+    "arc_bullets": [
+      "Two narrow defeats have highlighted a lack of composure in crucial moments of the game.",
+      "The bowling unit needs to drastically reduce the number of extras bowled to build pressure.",
+      "The middle order must find a way to increase their boundary-hitting frequency in the death overs."
+    ],
+    "next_test": {
+      "opponent": "dc",
+      "match_number": 14,
+      "context": "Facing an in-form DC side will be a stern test. GT desperately needs a victory to kickstart their campaign and restore belief.",
+      "playoff_path": "Currently on 0 points, they need 8 wins from their remaining 12 matches to reach the 16-point safety mark."
+    }
+  },
+  {
+    "franchise_id": "csk",
+    "title": "The Crumbling Fortress",
+    "mood": "falling",
+    "mood_symbol": "▼",
+    "narrative": "Chennai Super Kings are enduring a nightmare start, suffering three consecutive defeats with a league-worst NRR. The top order is misfiring, and the bowling looks toothless, with Noor Ahmad's form a major concern. They are desperately awaiting the return of MS Dhoni to salvage their season.",
+    "key_question": "Is the potential return of MS Dhoni enough to mask the deep structural flaws in this aging CSK squad?",
+    "buffer": "With zero points and a catastrophic -2.467 NRR, CSK's season is already on life support. Their NRR effectively acts as a one-game penalty.",
+    "buffer_tag": "MUST-WIN ZONE",
+    "arc_bullets": [
+      "Three heavy defeats have shattered their confidence and left them rooted to the bottom of the table.",
+      "The opening partnership of Sanju Samson and Ruturaj Gaikwad is failing to provide solid starts.",
+      "The bowling attack desperately needs to find a way to take wickets and stem the flow of runs."
+    ],
+    "next_test": {
+      "opponent": "dc",
+      "match_number": 18,
+      "context": "A clash against a high-flying DC side is a daunting prospect. CSK must win to keep their fading playoff hopes alive.",
+      "playoff_path": "Requiring 8 wins from their remaining 11 games (a 72% win rate), their margin for error is virtually zero."
+    }
+  }
+]

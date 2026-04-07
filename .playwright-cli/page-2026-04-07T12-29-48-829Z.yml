@@ -1,0 +1,15 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]: Loading Dugout...
+  - generic [ref=e7]:
+    - button "Menu" [ref=e8]:
+      - img [ref=e10]
+      - generic: Menu
+    - button "Inspect" [ref=e14]:
+      - img [ref=e16]
+      - generic: Inspect
+    - button "Audit" [ref=e18]:
+      - img [ref=e20]
+      - generic: Audit
+    - button "Settings" [ref=e23]:
+      - img [ref=e25]
+      - generic: Settings
