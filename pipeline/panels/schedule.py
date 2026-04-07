@@ -69,28 +69,18 @@ def sync(ctx: SyncContext) -> None:
         except Exception as e:
             console.print(f"  [yellow]Match notes: skipped: {e}[/yellow]")
 
-    if matches:
-        data = [asdict(m) for m in matches]
-        write_panel(
-            "schedule", data,
-            data_dir=ctx.data_dir, public_dir=ctx.public_dir,
-            db_conn=ctx.db_conn, season=ctx.season,
-        )
-
-    # Live match enrichment via page crawl
+    # Live match enrichment via page crawl (before writing panel)
     live_matches = [m for m in matches if m.status == "live" and m.match_url]
     if live_matches:
         try:
             from pipeline.sources.live_crawl import (
                 crawl_live_matches_sync,
-                patch_schedule_with_live,
                 write_live_archive,
                 write_live_snapshot,
             )
 
             results = crawl_live_matches_sync()
             if results:
-                patch_schedule_with_live(results)
                 write_live_snapshot(results)
                 write_live_archive(results)
                 for r in results:
@@ -110,6 +100,15 @@ def sync(ctx: SyncContext) -> None:
                                 m.score2 = r.score2
         except Exception as e:
             console.print(f"  [yellow]Live crawl: {e}[/yellow]")
+
+    # Write panel after live enrichment so final state ships
+    if matches:
+        data = [asdict(m) for m in matches]
+        write_panel(
+            "schedule", data,
+            data_dir=ctx.data_dir, public_dir=ctx.public_dir,
+            db_conn=ctx.db_conn, season=ctx.season,
+        )
 
     ctx.schedule_matches = matches
     ctx.today_matches = matches  # downstream panels filter by date themselves
