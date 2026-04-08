@@ -15,8 +15,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: live-update
+  cancel-in-progress: true
 
 jobs:
   update:
