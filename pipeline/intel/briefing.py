@@ -428,14 +428,41 @@ def _query_player_venue_stats(
     if not squad_map:
         return []
 
-    # Build surname → (squad_name, team_short) index
-    surname_to_squad: dict[str, tuple[str, str]] = {}
+    # Build surname → list of (squad_name, team_short) for matching
+    surname_to_squad: dict[str, list[tuple[str, str]]] = {}
     for team_short, names in squad_map.items():
         for name in names:
             surname = name.split()[-1].lower()
-            # Avoid collisions — first match wins (rare for same venue)
-            if surname not in surname_to_squad:
-                surname_to_squad[surname] = (name, team_short)
+            surname_to_squad.setdefault(surname, []).append(
+                (name, team_short),
+            )
+
+    def _match_squad(cricsheet_name: str) -> tuple[str, str] | None:
+        """Match a Cricsheet name (e.g. 'N Rana') to a squad member.
+
+        Uses surname + first-initial to disambiguate collisions like
+        Nitish Rana vs Harshit Rana.
+        """
+        surname = cricsheet_name.split()[-1].lower()
+        candidates = surname_to_squad.get(surname)
+        if not candidates:
+            return None
+        # Always verify first initial to avoid wrong-player matches
+        # (e.g. "N Rana" = Nitish Rana ≠ "Harshit Rana")
+        initial = cricsheet_name[0].upper()
+        for squad_name, team_short in candidates:
+            if squad_name[0].upper() == initial:
+                return (squad_name, team_short)
+        # Single candidate with mismatched initial — could be an
+        # abbreviated Cricsheet name (e.g. "KL Rahul" vs "KL Rahul").
+        # Only accept if the Cricsheet name has >1 token matching the
+        # squad first name (not just a single initial).
+        if len(candidates) == 1 and len(cricsheet_name.split()) > 1:
+            cric_first = cricsheet_name.split()[0].lower()
+            squad_first = candidates[0][0].split()[0].lower()
+            if cric_first == squad_first:
+                return candidates[0]
+        return None
 
     city_pattern = f"%{city}%"
     results: list[dict] = []
@@ -461,14 +488,14 @@ def _query_player_venue_stats(
         ORDER BY SUM(bs.runs) DESC
     """, [_EVENT, city_pattern]).fetchall()
 
-    # Match Cricsheet names to squad by surname
+    # Match Cricsheet names to squad members
     seen_players: set[str] = set()  # track squad names already used
     team_bat_count: dict[str, int] = {}
     for name, innings, runs, avg, sr, highest in bat_rows:
-        surname = name.split()[-1].lower()
-        if surname not in surname_to_squad:
+        matched = _match_squad(name)
+        if not matched:
             continue
-        squad_name, team_short = surname_to_squad[surname]
+        squad_name, team_short = matched
         if squad_name in seen_players:
             continue
         if team_bat_count.get(team_short, 0) >= 2:
@@ -507,10 +534,10 @@ def _query_player_venue_stats(
 
     team_bowl_count: dict[str, int] = {}
     for name, innings, wickets, econ in bowl_rows:
-        surname = name.split()[-1].lower()
-        if surname not in surname_to_squad:
+        matched = _match_squad(name)
+        if not matched:
             continue
-        squad_name, team_short = surname_to_squad[surname]
+        squad_name, team_short = matched
         if squad_name in seen_players:
             continue
         if team_bowl_count.get(team_short, 0) >= 1:

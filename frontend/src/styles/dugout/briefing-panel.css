@@ -274,6 +274,7 @@
 
 .wr-briefing-pnl > .wr-briefing-scroll > .wr-br > .wr-br-section {
   display: grid;
+  align-content: start;
 }
 
 /* ── Match Edge — card + context below ── */
