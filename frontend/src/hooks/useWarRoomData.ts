@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import type {
   WRStanding,
   WRFixture,
@@ -18,9 +18,13 @@ import { useWarRoomDispatch } from "./useWarRoom";
 
 const BASE = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/ipl/war-room`;
 
-async function fetchJson<T>(url: string): Promise<T | null> {
+/** Poll interval: 5 minutes. */
+const POLL_MS = 5 * 60 * 1000;
+
+async function fetchJson<T>(url: string, bustCache = false): Promise<T | null> {
   try {
-    const res = await fetch(url);
+    const finalUrl = bustCache ? `${url}?_t=${Date.now()}` : url;
+    const res = await fetch(finalUrl);
     if (!res.ok) return null;
     return (await res.json()) as T;
   } catch {
@@ -29,35 +33,36 @@ async function fetchJson<T>(url: string): Promise<T | null> {
 }
 
 /**
- * Fetches all War Room panel data on mount.
+ * Fetches all War Room panel data on mount, then polls every 5 minutes
+ * so live scores and intel refresh without a manual page reload.
  */
 export function useWarRoomData() {
   const dispatch = useWarRoomDispatch();
-  const loadedRef = useRef(false);
 
   useEffect(() => {
-    if (loadedRef.current) return;
-    loadedRef.current = true;
+    let active = true;
 
-    async function loadAll() {
+    async function loadAll(bustCache = false) {
       const [
         standings, schedule, caps, ticker, intelLog, pulse, metaData,
         scenarios, records, briefings, narratives, dossiers, wire,
       ] = await Promise.all([
-        fetchJson<WRStanding[]>(`${BASE}/standings.json`),
-        fetchJson<WRFixture[]>(`${BASE}/schedule.json`),
-        fetchJson<WRCaps>(`${BASE}/caps.json`),
-        fetchJson<WRTickerItem[]>(`${BASE}/ticker.json`),
-        fetchJson<WRIntelItem[]>(`${BASE}/intel-log.json`),
-        fetchJson<WRPulseTeam[]>(`${BASE}/pulse.json`),
-        fetchJson<WRMeta>(`${BASE}/meta.json`),
-        fetchJson<WRScenarios>(`${BASE}/scenarios.json`),
-        fetchJson<WRRecords>(`${BASE}/records.json`),
-        fetchJson<WRBriefing[]>(`${BASE}/briefing.json`),
-        fetchJson<WRNarrative[]>(`${BASE}/narratives.json`),
-        fetchJson<WRDossier[]>(`${BASE}/dossier.json`),
-        fetchJson<WRWireItem[]>(`${BASE}/wire.json`),
+        fetchJson<WRStanding[]>(`${BASE}/standings.json`, bustCache),
+        fetchJson<WRFixture[]>(`${BASE}/schedule.json`, bustCache),
+        fetchJson<WRCaps>(`${BASE}/caps.json`, bustCache),
+        fetchJson<WRTickerItem[]>(`${BASE}/ticker.json`, bustCache),
+        fetchJson<WRIntelItem[]>(`${BASE}/intel-log.json`, bustCache),
+        fetchJson<WRPulseTeam[]>(`${BASE}/pulse.json`, bustCache),
+        fetchJson<WRMeta>(`${BASE}/meta.json`, bustCache),
+        fetchJson<WRScenarios>(`${BASE}/scenarios.json`, bustCache),
+        fetchJson<WRRecords>(`${BASE}/records.json`, bustCache),
+        fetchJson<WRBriefing[]>(`${BASE}/briefing.json`, bustCache),
+        fetchJson<WRNarrative[]>(`${BASE}/narratives.json`, bustCache),
+        fetchJson<WRDossier[]>(`${BASE}/dossier.json`, bustCache),
+        fetchJson<WRWireItem[]>(`${BASE}/wire.json`, bustCache),
       ]);
+
+      if (!active) return;
 
       dispatch({
         type: "LOAD_DATA",
@@ -89,6 +94,14 @@ export function useWarRoomData() {
       });
     }
 
-    loadAll();
+    // Initial load (use browser cache)
+    loadAll(false);
+
+    // Poll with cache-busting so GitHub Pages CDN serves fresh JSON
+    const interval = setInterval(() => loadAll(true), POLL_MS);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
   }, [dispatch]);
 }
