@@ -1,0 +1,153 @@
+/* ── Top bar ── */
+
+.wr-top {
+  height: 42px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  background: var(--wr-s1);
+  border-bottom: 1px solid var(--wr-b2);
+  padding: 0 14px;
+  gap: 10px;
+}
+
+.wr-logo {
+  font: 800 13px 'Anybody', sans-serif;
+  letter-spacing: 3px;
+  color: var(--wr-brand);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.wr-logo i {
+  width: 5px;
+  height: 5px;
+  background: var(--wr-brand);
+  border-radius: 1px;
+  display: block;
+}
+
+.wr-pills {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.wr-pill {
+  height: 22px;
+  padding: 0 6px;
+  font: 600 9px 'JetBrains Mono', monospace;
+  line-height: 22px;
+  border: 1px solid var(--wr-b2);
+  border-radius: 2px;
+  cursor: pointer;
+  color: var(--wr-t3);
+  background: none;
+  transition: all 0.2s;
+}
+.wr-pill:hover {
+  color: var(--wr-t2);
+  background: rgba(255, 255, 255, 0.02);
+}
+.wr-pill.on {
+  /* Dynamic styles set inline */
+}
+
+/* Ticker */
+.wr-tkr {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+.wr-tkr::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  background: linear-gradient(90deg, var(--wr-s1), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+.wr-tkr::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 30px;
+  background: linear-gradient(90deg, transparent, var(--wr-s1));
+  pointer-events: none;
+  z-index: 1;
+}
+.wr-tkr-scroll {
+  display: flex;
+  gap: 24px;
+  white-space: nowrap;
+  animation: wr-tk 70s linear infinite;
+  font: 400 10px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+}
+@keyframes wr-tk {
+  to { transform: translateX(-50%); }
+}
+.wr-tkr-tag {
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 1px 4px;
+  border-radius: 1px;
+  margin-right: 4px;
+  /* Default fallback — visible pill for any unknown category */
+  background: rgba(168, 172, 184, 0.15);
+  color: var(--wr-t2);
+}
+.wr-tkr-h2h { background: rgba(212, 175, 55, 0.25); color: #d4af37; }
+.wr-tkr-venue { background: rgba(100, 100, 255, 0.25); color: #8888ff; }
+.wr-tkr-matchup { background: rgba(253, 185, 19, 0.25); color: var(--wr-brand); }
+.wr-tkr-form { background: rgba(0, 230, 118, 0.25); color: var(--wr-win); }
+.wr-tkr-impact { background: rgba(212, 175, 55, 0.25); color: #d4af37; }
+.wr-tkr-standings { background: rgba(100, 100, 255, 0.25); color: #8888ff; }
+.wr-tkr-emerging { background: rgba(0, 230, 118, 0.25); color: var(--wr-win); }
+.wr-tkr-record { background: rgba(253, 185, 19, 0.25); color: var(--wr-brand); }
+.wr-tkr-milestone { background: rgba(255, 152, 0, 0.25); color: #ff9800; }
+.wr-tkr-scenario { background: rgba(0, 188, 212, 0.25); color: #00bcd4; }
+.wr-tkr-quirk { background: rgba(224, 64, 251, 0.25); color: #e040fb; }
+.wr-tkr:hover .wr-tkr-scroll { animation-play-state: paused; }
+
+.wr-top-r {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.wr-clock {
+  font: 400 10px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+}
+.wr-live-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font: 600 8px 'JetBrains Mono', monospace;
+  letter-spacing: 2px;
+  color: var(--wr-win);
+}
+.wr-live-dot {
+  width: 5px;
+  height: 5px;
+  background: var(--wr-win);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--wr-win);
+  animation: wr-lp 2s ease-in-out infinite;
+  display: block;
+}
+@keyframes wr-lp {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+

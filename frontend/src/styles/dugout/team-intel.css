@@ -1,0 +1,641 @@
+/* ── Team Intel Panel ── */
+
+.wr-team-intel-pnl {
+  --tc: var(--wr-brand);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  --pnl-sheen: radial-gradient(ellipse 60% 60% at 10% 50%, color-mix(in srgb, var(--tc) 7%, transparent), transparent 65%);
+}
+
+/* ── Hero Narrative Card ── */
+.wr-ti-hero {
+  padding: 14px 18px 16px;
+  border-bottom: 1px solid var(--wr-b1);
+}
+
+/* Buffer — inline inside hero, not a separate block */
+.wr-ti-buffer-inline {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-left: 2px solid var(--tc);
+  background: color-mix(in srgb, var(--tc) 3%, transparent);
+}
+.wr-ti-buffer-tag {
+  display: inline-block;
+  font: 700 7.5px 'JetBrains Mono', monospace;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--tc);
+  border: 1px solid color-mix(in srgb, var(--tc) 40%, transparent);
+  padding: 1px 6px;
+  border-radius: 2px;
+  margin-bottom: 6px;
+}
+.wr-ti-buffer-body {
+  font: 400 11px 'Inter', sans-serif;
+  color: var(--wr-t2);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.wr-ti-hero-hd {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.wr-ti-hero-mood { font-size: 16px; }
+.wr-ti-hero-title {
+  font: 800 13px 'Anybody', sans-serif;
+  color: var(--wr-t);
+  letter-spacing: 0.4px;
+}
+.wr-ti-hero-vitals {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.wr-ti-hv {
+  font: 600 9px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+  letter-spacing: 0.3px;
+}
+.wr-ti-hv-sep {
+  font-size: 8px;
+  color: var(--wr-tm);
+}
+.wr-ti-hv-dots {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  margin-left: 4px;
+}
+.wr-ti-hero-body {
+  font: 400 11.5px 'Inter', sans-serif;
+  color: var(--wr-t2);
+  line-height: 1.7;
+  margin: 0 0 10px;
+}
+/* Structured arc bullets */
+.wr-ti-hero-bullets {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.wr-ti-hero-bullet {
+  font: 400 11.5px 'Inter', sans-serif;
+  color: var(--wr-t2);
+  line-height: 1.6;
+  margin: 0;
+  padding-left: 12px;
+  position: relative;
+}
+.wr-ti-hero-bullet::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--tc);
+  opacity: 0.55;
+}
+.wr-ti-hero-q {
+  font: 400 10.5px 'Inter', sans-serif;
+  font-style: italic;
+  color: var(--wr-t3);
+  line-height: 1.5;
+  margin: 0;
+  padding-left: 12px;
+  border-left: 1px solid color-mix(in srgb, var(--tc) 30%, var(--wr-b2));
+}
+
+/* ── Dual-column: Arc + Next Test ── */
+.wr-ti-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-bottom: 1px solid var(--wr-b1);
+}
+.wr-ti-col {
+  padding: 12px 16px 14px;
+}
+.wr-ti-col:first-child {
+  border-right: 1px solid var(--wr-b1);
+}
+@media (max-width: 1000px) {
+  .wr-ti-cols { grid-template-columns: 1fr; }
+  .wr-ti-col:first-child { border-right: none; border-bottom: 1px solid var(--wr-b1); }
+}
+
+/* Next Test cards (inside right column) */
+.wr-ti-next-card {
+  padding: 9px 12px;
+  margin-bottom: 6px;
+  border-left: 2px solid color-mix(in srgb, var(--tc) 35%, var(--wr-b2));
+  background: color-mix(in srgb, var(--tc) 2%, transparent);
+}
+.wr-ti-next-card:last-child { margin-bottom: 0; }
+.wr-ti-next-matchup {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.wr-ti-next-vs {
+  font: 700 11px 'Anybody', sans-serif;
+  color: var(--wr-t);
+  letter-spacing: 0.3px;
+}
+.wr-ti-next-mn {
+  font: 500 9px 'JetBrains Mono', monospace;
+  color: var(--wr-t3);
+}
+.wr-ti-next-ctx {
+  font: 400 10.5px 'Inter', sans-serif;
+  color: var(--wr-t2);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ── Wire Dispatches (team-filtered intelligence) ── */
+.wr-ti-dispatches {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wr-ti-dispatch {
+  display: flex;
+  gap: 8px;
+  padding: 7px 9px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-left: 3px solid var(--wr-t3);
+  border-radius: 2px;
+  align-items: flex-start;
+}
+.wr-ti-dispatch.alarm {
+  border-left-color: var(--wr-loss);
+  background: rgba(239, 68, 68, 0.03);
+}
+.wr-ti-dispatch.alert {
+  border-left-color: var(--wr-brand);
+  background: rgba(253, 185, 19, 0.03);
+}
+.wr-ti-dispatch-emoji {
+  font-size: 12px;
+  flex-shrink: 0;
+  line-height: 1.3;
+}
+.wr-ti-dispatch-body {
+  flex: 1;
+  min-width: 0;
+}
+.wr-ti-dispatch-hl {
+  display: block;
+  font: 600 10px 'Inter', sans-serif;
+  color: var(--wr-t);
+  line-height: 1.45;
+  margin-bottom: 2px;
+}
+.wr-ti-dispatch-cat {
+  font: 500 7px 'JetBrains Mono', monospace;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--wr-tm);
+}
+
+.wr-ti-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 1px;
+}
+.wr-ti-dot.w  { background: var(--wr-win); }
+.wr-ti-dot.l  { background: var(--wr-loss); opacity: 0.7; }
+.wr-ti-dot.nr { background: var(--wr-t3); opacity: 0.5; }
+
+/* Scroll area */
+.wr-team-intel-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* ── Two-column grid (matches Briefing grid) ── */
+.wr-ti-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 0;
+  min-height: 0;
+}
+.wr-ti-main {
+  border-right: 1px solid var(--wr-b1);
+  min-width: 0;
+}
+.wr-ti-side {
+  min-width: 0;
+}
+@media (max-width: 1000px) {
+  .wr-ti-grid { grid-template-columns: 1fr; }
+  .wr-ti-main { border-right: none; }
+}
+
+/* Sections */
+.wr-ti-section {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--wr-b1);
+}
+.wr-ti-section:last-child { border-bottom: none; }
+.wr-ti-sh {
+  font: 600 8px 'JetBrains Mono', monospace;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--wr-t3);
+  margin-bottom: 9px;
+  padding-left: 7px;
+  border-left: 2px solid var(--tc);
+}
+
+/* Empty state */
+.wr-ti-empty {
+  font: 400 10px 'JetBrains Mono', monospace;
+  color: var(--wr-t3);
+  opacity: 0.5;
+  padding: 4px 0;
+}
+
+/* ── Qualification bar — 14 slots, colored by outcome ── */
+.wr-ti-bar {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 7px;
+}
+.wr-ti-bar-slot {
+  flex: 1;
+  height: 5px;
+  border-radius: 1px;
+  transition: opacity 0.2s;
+}
+.wr-ti-bar-slot.w   { background: var(--wr-win); }
+.wr-ti-bar-slot.l   { background: var(--wr-loss); opacity: 0.55; }
+.wr-ti-bar-slot.nr  { background: var(--wr-t3); opacity: 0.45; }
+.wr-ti-bar-slot.rem { background: var(--wr-b2); }
+.wr-ti-path-txt {
+  font: 400 10px 'JetBrains Mono', monospace;
+  color: var(--wr-t3);
+  letter-spacing: 0.3px;
+}
+
+/* ── Elimination Watch card ── */
+.wr-ti-elim {
+  padding: 8px 10px;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-left: 3px solid var(--wr-t3);
+  background: rgba(255, 255, 255, 0.04);
+}
+.wr-ti-elim.danger { border-left-color: var(--wr-loss); background: rgba(239, 68, 68, 0.04); }
+.wr-ti-elim.watch  { border-left-color: var(--wr-brand); background: rgba(253, 185, 19, 0.04); }
+.wr-ti-elim.safe   { border-left-color: var(--wr-win); background: rgba(74, 222, 128, 0.04); }
+.wr-ti-elim-hd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+.wr-ti-elim-badge {
+  font: 700 8px 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+  padding: 2px 6px;
+  border-radius: 1px;
+}
+.wr-ti-elim-badge.danger { background: rgba(239, 68, 68, 0.2); color: var(--wr-loss); }
+.wr-ti-elim-badge.watch  { background: rgba(253, 185, 19, 0.2); color: var(--wr-brand); }
+.wr-ti-elim-badge.safe   { background: rgba(74, 222, 128, 0.15); color: var(--wr-win); }
+.wr-ti-elim-metric {
+  font: 600 9px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+  letter-spacing: 0.3px;
+}
+.wr-ti-elim-body {
+  font: 400 10.5px 'Inter', sans-serif;
+  color: var(--wr-t3);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ── If Tonight scenarios ── */
+.wr-ti-tonight {
+  padding: 4px 0;
+}
+.wr-ti-tonight-match {
+  font: 600 9px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+  letter-spacing: 0.3px;
+  margin-bottom: 6px;
+}
+.wr-ti-tonight-row {
+  display: flex;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.025);
+  align-items: baseline;
+}
+.wr-ti-tonight-row:last-child { border-bottom: none; }
+.wr-ti-tonight-result {
+  flex-shrink: 0;
+  font: 700 9px 'JetBrains Mono', monospace;
+  color: var(--wr-t);
+  min-width: 56px;
+}
+.wr-ti-tonight-impact {
+  font: 400 10px 'Inter', sans-serif;
+  color: var(--wr-t3);
+  line-height: 1.5;
+}
+
+/* ── Milestones ── */
+.wr-ti-milestones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wr-ti-milestone {
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 2px;
+}
+.wr-ti-ms-hd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+.wr-ti-ms-name {
+  font: 700 10px 'Anybody', sans-serif;
+  color: var(--wr-t);
+  letter-spacing: 0.3px;
+}
+.wr-ti-ms-badge {
+  font: 700 7px 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+  padding: 1px 5px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--wr-t3);
+}
+.wr-ti-ms-badge.hot {
+  background: rgba(253, 185, 19, 0.18);
+  color: var(--wr-brand);
+}
+.wr-ti-ms-progress {
+  font: 600 9px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+  letter-spacing: 0.3px;
+  margin-bottom: 2px;
+}
+.wr-ti-ms-note {
+  font: 400 10px 'Inter', sans-serif;
+  color: var(--wr-t3);
+  line-height: 1.5;
+}
+
+/* ── Season Results (FORM tab) ── */
+.wr-ti-results { display: flex; flex-direction: column; }
+.wr-ti-result {
+  display: grid;
+  grid-template-columns: 28px 56px 1fr 22px;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 6px 6px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.025);
+  border-left: 2px solid transparent;
+  transition: background 0.15s;
+  text-decoration: none;
+  color: inherit;
+  cursor: default;
+}
+.wr-ti-result[href] { cursor: pointer; }
+.wr-ti-result:last-child { border-bottom: none; }
+.wr-ti-result:hover { background: rgba(255, 255, 255, 0.02); }
+.wr-ti-result.w  { border-left-color: var(--wr-win); }
+.wr-ti-result.l  { border-left-color: var(--wr-loss); opacity: 0.8; }
+.wr-ti-result.nr { border-left-color: var(--wr-t3); }
+.wr-ti-r-num {
+  font: 600 8px 'JetBrains Mono', monospace;
+  color: var(--wr-tm);
+}
+.wr-ti-r-opp {
+  font: 700 9.5px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wr-ti-r-score {
+  font: 500 9px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wr-ti-r-res {
+  font: 800 9px 'JetBrains Mono', monospace;
+  text-align: center;
+}
+.wr-ti-r-res.w  { color: var(--wr-win); }
+.wr-ti-r-res.l  { color: var(--wr-loss); }
+.wr-ti-r-res.nr { color: var(--wr-t3); }
+.wr-ti-r-hero {
+  grid-column: 1 / -1;
+  font: 400 9px 'Inter', sans-serif;
+  color: var(--wr-t3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 10px;
+  margin-top: -2px;
+}
+.wr-ti-r-note {
+  grid-column: 1 / -1;
+  font: 400 9.5px 'Inter', sans-serif;
+  color: var(--wr-t3);
+  line-height: 1.5;
+  padding-left: 10px;
+  margin-top: 1px;
+  white-space: normal;
+}
+
+/* ── Upcoming fixtures ── */
+.wr-ti-upcoming {
+  display: flex;
+  flex-direction: column;
+}
+.wr-ti-upc-row {
+  display: grid;
+  grid-template-columns: 50px 1fr;
+  gap: 6px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.025);
+  align-items: baseline;
+}
+.wr-ti-upc-row:last-child { border-bottom: none; }
+.wr-ti-upc-date {
+  font: 600 8px 'JetBrains Mono', monospace;
+  color: var(--wr-tm);
+  letter-spacing: 0.3px;
+}
+.wr-ti-upc-opp {
+  font: 700 9.5px 'JetBrains Mono', monospace;
+  color: var(--wr-t);
+}
+.wr-ti-upc-venue {
+  grid-column: 2;
+  font: 400 9px 'Inter', sans-serif;
+  color: var(--wr-t3);
+}
+
+/* ── Rank Journey badges ── */
+.wr-ti-rank-seq {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.wr-ti-rank-badge {
+  font: 700 9px 'JetBrains Mono', monospace;
+  padding: 3px 6px;
+  border-radius: 2px;
+  letter-spacing: 0.3px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--wr-t3);
+}
+.wr-ti-rank-badge.up {
+  background: rgba(74, 222, 128, 0.08);
+  border-color: rgba(74, 222, 128, 0.15);
+  color: var(--wr-win);
+}
+.wr-ti-rank-badge.down {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.15);
+  color: var(--wr-loss);
+}
+
+/* ── Opposition Dossier (inside Team Intel) ── */
+
+/* Dossier opponent chip */
+.wr-dos-opp-chip {
+  font: 700 8px 'JetBrains Mono', monospace;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--wr-t3);
+  padding: 8px 14px 4px;
+  border-top: 1px solid var(--wr-b1);
+}
+/* Threat summary (unit-level) */
+.wr-dos-threat-summary { padding: 0 14px; margin-bottom: 6px; }
+
+.wr-dos-dept-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--wr-b1);
+}
+.wr-dos-dept {
+  font: 700 8px 'JetBrains Mono', monospace;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--wr-t3);
+}
+.wr-dos-lvl {
+  font: 700 8.5px 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 1px;
+}
+.wr-dos-lvl.high { background: rgba(255, 68, 68, 0.18); color: var(--wr-loss); }
+.wr-dos-lvl.mid  { background: rgba(253, 185, 19, 0.18); color: var(--wr-brand); }
+.wr-dos-lvl.low  { background: rgba(255, 255, 255, 0.05); color: var(--wr-t3); }
+
+/* Weaknesses */
+.wr-dos-weak { margin-top: 10px; padding: 0 14px; }
+.wr-dos-weak-hd {
+  font: 600 8px 'JetBrains Mono', monospace;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--wr-loss);
+  opacity: 0.8;
+  margin-bottom: 6px;
+}
+.wr-dos-weak-item {
+  font: 400 10px 'Inter', sans-serif;
+  color: var(--wr-t3);
+  line-height: 1.5;
+  padding: 3px 0 3px 10px;
+  border-left: 1px solid rgba(255, 61, 81, 0.2);
+  margin-bottom: 4px;
+}
+
+/* How to win */
+.wr-dos-win { margin-top: 10px; padding: 0 14px; }
+.wr-dos-win-hd {
+  font: 600 8px 'JetBrains Mono', monospace;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--wr-brand);
+  opacity: 0.8;
+  margin-bottom: 6px;
+}
+.wr-dos-win-item {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0;
+  font: 400 10px 'Inter', sans-serif;
+  color: var(--wr-t3);
+  line-height: 1.5;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.025);
+}
+.wr-dos-win-item:last-child { border-bottom: none; }
+.wr-dos-win-num {
+  flex-shrink: 0;
+  font: 700 9px 'JetBrains Mono', monospace;
+  color: var(--wr-brand);
+  opacity: 0.7;
+  min-width: 12px;
+}
+
+/* ── Briefing content tabs (BRIEF | TEAM FILE) ── */
+.wr-briefing-content-tabs {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 10px;
+  background: var(--wr-s1);
+  border-bottom: 1px solid var(--wr-b1);
+}
+.wr-bct {
+  font: 600 9px 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+  padding: 3px 9px;
+  border-radius: 1px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--wr-t3);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.wr-bct:hover { color: var(--wr-t2); }
+.wr-bct.on {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--wr-b2);
+  color: var(--wr-t);
+}

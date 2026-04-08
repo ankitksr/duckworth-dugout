@@ -1,0 +1,121 @@
+/* ═══════════════════════════════════════════════════════════
+   Duckworth Dugout — IPL Command Center
+   Minimal reset + War Room styles (scoped under .wr)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Reset ─────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: #0a0b0e;
+  color: #e8e8ec;
+  min-height: 100dvh;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   WAR ROOM — League-wide IPL command center
+   Scoped under .wr to avoid leaking into other views
+   ═══════════════════════════════════════════════════════════ */
+
+/* Color overrides — darker palette than default theme */
+.wr {
+  --wr-bg: #0a0b0e;
+  --wr-s1: #12141a;
+  --wr-s2: #181b22;
+  --wr-s3: #1e2129;
+  --wr-b1: #1e2028;
+  --wr-b2: #262a33;
+  --wr-t: #e8e8ec;
+  --wr-t2: #a8acb8;
+  --wr-t3: #8890a0;
+  --wr-tm: #5a6275;
+  --wr-brand: #fdb913;
+  --wr-win: #00e676;
+  --wr-loss: #ff3d51;
+
+  /* Team colors — must match war_room_color in franchises.json */
+  --csk: #fdb913; --mi: #4a90e8; --rcb: #e2231a; --kkr: #9b7ed8;
+  --dc: #2bbce0; --srh: #ff822a; --pbks: #ff6b6b; --rr: #ea1a85;
+  --gt: #4dbfa8; --lsg: #c44885;
+}
+
+/* ── Master layout ── */
+
+.wr {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  background: var(--wr-bg);
+  color: var(--wr-t);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* Thin scrollbars for all scrollable areas */
+.wr * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--wr-b2) transparent;
+}
+.wr *::-webkit-scrollbar { width: 4px; }
+.wr *::-webkit-scrollbar-track { background: transparent; }
+.wr *::-webkit-scrollbar-thumb {
+  background: var(--wr-b2);
+  border-radius: 2px;
+}
+.wr *::-webkit-scrollbar-thumb:hover { background: var(--wr-tm); }
+
+.wr-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font: 500 14px 'JetBrains Mono', monospace;
+  color: var(--wr-t3);
+  letter-spacing: 2px;
+}
+
+.wr-main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 300px 1fr 300px;
+  grid-template-rows: 100%;
+  gap: 0 5px;
+  overflow: hidden;
+  background: var(--wr-bg);
+}
+
+/* Center column lower half: single panel (Briefing or Team Intel) */
+.wr-center-lower {
+  flex: 50 1 0;        /* same flex weight as SeasonPulse — equal vertical split */
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  overflow: hidden;
+}
+
+.wr-col {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  overflow: hidden;
+  background: var(--wr-bg);
+  padding: 5px 0;
+}
+

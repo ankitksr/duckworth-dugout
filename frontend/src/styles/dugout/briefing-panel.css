@@ -1,0 +1,381 @@
+/* ── Briefing Panel (standalone) ── */
+
+.wr-briefing-pnl {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.wr-briefing-frame {
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  width: min(100%, 1120px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.wr-briefing-scroll {
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+.wr-briefing-pnl > .wr-briefing-scroll {
+  padding-top: 6px;
+  display: grid;
+  align-content: stretch;
+}
+/* On double-header days the tab bar sits between header and scroll */
+.wr-briefing-tabs {
+  border-bottom: 1px solid var(--wr-b2);
+  flex-shrink: 0;
+}
+.wr-briefing-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wr-br-shell {
+  width: min(100%, 1060px);
+  margin: 0 auto;
+  padding: 12px 12px 14px;
+  display: grid;
+  gap: 12px;
+}
+
+/* ── Briefing Hero Strip — 3-section matchup overview card ── */
+.wr-bp-hero {
+  display: grid;
+  grid-template-columns: auto 1px auto 1px auto;
+  gap: 16px;
+  align-items: center;
+  margin: 6px 8px 0;
+  padding: 14px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* Section 1: Matchup identity — team names with form dots below */
+.wr-bp-identity {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 4px 0;
+}
+
+.wr-bp-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.wr-bp-side.right {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.wr-bp-side.right .wr-br-mh-dots {
+  justify-content: flex-end;
+}
+
+.wr-bp-name {
+  font: 800 34px 'Anybody', sans-serif;
+  letter-spacing: 3px;
+  line-height: 1;
+}
+
+.wr-bp-vs {
+  color: var(--wr-brand);
+  font: 800 18px 'Anybody', sans-serif;
+  letter-spacing: 2px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.wr-bp-record {
+  font: 500 8.5px 'JetBrains Mono', monospace;
+  color: var(--wr-t3);
+  letter-spacing: 0.3px;
+}
+
+/* Dotted vertical divider */
+.wr-bp-divider {
+  align-self: stretch;
+  width: 1px;
+  background-image: linear-gradient(to bottom, rgba(130, 144, 170, 0.55) 33%, transparent 0%);
+  background-position: center;
+  background-size: 1px 8px;
+  background-repeat: repeat-y;
+}
+
+/* Section 2: Match details — venue, time, preview */
+.wr-bp-details {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.wr-bp-detail-venue {
+  font: 600 9px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.wr-bp-detail-meta {
+  font: 400 8.5px 'JetBrains Mono', monospace;
+  color: var(--wr-t3);
+  letter-spacing: 0.3px;
+}
+
+.wr-bp-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(253, 185, 19, 0.1);
+  border: 1px solid rgba(253, 185, 19, 0.16);
+  text-decoration: none;
+  max-width: 100%;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.wr-bp-preview-tag {
+  font: 700 7px 'JetBrains Mono', monospace;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--wr-brand);
+  flex-shrink: 0;
+}
+
+.wr-bp-preview-title {
+  font: 500 7.5px 'JetBrains Mono', monospace;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--wr-t2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Section 3: Stats — metric number on top, label below */
+.wr-bp-metrics {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.wr-bp-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0 16px;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.wr-bp-metric:last-child { border-right: none; padding-right: 0; }
+.wr-bp-metric:first-child { padding-left: 0; }
+
+.wr-bp-metric strong {
+  font: 800 20px 'Anybody', sans-serif;
+  color: var(--wr-t);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.wr-bp-metric span {
+  font: 600 7px 'JetBrains Mono', monospace;
+  color: var(--wr-tm);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Responsive: stack hero sections on narrow screens */
+@media (max-width: 900px) {
+  .wr-bp-hero {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .wr-bp-divider {
+    width: auto;
+    height: 1px;
+    align-self: auto;
+    background-image: linear-gradient(to right, rgba(130, 144, 170, 0.55) 33%, transparent 0%);
+    background-size: 8px 1px;
+    background-repeat: repeat-x;
+    background-position: center;
+  }
+  .wr-bp-identity {
+    justify-content: center;
+  }
+  .wr-bp-details {
+    align-items: center;
+    text-align: center;
+  }
+  .wr-bp-metrics {
+    justify-content: center;
+  }
+}
+
+/* Tab content internals — stretch to fill panel height */
+.wr-briefing-pnl .wr-bp-edge-wrap,
+.wr-briefing-pnl > .wr-briefing-scroll > .wr-br,
+.wr-briefing-pnl .wr-bp-form-grid {
+  display: grid;
+}
+
+.wr-briefing-pnl > .wr-briefing-scroll > .wr-br > .wr-br-section {
+  display: grid;
+}
+
+/* ── Match Edge — card + context below ── */
+.wr-bp-edge-wrap {
+  padding: 4px 10px 6px;
+}
+
+.wr-bp-edge-card {
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  background:
+    linear-gradient(135deg, rgba(14, 21, 40, 0.75), rgba(12, 14, 19, 0.88));
+}
+
+.wr-bp-edge-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(220px, 0.8fr);
+  gap: 10px;
+}
+
+.wr-bp-edge-aside {
+  min-width: 0;
+  padding: 6px 0 0 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.04);
+  display: grid;
+  grid-template-rows: auto 1fr 1fr;
+  gap: 6px;
+  align-content: stretch;
+}
+
+.wr-bp-edge-col {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 8px;
+  min-width: 0;
+}
+
+.wr-bp-h2h-card {
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.wr-bp-h2h-score {
+  font: 700 9px 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.wr-bp-h2h-sep {
+  color: var(--wr-tm);
+}
+
+.wr-bp-h2h-note {
+  font: 400 11px 'Inter', sans-serif;
+  color: var(--wr-t2);
+  line-height: 1.55;
+  margin-top: 4px;
+}
+
+/* ── Form cards — team-tinted with visual depth ── */
+.wr-bp-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px 10px 12px;
+}
+
+.wr-bp-form-card {
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-left: 3px solid var(--wr-t3);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.wr-bp-form-hd {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.wr-bp-form-name {
+  font: 800 16px 'Anybody', sans-serif;
+  letter-spacing: 1px;
+}
+
+.wr-bp-form-stats {
+  display: flex;
+  gap: 12px;
+  font: 600 9px 'JetBrains Mono', monospace;
+  color: var(--wr-tm);
+  letter-spacing: 0.5px;
+}
+
+.wr-bp-form-stat strong {
+  color: var(--wr-t2);
+}
+
+.wr-bp-form-stat strong.up { color: var(--wr-win); }
+.wr-bp-form-stat strong.down { color: var(--wr-loss); }
+
+.wr-bp-form-run {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wr-bp-form-run-label {
+  font: 600 7px 'JetBrains Mono', monospace;
+  letter-spacing: 1.2px;
+  color: var(--wr-tm);
+}
+
+.wr-bp-form-trend {
+  font: 400 10.5px 'Inter', sans-serif;
+  color: var(--wr-t3);
+  line-height: 1.55;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+@media (max-width: 1000px) {
+  .wr-bp-edge-grid { grid-template-columns: 1fr; }
+  .wr-bp-edge-aside { border-left: none; padding-left: 0; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 12px; }
+  .wr-bp-form-grid { grid-template-columns: 1fr; }
+}
+

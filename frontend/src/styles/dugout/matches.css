@@ -1,0 +1,197 @@
+/* ── Matches ── */
+
+.wr-matches-pnl {
+  flex: 0 0 auto;
+  max-height: 30%;
+  display: flex;
+  flex-direction: column;
+}
+.wr-matches-wrap {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.wr-match-div { padding: 0 14px; margin: 4px 0; }
+.wr-match-div-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--wr-t3), transparent);
+  opacity: 0.2;
+}
+.wr-match-div-label {
+  font: 500 8px 'JetBrains Mono', monospace;
+  color: var(--wr-tm);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: center;
+  margin-top: 2px;
+}
+
+/* Ticket stub layout */
+.wr-tmc {
+  display: flex;
+  border-bottom: 1px solid var(--wr-b1);
+  transition: opacity 0.2s;
+}
+.wr-tmc.dim { opacity: 0.3; }
+.wr-tmc.hl {
+  background: rgba(253, 185, 19, 0.03);
+  border-left: 2px solid var(--tc, var(--wr-t3));
+}
+
+/* Left: match content */
+.wr-tmc-left {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+}
+
+/* Dashed perforation */
+.wr-tmc-sep {
+  width: 1px;
+  flex-shrink: 0;
+  margin: 8px 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--wr-tm) 0px, var(--wr-tm) 3px,
+    transparent 3px, transparent 7px
+  );
+}
+
+/* Right: date/city stub */
+.wr-tmc-stub {
+  position: relative;
+  width: 130px;
+  flex-shrink: 0;
+  padding: 8px 14px 8px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 1px;
+  overflow: hidden;
+}
+.wr-tmc-stub-date {
+  font: 700 10px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.wr-tmc-stub-city {
+  font: 400 9px 'JetBrains Mono', monospace;
+  color: var(--wr-t3);
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.wr-tmc-stub-mnum {
+  color: var(--wr-tm);
+}
+
+.wr-tmc-t {
+  font: 700 13px 'Anybody', sans-serif;
+  letter-spacing: 1px;
+  color: color-mix(in srgb, var(--tc, var(--wr-t2)) 45%, var(--wr-t2));
+}
+.wr-tmc-vs {
+  font: 300 8px 'JetBrains Mono', monospace;
+  color: var(--wr-tm);
+  letter-spacing: 2px;
+  margin: 0 5px;
+}
+
+/* Detail + status (completed only) */
+.wr-tmc-detail {
+  font: 400 10px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+  margin-top: 2px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rr-w { color: var(--wr-win); font-weight: 700; }
+.rr-l { color: var(--wr-loss); }
+.rr-nr { color: var(--wr-tm); }
+.wr-tmc-result {
+  font: 500 9.5px 'JetBrains Mono', monospace;
+  margin-top: 1px;
+  white-space: nowrap;
+}
+/* Match link wrapper */
+.wr-tmc-link {
+  text-decoration: none;
+  color: inherit;
+  display: contents;
+}
+.wr-tmc-link .wr-tmc-stub::after {
+  content: '↗';
+  font-size: 10px;
+  color: var(--wr-tm);
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  transition: color 0.2s;
+}
+.wr-tmc-link:hover .wr-tmc-stub::after {
+  color: var(--wr-win);
+}
+
+/* Live match — radar sweep aesthetic */
+.wr-tmc-live {
+  position: relative;
+  background: rgba(0, 230, 118, 0.03);
+  border-top: 1px solid rgba(0, 230, 118, 0.15);
+  border-bottom: 1px solid rgba(0, 230, 118, 0.15);
+  overflow: hidden;
+  animation: wr-live-breathe 3s ease-in-out infinite;
+}
+/* Horizontal sweep line */
+.wr-tmc-live::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 230, 118, 0.06) 40%,
+    rgba(0, 230, 118, 0.12) 50%,
+    rgba(0, 230, 118, 0.06) 60%,
+    transparent 100%
+  );
+  animation: wr-live-sweep 4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes wr-live-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+@keyframes wr-live-breathe {
+  0%, 100% { background: rgba(0, 230, 118, 0.02); }
+  50% { background: rgba(0, 230, 118, 0.05); }
+}
+.wr-tmc-live-badge {
+  font: 700 9px 'JetBrains Mono', monospace;
+  color: var(--wr-win);
+  letter-spacing: 1px;
+  margin-left: 8px;
+}
+.wr-tmc-live-badge::before {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  background: var(--wr-win);
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+  box-shadow: 0 0 6px var(--wr-win), 0 0 12px rgba(0, 230, 118, 0.3);
+  animation: wr-lp 2s ease-in-out infinite;
+}
+.wr-tmc-forecast {
+  font: 500 9px 'JetBrains Mono', monospace;
+  color: var(--wr-brand);
+  opacity: 0.7;
+}
+

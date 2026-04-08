@@ -1,0 +1,140 @@
+/* ── Scenarios Panel ── */
+
+.wr-scenarios-pnl {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-bottom: 2px solid var(--wr-b2);
+}
+.wr-scenarios-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 8px;
+}
+
+/* Situation Brief — World-Brief-style card inside the scroll area */
+.wr-sc-brief {
+  margin: 10px 14px;
+  padding: 10px 12px 12px 14px;
+  background: #0e1528;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-left: 3px solid rgba(255, 255, 255, 0.28);
+  border-radius: 2px;
+}
+.wr-sc-brief-label {
+  font: 600 8px 'JetBrains Mono', monospace;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: var(--wr-t3);
+  margin-bottom: 7px;
+}
+.wr-sc-brief-body {
+  font: 400 12px 'Inter', sans-serif;
+  color: var(--wr-t);
+  line-height: 1.6;
+}
+
+/* Sections (elimination watch, qualification math) */
+.wr-sc-section {
+  padding: 8px 14px 10px;
+  border-bottom: 1px solid var(--wr-b1);
+}
+.wr-sc-section:last-child { border-bottom: none; }
+.wr-sc-label {
+  font: 600 8px 'JetBrains Mono', monospace;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--wr-t3);
+  margin-bottom: 7px;
+  padding-left: 8px;
+  border-left: 2px solid var(--wr-brand);
+}
+
+/* Elimination watch cards — team-tinted with left bar */
+.wr-sc-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.wr-sc-card {
+  --tc: var(--wr-t3);
+  line-height: 1.55;
+  padding: 8px 10px 8px 11px;
+  background: color-mix(in srgb, var(--tc) 8%, var(--wr-s2));
+  border-radius: 2px;
+  border-left: 3px solid var(--tc);
+}
+.wr-sc-card-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+.wr-sc-card-team {
+  font: 700 12px 'Anybody', sans-serif;
+  color: var(--tc);
+  letter-spacing: 0.5px;
+}
+.wr-sc-card-metric {
+  font: 700 10px 'JetBrains Mono', monospace;
+  color: var(--tc);
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+  opacity: 0.9;
+}
+.wr-sc-card-body {
+  font: 400 10px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+  line-height: 1.55;
+}
+
+/* Risk badges */
+.wr-sc-risk {
+  font: 700 7.5px 'JetBrains Mono', monospace;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 1px;
+}
+.wr-sc-risk-danger { background: var(--wr-loss); color: #fff; }
+.wr-sc-risk-watch  { background: rgba(253, 185, 19, 0.28); color: var(--wr-brand); }
+.wr-sc-risk-clear  { background: rgba(0, 230, 118, 0.22); color: var(--wr-win); }
+
+/* Qualification math rows — dot + divider pattern */
+.wr-sc-math {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--wr-b1);
+}
+.wr-sc-math:last-child { border-bottom: none; }
+.wr-sc-math::before {
+  content: '';
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--wr-t3);
+  margin-top: 4px;
+}
+.wr-sc-math-fact {
+  flex: 1;
+  font: 400 10.5px 'Inter', sans-serif;
+  color: var(--wr-t2);
+  line-height: 1.55;
+}
+.wr-sc-math-tag {
+  flex-shrink: 0;
+  font: 600 7px 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--wr-tm);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 5px;
+  border-radius: 1px;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+

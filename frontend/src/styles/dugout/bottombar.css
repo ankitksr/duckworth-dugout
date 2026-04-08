@@ -1,0 +1,58 @@
+/* ── Bottom bar ── */
+
+.wr-bot {
+  height: 26px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  background: var(--wr-s1);
+  border-top: 1px solid var(--wr-b1);
+  font: 400 9px 'JetBrains Mono', monospace;
+  color: var(--wr-tm);
+}
+.wr-bot > span:first-child { color: var(--wr-t2); }
+/* Empty state */
+.wr-empty {
+  font: 400 11px 'JetBrains Mono', monospace;
+  color: var(--wr-tm);
+  padding: 14px 0;
+  text-align: center;
+  font-style: italic;
+}
+
+.wr-bot-brand {
+  color: var(--wr-brand);
+  font-weight: 700;
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.wr-bot-gh {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--wr-t2);
+  text-decoration: none;
+  font: 500 9px 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+  padding: 0 8px;
+  border-left: 1px solid var(--wr-b2);
+  border-right: 1px solid var(--wr-b2);
+  transition: color 0.2s;
+}
+.wr-bot-gh svg {
+  flex-shrink: 0;
+}
+.wr-bot-gh:hover {
+  color: var(--wr-t);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE / TABLET — additive overrides only
+   Desktop styles above are untouched; these only activate
+   below their breakpoints.
+   ═══════════════════════════════════════════════════════════ */
+

@@ -1,0 +1,161 @@
+/* ── Intel Feed ── */
+
+.wr-log-pnl {
+  flex: 1 1 0 !important;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+/* Feed source filters */
+.wr-log-filters {
+  display: flex;
+  gap: 0;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--wr-b1);
+  flex-shrink: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex-wrap: nowrap;
+}
+.wr-log-filters::-webkit-scrollbar { display: none; }
+.wr-log-filter {
+  font: 500 8px 'JetBrains Mono', monospace;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--wr-tm);
+  background: none;
+  border: none;
+  padding: 6px 8px 5px;
+  cursor: pointer;
+  border-bottom: 1.5px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.wr-log-filter:hover { color: var(--wr-t3); }
+.wr-log-filter.on {
+  color: var(--wr-t2);
+  border-bottom-color: var(--wr-t2);
+}
+
+.wr-log-wrap {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+}
+.wr-log-scroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+}
+
+.wr-log-item {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--wr-b1);
+  transition: background 0.2s;
+  cursor: pointer;
+  display: flex;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+.wr-log-item:hover { background: rgba(255, 255, 255, 0.05); }
+.wr-log-item.hl {
+  border-left: 3px solid rgba(253, 185, 19, 0.4);
+  background: rgba(253, 185, 19, 0.04);
+}
+
+.wr-log-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 3px;
+  background: var(--wr-s3);
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wr-log-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.wr-log-thumb-ph {
+  font: 700 11px 'Anybody', sans-serif;
+  color: var(--wr-tm);
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+}
+
+/* ─────────────────────────────────────────────────
+   Scroll-fade edges — signals overflow to the user.
+   Content dissolves into the panel at top + bottom,
+   matching the WorldMonitor "shine" pattern.
+   Pure CSS mask, no extra DOM elements.
+───────────────────────────────────────────────── */
+.wr-matches-wrap,
+.wr-scenarios-scroll,
+.wr-briefing-scroll,
+.wr-team-intel-scroll,
+.wr-log-scroll {
+  --sf-size: 22px;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    black var(--sf-size),
+    black calc(100% - var(--sf-size)),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    black var(--sf-size),
+    black calc(100% - var(--sf-size)),
+    transparent 100%
+  );
+}
+/* Compact panel — smaller fade zone */
+.wr-cap-body {
+  --sf-size: 10px;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    black var(--sf-size),
+    black calc(100% - var(--sf-size)),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    black var(--sf-size),
+    black calc(100% - var(--sf-size)),
+    transparent 100%
+  );
+}
+
+.wr-log-body { flex: 1; min-width: 0; }
+.wr-log-meta {
+  font: 700 9px 'JetBrains Mono', monospace;
+  color: var(--wr-t3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.wr-log-tag {
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+}
+.wr-log-team { opacity: 0.7; }
+.wr-log-time { font-weight: 400; margin-left: auto; }
+.wr-log-headline {
+  font: 600 12px 'Inter', sans-serif;
+  color: var(--wr-t);
+  line-height: 1.45;
+  margin-bottom: 4px;
+}
+

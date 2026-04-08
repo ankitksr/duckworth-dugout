@@ -1,0 +1,279 @@
+/* ── Standings ── */
+
+.wr-st-hdr, .wr-st-row {
+  display: grid;
+  grid-template-columns: 16px 3px 42px 1fr 24px 24px 24px 30px 46px;
+  gap: 3px;
+  padding: 6px 14px;
+  align-items: center;
+  font: 400 11px 'JetBrains Mono', monospace;
+  line-height: 1.3;
+}
+.wr-st-hdr {
+  font-size: 9px;
+  color: var(--wr-tm);
+  letter-spacing: 1px;
+  padding-bottom: 2px;
+  text-align: center;
+}
+.wr-st-row {
+  color: var(--wr-t2);
+  transition: background 0.2s;
+}
+.wr-st-row:hover { background: rgba(255, 255, 255, 0.02); }
+.wr-st-row.sel {
+  background: rgba(253, 185, 19, 0.06);
+  border-left: 2px solid var(--wr-brand);
+  color: var(--wr-t);
+}
+.wr-st-row.sel .wr-st-name {
+  color: var(--wr-brand);
+  font-weight: 700;
+}
+.wr-st-pos { color: var(--wr-t3); font-size: 9px; text-align: center; }
+.wr-st-bar { width: 3px; height: 16px; border-radius: 1px; }
+.wr-st-name { font-weight: 600; }
+.wr-st-val { text-align: center; }
+.wr-st-pts { text-align: center; font-weight: 700; color: var(--wr-t); }
+.wr-st-nrr { text-align: right; font-size: 10px; }
+.wr-st-nrr.pos { color: var(--wr-win); }
+.wr-st-nrr.neg { color: var(--wr-loss); }
+.wr-st-cut {
+  height: 0;
+  border-top: 1px dashed rgba(0, 230, 118, 0.2);
+  margin: 2px 0;
+}
+.wr-standings > div:nth-child(-n+4) .wr-st-row {
+  background: rgba(0, 230, 118, 0.02);
+}
+
+/* ── Cap Race ── */
+
+.wr-caps-pnl {
+  flex: 1 1 0 !important;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.wr-cap-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--wr-b1);
+}
+.wr-cap-tab {
+  font: 600 9px 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 8px 8px 7px;
+  cursor: pointer;
+  color: var(--wr-tm);
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.wr-cap-tab:hover { color: var(--wr-t3); }
+.wr-cap-tab.on { color: var(--wr-t2); border-bottom-color: var(--wr-t2); }
+
+.wr-cap-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 1px;
+  margin-right: 3px;
+  vertical-align: middle;
+}
+.wr-cap-body {
+  padding: 8px 14px;
+  flex: 1;
+  overflow-y: auto;
+}
+.wr-cap-row {
+  display: grid;
+  grid-template-columns: 16px 1fr auto;
+  gap: 6px;
+  padding: 6px 0;
+  align-items: center;
+  font: 400 11px 'JetBrains Mono', monospace;
+  line-height: 1.3;
+  color: var(--wr-t2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  transition: opacity 0.2s;
+}
+.wr-cap-row:last-child { border-bottom: none; }
+.wr-cap-row.leader {
+  font-weight: 600; color: var(--wr-t); padding: 7px 0 7px 6px;
+  border-left: 2px solid var(--cap-accent, #fff); margin-left: -6px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.03), transparent 60%);
+}
+.wr-cap-row.leader .wr-cap-val { font-size: 12px; }
+.wr-cap-rank { font-size: 9px; color: var(--wr-tm); text-align: center; }
+.wr-cap-val { font: 600 11px 'JetBrains Mono', monospace; text-align: right; }
+.wr-cap-inn { font: 400 9px 'JetBrains Mono', monospace; color: var(--wr-tm); margin-left: 4px; }
+.wr-cap-team { font-size: 9px; color: var(--wr-tm); margin-left: 4px; }
+.wr-cap-footer {
+  font: 400 9px 'JetBrains Mono', monospace;
+  color: var(--wr-tm);
+  padding: 6px 14px 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+  margin-top: auto;
+  letter-spacing: 0.5px;
+}
+
+/* ── Season Pulse ── */
+
+.wr-pulse-pnl {
+  flex: 50 1 0 !important;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.wr-pulse-canvas {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+}
+.wr-pulse-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.wr-axis-label {
+  font: 400 8px 'JetBrains Mono', monospace;
+  fill: var(--wr-tm);
+  text-anchor: middle;
+}
+/* ── Rank River ── */
+.wr-cutoff {
+  stroke: rgba(0, 230, 118, 0.18);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+.wr-river-label {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 2px 4px 2px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.wr-river-name {
+  font: 700 10px 'Anybody', sans-serif;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+.wr-river-label.hero .wr-river-name {
+  font-size: 11px;
+}
+.wr-river-stat {
+  font: 500 9px 'JetBrains Mono', monospace;
+  opacity: 0.55;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wr-river-stat small {
+  font-size: 7px;
+  margin-left: 1px;
+  opacity: 0.7;
+}
+.wr-river-label.hero .wr-river-stat {
+  opacity: 0.9;
+}
+
+/* Campaign timeline (team mode) */
+.wr-campaign { padding: 10px 14px 24px; }
+.wr-camp-match {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: var(--wr-s2);
+  border: 1px solid var(--wr-b2);
+  border-radius: 4px;
+  align-items: flex-start;
+  transition: border-color 0.2s;
+}
+.wr-camp-match:hover { border-color: var(--wr-t3); }
+.wr-camp-num {
+  font: 700 9px 'JetBrains Mono', monospace;
+  color: var(--wr-tm);
+  min-width: 24px;
+  padding-top: 2px;
+}
+.wr-camp-body { flex: 1; min-width: 0; }
+.wr-camp-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.wr-camp-teams { font: 700 13px 'Anybody', sans-serif; letter-spacing: 0.5px; }
+.wr-camp-result { font: 700 10px 'JetBrains Mono', monospace; }
+.wr-camp-result.w { color: var(--wr-win); }
+.wr-camp-result.l { color: var(--wr-loss); }
+.wr-camp-detail {
+  font: 400 10px 'JetBrains Mono', monospace;
+  color: var(--wr-t3);
+  line-height: 1.4;
+  margin-top: 3px;
+}
+
+/* ── Season Intel Content ── */
+
+.wr-si-section {
+  padding: 6px 14px 8px;
+  border-bottom: 1px solid var(--wr-b1);
+}
+.wr-si-section:last-child { border-bottom: none; }
+
+/* Section header — matches .wr-st-hdr density */
+.wr-si-sh {
+  font: 600 8px 'JetBrains Mono', monospace;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--wr-tm);
+  margin-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.wr-si-narrative { padding-top: 8px; }
+.wr-si-arc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.wr-si-arc-title {
+  font: 700 11px 'Anybody', sans-serif;
+  color: var(--wr-t);
+  letter-spacing: 0.3px;
+}
+.wr-si-mood {
+  font-size: 11px;
+  opacity: 0.6;
+}
+.wr-si-mood.rising { color: var(--wr-win); }
+.wr-si-mood.falling { color: var(--wr-loss); }
+.wr-si-mood.steady { color: var(--wr-t3); }
+.wr-si-mood.volatile { color: var(--wr-brand); }
+.wr-si-mood.dominant { color: var(--wr-brand); }
+
+.wr-si-arc-body {
+  font: 400 11px 'Inter', sans-serif;
+  color: var(--wr-t2);
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+.wr-si-arc-question {
+  font: 400 10.5px 'Inter', sans-serif;
+  color: var(--wr-t3);
+  line-height: 1.5;
+  padding-left: 8px;
+  border-left: 2px solid var(--wr-b2);
+}
+

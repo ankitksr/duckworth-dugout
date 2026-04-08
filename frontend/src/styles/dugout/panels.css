@@ -1,0 +1,61 @@
+/* ── Panel primitives ── */
+
+.wr-pnl {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.018), transparent 20%),
+    var(--wr-s1);
+  border: 1px solid var(--wr-b1);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Panel sheen — radial glow per panel */
+.wr-pnl::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.6;
+  background: var(--pnl-sheen, none);
+  mix-blend-mode: screen;
+}
+
+/* Each panel: unique hue, unique origin point — boosted from 0.03-0.04 → 0.08-0.10 */
+.wr-standings-pnl { --pnl-sheen: radial-gradient(ellipse 70% 60% at 10% 100%, rgba(253, 185, 19, 0.09), transparent 70%); }
+.wr-caps-pnl      { --pnl-sheen: radial-gradient(ellipse 60% 80% at 90% 0%, rgba(155, 126, 216, 0.09), transparent 70%); }
+.wr-pulse-pnl     { --pnl-sheen: radial-gradient(ellipse 50% 70% at 0% 50%, rgba(0, 230, 118, 0.07), transparent 60%); }
+.wr-briefing-pnl  { --pnl-sheen: radial-gradient(ellipse 60% 50% at 50% 100%, rgba(43, 188, 224, 0.09), transparent 70%); }
+.wr-team-intel-pnl { --pnl-sheen: radial-gradient(ellipse 60% 60% at 10% 50%, rgba(253, 185, 19, 0.07), transparent 65%); }
+.wr-matches-pnl   { --pnl-sheen: radial-gradient(ellipse 50% 40% at 100% 0%, rgba(168, 172, 184, 0.06), transparent 60%); }
+.wr-scenarios-pnl { --pnl-sheen: radial-gradient(ellipse 50% 60% at 50% 50%, rgba(253, 185, 19, 0.08), transparent 60%); }
+.wr-log-pnl       { --pnl-sheen: radial-gradient(ellipse 60% 50% at 80% 100%, rgba(234, 26, 133, 0.08), transparent 65%); }
+.wr-wire-pnl      { --pnl-sheen: radial-gradient(ellipse 50% 60% at 20% 30%, rgba(0, 230, 118, 0.08), transparent 65%); }
+
+.wr-ph {
+  font: 800 11px 'Anybody', sans-serif;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--wr-t);
+  padding: 0 14px;
+  height: 36px;
+  background: var(--wr-s2);
+  border-bottom: 1px solid var(--wr-b2);
+  display: flex;
+  align-items: center;
+}
+.wr-ph::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  margin-right: 7px;
+  background: var(--wr-brand, #fdb913);
+  flex-shrink: 0;
+}
+.wr-ph sub {
+  margin-left: auto;
+  font: 500 9px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+  letter-spacing: 1px;
+}
+

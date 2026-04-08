@@ -1,0 +1,187 @@
+/* ── AI Wire Panel ── */
+
+.wr-wire-pnl {
+  flex: 1 1 0 !important;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.wr-wire-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Card base — tactile dispatch card with grain + border haze */
+.wr-wire-card {
+  padding: 10px 14px 9px;
+  margin: 6px 5px 0;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  transition: opacity 0.2s, background 0.2s, border-color 0.2s, padding 0.15s;
+  position: relative;
+}
+.wr-wire-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0.35;
+  pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+.wr-wire-card:hover {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.wr-wire-card:last-child { margin-bottom: 4px; }
+.wr-wire-alert {
+  padding: 8px 12px 5px;
+  border-radius: 6px;
+  background: rgba(253, 185, 19, 0.05);
+  border-color: rgba(253, 185, 19, 0.1);
+}
+.wr-wire-alarm {
+  padding: 9px 12px 5px;
+  margin-top: 5px;
+  margin-bottom: 2px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.12);
+}
+
+/* Highlighted card (selected team involved) */
+.wr-wire-card.hl {
+  background:
+    linear-gradient(135deg, rgba(253,185,19,0.06) 0%, transparent 50%),
+    rgba(253, 185, 19, 0.05);
+  border-color: rgba(253, 185, 19, 0.1);
+}
+.wr-wire-card.hl.wr-wire-alarm {
+  background:
+    linear-gradient(135deg, rgba(239,68,68,0.08) 0%, transparent 50%),
+    rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.12);
+}
+
+/* Alarm pulse animation — subtle border glow */
+.wr-wire-alarm {
+  animation: wire-alarm-pulse 2s ease-in-out 1;
+}
+@keyframes wire-alarm-pulse {
+  0%, 100% { border-color: rgba(239, 68, 68, 0.12); }
+  50% { border-color: rgba(239, 68, 68, 0.3); }
+}
+
+/* Top row: emoji + category + team chips */
+.wr-wire-top {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.wr-wire-emoji {
+  font-size: 12px;
+  line-height: 1;
+}
+.wr-wire-alert .wr-wire-emoji,
+.wr-wire-alarm .wr-wire-emoji {
+  font-size: 14px;
+}
+.wr-wire-cat {
+  font: 700 8px 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--wr-t);
+  background: rgba(255,255,255,0.08);
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+.wr-wire-team {
+  font: 700 7px 'JetBrains Mono', monospace;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 2px;
+  color: var(--tc);
+  background: color-mix(in srgb, var(--tc) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tc) 20%, transparent);
+}
+
+/* Severity badge — floated right */
+.wr-wire-sev {
+  margin-left: auto;
+  font: 700 7px 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.wr-wire-sev-alert {
+  color: var(--wr-brand);
+  background: rgba(253, 185, 19, 0.15);
+}
+.wr-wire-sev-alarm {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* Headline row — headline + expand chevron */
+.wr-wire-hl-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.wr-wire-headline {
+  font: 700 12.5px 'Inter', sans-serif;
+  color: var(--wr-t);
+  line-height: 1.5;
+  margin-bottom: 4px;
+  flex: 1;
+}
+.wr-wire-chevron {
+  color: var(--wr-t3);
+  font-size: 10px;
+  flex-shrink: 0;
+  margin-top: 4px;
+  transition: transform 0.2s;
+}
+.wr-wire-chevron.open {
+  transform: rotate(90deg);
+}
+.wr-wire-alarm .wr-wire-headline {
+  color: #fca5a5;
+}
+
+.wr-wire-card.open {
+  padding: 8px 12px 6px;
+  border-radius: 8px;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+}
+.wr-wire-card.open.wr-wire-alert {
+  padding: 9px 14px 6px;
+  border-color: rgba(253, 185, 19, 0.14);
+}
+.wr-wire-card.open.wr-wire-alarm {
+  padding: 10px 14px 6px;
+  border-color: rgba(239, 68, 68, 0.16);
+}
+
+/* Body — muted detail paragraph */
+.wr-wire-body {
+  font: 400 10.5px 'Inter', sans-serif;
+  color: var(--wr-t3);
+  line-height: 1.55;
+  padding-top: 4px;
+}
+.wr-wire-time {
+  font: 500 8px 'JetBrains Mono', monospace;
+  color: var(--wr-t3);
+  margin-top: 6px;
+  padding: 4px 0 2px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  letter-spacing: 0.5px;
+}
+

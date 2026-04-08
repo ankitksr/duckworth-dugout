@@ -1,0 +1,387 @@
+/* ── Briefing ── */
+
+.wr-br { padding: 0; }
+.wr-br-shell .wr-br { padding-top: 10px; }
+.wr-br-shell .wr-br + .wr-br { border-top: 1px solid var(--wr-b1); }
+
+/* Two-column grid: main (editorial) + sidebar (context) */
+.wr-br-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.9fr);
+  gap: 0;
+  min-height: 0;
+}
+.wr-br-main {
+  border-right: 1px solid var(--wr-b1);
+  min-width: 0;
+}
+.wr-br-sidebar {
+  min-width: 0;
+}
+@media (max-width: 1000px) {
+  .wr-br-grid { grid-template-columns: 1fr; }
+  .wr-br-main { border-right: none; }
+  .wr-br-matchup-summary { grid-template-columns: 1fr; }
+}
+
+/* ── Fact cards (venue stats, etc.) ── */
+.wr-br-facts {
+  display: grid;
+  gap: 8px;
+}
+.wr-br-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.wr-br-fact.accent {
+  background: rgba(253, 185, 19, 0.08);
+  border-color: rgba(253, 185, 19, 0.2);
+}
+.wr-br-fact.good {
+  background: rgba(0, 230, 118, 0.08);
+  border-color: rgba(0, 230, 118, 0.14);
+}
+.wr-br-fact.warn {
+  background: rgba(43, 188, 224, 0.08);
+  border-color: rgba(43, 188, 224, 0.14);
+}
+.wr-br-fact-label {
+  font: 600 7px 'JetBrains Mono', monospace;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--wr-tm);
+}
+.wr-br-fact-value {
+  font: 700 16px 'Anybody', sans-serif;
+  line-height: 1;
+  color: var(--wr-t);
+}
+.wr-br-matchup-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 10px;
+}
+.wr-br-fact-detail {
+  font: 400 10.5px 'Inter', sans-serif;
+  line-height: 1.45;
+  color: var(--wr-t3);
+}
+
+/* ── W/L dots ── */
+.wr-br-mh-dots {
+  display: flex;
+  gap: 3px;
+  margin-top: 1px;
+}
+.wr-br-fo-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 1px;
+}
+.wr-br-fo-dot.w { background: var(--wr-win); }
+.wr-br-fo-dot.l { background: var(--wr-loss); opacity: 0.7; }
+
+/* ── Double-header match pills (inline in panel header) ── */
+.wr-br-match-pills {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 10px;
+  vertical-align: middle;
+}
+.wr-br-match-pill {
+  font: 600 8px 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border: 1px solid var(--wr-b2);
+  border-radius: 1px;
+  background: transparent;
+  color: var(--wr-t3);
+  cursor: pointer;
+}
+.wr-br-match-pill:hover { color: var(--wr-t2); background: rgba(255,255,255,0.04); }
+.wr-br-match-pill.on {
+  background: var(--wr-brand);
+  color: #0a0b0e;
+  border-color: var(--wr-brand);
+}
+
+/* ── Venue Intel (defend thresholds + last 5) ── */
+.wr-br-venue-intel {
+  padding: 10px 18px 4px;
+}
+.wr-br-defend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 10px 'JetBrains Mono', monospace;
+  letter-spacing: 0.3px;
+  margin-bottom: 2px;
+}
+.wr-br-defend-safe { color: var(--wr-win); }
+.wr-br-defend-sep { color: var(--wr-tm); }
+.wr-br-defend-danger { color: var(--wr-loss); opacity: 0.8; }
+.wr-br-last5 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.wr-br-last5-label {
+  font: 600 7.5px 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+  color: var(--wr-tm);
+  margin-right: 4px;
+}
+.wr-br-last5-score {
+  font: 600 11px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+  padding: 3px 7px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 2px;
+}
+.wr-br-last5-score.high { color: var(--wr-win); background: rgba(0,230,118,0.08); }
+.wr-br-last5-score.low  { color: var(--wr-loss); background: rgba(255,61,81,0.08); }
+
+.wr-br-ground-note {
+  font: 400 11.5px 'Inter', sans-serif;
+  color: var(--wr-t2);
+  line-height: 1.7;
+  padding: 0 18px;
+}
+
+/* ── Section blocks ── */
+.wr-br-section {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--wr-b1);
+}
+.wr-br-label {
+  font: 600 8px 'JetBrains Mono', monospace;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--wr-t3);
+  margin-bottom: 8px;
+  padding-left: 8px;
+  border-left: 2px solid var(--wr-brand);
+}
+.wr-br-via {
+  font-weight: 400;
+  opacity: 0.5;
+  margin-left: 4px;
+}
+
+/* ── Tactical Edge with favoured badge ── */
+.wr-br-edge {
+  margin: 10px 14px 0;
+  padding: 10px 12px 12px 14px;
+  background: #0e1528;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-left: 3px solid var(--wr-win);
+  border-radius: 2px;
+}
+.wr-br-edge-hd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+.wr-br-edge-label {
+  font: 600 8px 'JetBrains Mono', monospace;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: var(--wr-t3);
+}
+.wr-br-edge-badge {
+  font: 700 7px 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+  padding: 2px 6px;
+  border-radius: 1px;
+  color: #0a0b0e;
+}
+.wr-br-edge-badge.even {
+  background: var(--wr-tm);
+  color: var(--wr-t);
+}
+.wr-br-edge-text {
+  font: 400 11.5px 'Inter', sans-serif;
+  color: var(--wr-t);
+  line-height: 1.6;
+}
+
+/* ── Form mood indicators (shared with wr-bp-form) ── */
+.wr-br-form-mood {
+  font: 700 9px 'JetBrains Mono', monospace;
+  margin-left: auto;
+  margin-right: 4px;
+}
+.wr-br-form-mood.rising  { color: var(--wr-win); }
+.wr-br-form-mood.falling { color: var(--wr-loss); }
+.wr-br-form-mood.steady  { color: var(--wr-tm); }
+.wr-br-form-pos {
+  font: 600 8px 'JetBrains Mono', monospace;
+  color: var(--wr-tm);
+}
+
+/* ── Battle Cards (structured matchups) ── */
+.wr-br-battle {
+  display: flex;
+  gap: 8px;
+  padding: 7px 9px;
+  margin-bottom: 5px;
+  background: var(--wr-s2);
+  border: 1px solid var(--wr-b1);
+  border-radius: 2px;
+}
+.wr-br-battle:last-child { margin-bottom: 0; }
+.wr-br-battle-num {
+  flex-shrink: 0;
+  font: 700 11px 'JetBrains Mono', monospace;
+  color: var(--wr-brand);
+  opacity: 0.5;
+  min-width: 14px;
+  padding-top: 2px;
+}
+.wr-br-battle-body { flex: 1; min-width: 0; }
+.wr-br-battle-players {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.wr-br-battle-side {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.wr-br-battle-side.right {
+  align-items: flex-end;
+  text-align: right;
+}
+.wr-br-battle-name {
+  font: 700 11px 'Anybody', sans-serif;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+}
+.wr-br-battle-role {
+  font: 500 7px 'JetBrains Mono', monospace;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--wr-tm);
+}
+.wr-br-battle-x {
+  font: 600 16px 'Anybody', sans-serif;
+  color: var(--wr-brand);
+  opacity: 0.6;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+.wr-br-battle-insight {
+  font: 400 10.5px 'Inter', sans-serif;
+  color: var(--wr-t2);
+  line-height: 1.55;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+/* Legacy matchup fallback */
+.wr-br-matchup {
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  background: var(--wr-s2);
+  border: 1px solid var(--wr-b1);
+  border-left: 2px solid var(--wr-brand);
+  border-radius: 2px;
+}
+.wr-br-matchup:last-child { margin-bottom: 0; }
+.wr-br-mu-name {
+  font: 700 11px 'Anybody', sans-serif;
+  color: var(--wr-brand);
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.wr-br-mu-insight {
+  font: 400 10.5px 'Inter', sans-serif;
+  color: var(--wr-t2);
+  line-height: 1.55;
+}
+
+/* ── Squad intel items ── */
+.wr-br-item {
+  font: 400 11px 'Inter', sans-serif;
+  color: var(--wr-t2);
+  line-height: 1.6;
+  padding: 5px 0 5px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  position: relative;
+}
+.wr-br-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 11px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--wr-brand);
+  opacity: 0.55;
+}
+.wr-br-item:last-child { border-bottom: none; }
+
+/* ── Tonight's Stakes ── */
+.wr-br-stake {
+  padding: 6px 8px;
+  margin-bottom: 3px;
+  background: rgba(255, 255, 255, 0.045);
+  border-left: 3px solid var(--tc, var(--wr-b2));
+  border-radius: 1px;
+}
+.wr-br-stake-team {
+  font: 700 9.5px 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+}
+.wr-br-stake-impact {
+  font: 400 10px 'Inter', sans-serif;
+  color: var(--wr-t3);
+  line-height: 1.5;
+}
+
+/* ── Preview Link Cards ── */
+.wr-br-links { padding-bottom: 12px; }
+.wr-br-link-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  margin-bottom: 3px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--wr-b1);
+  border-radius: 2px;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+.wr-br-link-card:last-child { margin-bottom: 0; }
+.wr-br-link-card:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: var(--wr-b2);
+}
+.wr-br-link-title {
+  font: 500 10px 'Inter', sans-serif;
+  color: var(--wr-t2);
+  line-height: 1.4;
+  flex: 1;
+  min-width: 0;
+}
+.wr-br-link-card:hover .wr-br-link-title { color: var(--wr-t); }
+.wr-br-link-arrow {
+  font-size: 12px;
+  color: var(--wr-tm);
+  flex-shrink: 0;
+}
+.wr-br-link-card:hover .wr-br-link-arrow { color: var(--wr-brand); }
