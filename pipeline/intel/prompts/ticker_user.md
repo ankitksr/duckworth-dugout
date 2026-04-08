@@ -15,6 +15,6 @@ GOOD examples:
 
 BAD examples (don't do these):
 - "Rohit extends lead to 357 for #2" (what lead? #2 in what?)
-- "Narine 3 away from Chawla" (3 what? who cares about the comparison?)
+- "Narine 3 away from 200 IPL wickets" (comparison to retired players or vague milestones)
 
 Return a JSON array of items.

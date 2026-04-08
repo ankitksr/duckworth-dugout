@@ -57,8 +57,37 @@ def _standings_hash(standings: list[dict]) -> str:
     return hashlib.sha256(content.encode()).hexdigest()[:16]
 
 
-def _build_mcp_context(today_matches: list[ScheduleMatch]) -> str:
-    """Query MCP for historical data relevant to ticker insights."""
+def _get_active_last_names(season: str) -> set[str]:
+    """Get last names of players in current season squads for filtering."""
+    try:
+        from pipeline.db.connection import get_connection
+
+        year = int(season.split("/")[0]) if "/" in season else int(season)
+        conn = get_connection()
+        rows = conn.execute(
+            "SELECT DISTINCT player_name FROM ipl_season_squad WHERE season = ?",
+            [year],
+        ).fetchall()
+        return {r[0].split()[-1].lower() for r in rows if r[0].strip()}
+    except Exception:
+        return set()
+
+
+def _is_active(name: str, active_lasts: set[str]) -> bool:
+    """Check if a player name matches any active squad member by last name."""
+    if not active_lasts:
+        return True  # no filter available, keep all
+    return name.split()[-1].lower() in active_lasts
+
+
+def _build_mcp_context(
+    today_matches: list[ScheduleMatch],
+    active_lasts: set[str],
+) -> str:
+    """Query MCP for historical data relevant to ticker insights.
+
+    Only includes players who are in the current season's squads.
+    """
     parts: list[str] = []
 
     try:
@@ -66,7 +95,7 @@ def _build_mcp_context(today_matches: list[ScheduleMatch]) -> str:
 
         conn = _connect()
 
-        # All-time IPL run leaders (top 10)
+        # All-time IPL run leaders — filtered to active players
         rows = conn.execute("""
             SELECT p.name, SUM(bs.runs) as total
             FROM batting_scorecard bs
@@ -75,15 +104,21 @@ def _build_mcp_context(today_matches: list[ScheduleMatch]) -> str:
             WHERE m.event_name = ?
             GROUP BY p.name
             ORDER BY total DESC
-            LIMIT 10
+            LIMIT 30
         """, [_EVENT]).fetchall()
         if rows:
-            lines = [f"  {name}: {total} runs" for name, total in rows]
-            parts.append(
-                "ALL-TIME IPL RUN LEADERS:\n" + "\n".join(lines)
-            )
+            lines = [
+                f"  {name}: {total} runs"
+                for name, total in rows
+                if _is_active(name, active_lasts)
+            ][:10]
+            if lines:
+                parts.append(
+                    "ALL-TIME IPL RUN LEADERS (active players):\n"
+                    + "\n".join(lines)
+                )
 
-        # All-time IPL wicket leaders (top 10)
+        # All-time IPL wicket leaders — filtered to active players
         rows = conn.execute("""
             SELECT p.name, SUM(bs.wickets) as total
             FROM bowling_scorecard bs
@@ -92,13 +127,19 @@ def _build_mcp_context(today_matches: list[ScheduleMatch]) -> str:
             WHERE m.event_name = ?
             GROUP BY p.name
             ORDER BY total DESC
-            LIMIT 10
+            LIMIT 30
         """, [_EVENT]).fetchall()
         if rows:
-            lines = [f"  {name}: {total} wkts" for name, total in rows]
-            parts.append(
-                "ALL-TIME IPL WICKET LEADERS:\n" + "\n".join(lines)
-            )
+            lines = [
+                f"  {name}: {total} wkts"
+                for name, total in rows
+                if _is_active(name, active_lasts)
+            ][:10]
+            if lines:
+                parts.append(
+                    "ALL-TIME IPL WICKET LEADERS (active players):\n"
+                    + "\n".join(lines)
+                )
 
         # H2H for today's matches
         for match in today_matches:
@@ -267,11 +308,25 @@ async def generate_smart_ticker(
         )
         return [TickerItem(**item) for item in cached["items"]]
 
+    # Active player filter — only feed active names to the LLM
+    active_lasts = _get_active_last_names(season)
+
     # Build context
-    mcp_context = _build_mcp_context(today_matches)
+    mcp_context = _build_mcp_context(today_matches, active_lasts)
     season_context = _build_season_context(
         standings, caps, schedule,
     )
+
+    # Add roster summary so LLM has a positive reference of active players
+    try:
+        from pipeline.db.connection import get_connection
+        from pipeline.intel.roster_context import summary as roster_summary
+
+        roster_ctx = roster_summary(get_connection(), season)
+        if roster_ctx:
+            season_context += "\n\n" + roster_ctx
+    except Exception:
+        pass
 
     # LLM call
     from pipeline.llm.gemini import GeminiProvider
