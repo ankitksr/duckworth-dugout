@@ -54,6 +54,35 @@
   .wr-scenarios-pnl   { order: 7; }
   .wr-log-pnl         { order: 8; }
 
+  /* --- Collapsible panels: tap header to collapse/expand --- */
+  .wr-collapse-wrap .wr-ph {
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Chevron indicator (right side of header) */
+  .wr-collapse-wrap .wr-ph::after {
+    content: '';
+    margin-left: 8px;
+    border: 3.5px solid transparent;
+    border-top: 4px solid var(--wr-tm);
+    border-bottom: 0;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+  }
+  .wr-collapse-wrap.wr-collapsed .wr-ph::after {
+    transform: rotate(-90deg);
+  }
+
+  /* Collapsed state: clip to header height */
+  .wr-collapse-wrap.wr-collapsed > .wr-pnl {
+    max-height: 40px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
   /* --- Panel sizing: natural height instead of flex-fill --- */
   .wr-pnl {
     flex-shrink: 0;

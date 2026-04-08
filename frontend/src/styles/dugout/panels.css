@@ -1,3 +1,6 @@
+/* ── Collapsible wrapper — invisible to layout on all breakpoints ── */
+.wr-collapse-wrap { display: contents; }
+
 /* ── Panel primitives ── */
 
 .wr-pnl {

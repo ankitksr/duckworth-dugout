@@ -12,6 +12,7 @@ import { AIWirePanel } from "./panels/AIWirePanel";
 import { IntelLogPanel } from "./panels/IntelLogPanel";
 import { BriefingPanel } from "./bridge/BriefingPanel";
 import { TeamIntelPanel } from "./bridge/TeamIntelPanel";
+import { CollapsiblePanel } from "./CollapsiblePanel";
 
 function WarRoomInner() {
   const { loading, selectedTeam } = useWarRoomState();
@@ -30,19 +31,33 @@ function WarRoomInner() {
       <WarRoomTopBar />
       <main className="wr-main">
         <div className="wr-col wr-col-left">
-          <StandingsPanel />
-          <MatchTimeline />
-          <CapRacePanel />
+          <CollapsiblePanel>
+            <StandingsPanel />
+          </CollapsiblePanel>
+          <CollapsiblePanel>
+            <MatchTimeline />
+          </CollapsiblePanel>
+          <CollapsiblePanel>
+            <CapRacePanel />
+          </CollapsiblePanel>
         </div>
         <div className="wr-col wr-col-center">
-          <SeasonPulse />
+          <CollapsiblePanel defaultCollapsed>
+            <SeasonPulse />
+          </CollapsiblePanel>
           <div className="wr-center-lower">
-            {selectedTeam ? <TeamIntelPanel /> : <BriefingPanel />}
+            <CollapsiblePanel>
+              {selectedTeam ? <TeamIntelPanel /> : <BriefingPanel />}
+            </CollapsiblePanel>
           </div>
         </div>
         <div className="wr-col wr-col-right">
-          <AIWirePanel />
-          <IntelLogPanel />
+          <CollapsiblePanel>
+            <AIWirePanel />
+          </CollapsiblePanel>
+          <CollapsiblePanel defaultCollapsed>
+            <IntelLogPanel />
+          </CollapsiblePanel>
         </div>
       </main>
       <WarRoomBottomBar />
