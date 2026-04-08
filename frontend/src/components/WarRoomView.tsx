@@ -55,7 +55,7 @@ function WarRoomInner() {
           <CollapsiblePanel>
             <AIWirePanel />
           </CollapsiblePanel>
-          <CollapsiblePanel defaultCollapsed>
+          <CollapsiblePanel>
             <IntelLogPanel />
           </CollapsiblePanel>
         </div>

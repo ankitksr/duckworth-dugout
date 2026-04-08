@@ -43,16 +43,15 @@
     display: contents;
   }
 
-  /* --- Panel ordering: intelligence-first --- */
+  /* --- Panel ordering: AI-first, data interleaved --- */
   .wr-briefing-pnl   { order: 1; }
   .wr-team-intel-pnl  { order: 1; }  /* replaces briefing when team selected */
-  .wr-wire-pnl        { order: 2; }
-  .wr-matches-pnl     { order: 3; }
-  .wr-standings-pnl   { order: 4; }
-  .wr-pulse-pnl       { order: 5; }
-  .wr-caps-pnl        { order: 6; }
-  .wr-scenarios-pnl   { order: 7; }
-  .wr-log-pnl         { order: 8; }
+  .wr-standings-pnl   { order: 2; }
+  .wr-wire-pnl        { order: 3; }
+  .wr-matches-pnl     { order: 4; }
+  .wr-caps-pnl        { order: 5; }
+  .wr-pulse-pnl       { order: 6; }
+  .wr-log-pnl         { order: 7; }
 
   /* --- Collapsible panels: tap header to collapse/expand --- */
   .wr-collapse-wrap .wr-ph {
