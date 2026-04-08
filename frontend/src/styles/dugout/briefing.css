@@ -84,6 +84,7 @@
 }
 .wr-br-fo-dot.w { background: var(--wr-win); }
 .wr-br-fo-dot.l { background: var(--wr-loss); opacity: 0.7; }
+.wr-br-fo-dot.nr { background: var(--wr-tm); opacity: 0.5; }
 
 /* ── Double-header match pills (inline in panel header) ── */
 .wr-br-match-pills {
@@ -151,6 +152,41 @@
   color: var(--wr-t2);
   line-height: 1.7;
   padding: 0 18px;
+}
+
+/* ── Team Venue Records ── */
+.wr-br-venue-records {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 14px;
+}
+.wr-br-venue-record {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px;
+  border-left: 3px solid var(--wr-tm);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 0 2px 2px 0;
+}
+.wr-br-venue-record-team {
+  font: 700 10px 'Anybody', sans-serif;
+  letter-spacing: 0.5px;
+}
+.wr-br-venue-record-stat {
+  font: 500 10px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+  letter-spacing: 0.3px;
+}
+.wr-br-venue-record-stat strong {
+  color: var(--wr-t);
+}
+.wr-br-venue-record-pct {
+  color: var(--wr-tm);
+  margin-left: 3px;
+  font-size: 8px;
 }
 
 /* ── Section blocks ── */
@@ -226,16 +262,22 @@
 }
 
 /* ── Battle Cards (structured matchups) ── */
+.wr-br-battle-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+@media (max-width: 700px) {
+  .wr-br-battle-grid { grid-template-columns: 1fr; }
+}
 .wr-br-battle {
   display: flex;
   gap: 8px;
   padding: 7px 9px;
-  margin-bottom: 5px;
   background: var(--wr-s2);
   border: 1px solid var(--wr-b1);
   border-radius: 2px;
 }
-.wr-br-battle:last-child { margin-bottom: 0; }
 .wr-br-battle-num {
   flex-shrink: 0;
   font: 700 11px 'JetBrains Mono', monospace;

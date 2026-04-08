@@ -29,7 +29,8 @@ function VenueIntel({ vs }: { vs: WRVenueStats }) {
   const d180 = vs.defend_180_pct;
   const dUnder = vs.defend_under_160_pct;
   const last5 = vs.last_5_1st_inn;
-  if (d180 == null && !last5?.length) return null;
+  const last5_2nd = vs.last_5_2nd_inn;
+  if (d180 == null && !last5?.length && !last5_2nd?.length) return null;
 
   return (
     <div className="wr-br-venue-intel">
@@ -44,6 +45,14 @@ function VenueIntel({ vs }: { vs: WRVenueStats }) {
         <div className="wr-br-last5">
           <span className="wr-br-last5-label">1ST INN &middot; LAST 5</span>
           {last5.map((s, i) => (
+            <span key={i} className={`wr-br-last5-score${s >= 180 ? " high" : s < 150 ? " low" : ""}`}>{s}</span>
+          ))}
+        </div>
+      )}
+      {last5_2nd && last5_2nd.length > 0 && (
+        <div className="wr-br-last5">
+          <span className="wr-br-last5-label">2ND INN &middot; LAST 5</span>
+          {last5_2nd.map((s, i) => (
             <span key={i} className={`wr-br-last5-score${s >= 180 ? " high" : s < 150 ? " low" : ""}`}>{s}</span>
           ))}
         </div>
@@ -86,7 +95,7 @@ function HeroStrip({ briefing }: { briefing: WRBriefing }) {
           {f.last5 && f.last5.length > 0 && (
             <div className="wr-br-mh-dots">
               {f.last5.map((r, i) => (
-                <span key={i} className={`wr-br-fo-dot ${r === "W" ? "w" : "l"}`} />
+                <span key={i} className={`wr-br-fo-dot ${r === "W" ? "w" : r === "NR" ? "nr" : "l"}`} />
               ))}
             </div>
           )}
@@ -124,7 +133,7 @@ function HeroStrip({ briefing }: { briefing: WRBriefing }) {
         </div>
         {previewLink && (
           <a href={previewLink.url} target="_blank" rel="noopener noreferrer" className="wr-bp-preview">
-            <span className="wr-bp-preview-tag">PREVIEW</span>
+            <span className="wr-bp-preview-tag">ESPNcricinfo Preview</span>
             <span className="wr-bp-preview-title">{previewLink.title}</span>
             <span>&#x2197;</span>
           </a>
@@ -291,36 +300,38 @@ function MatchupsTab({ briefing }: { briefing: WRBriefing }) {
       <div className="wr-br-section">
         <div className="wr-br-label">Key Matchups <span className="wr-br-via">{briefing.key_matchups.length}</span></div>
         {briefing.key_matchups.length > 0 ? (
-          briefing.key_matchups.map((mu, i) =>
-            isStructuredMatchup(mu) ? (
-              <div key={i} className="wr-br-battle">
-                <span className="wr-br-battle-num">{i + 1}</span>
-                <div className="wr-br-battle-body">
-                  <div className="wr-br-battle-players">
-                    <div className="wr-br-battle-side">
-                      <span className="wr-br-battle-name" style={{ color: `var(--${mu.player1_team.toLowerCase()})` }}>
-                        {mu.player1}
-                      </span>
-                      <span className="wr-br-battle-role">{mu.player1_team} &middot; {mu.player1_role}</span>
+          <div className="wr-br-battle-grid">
+            {briefing.key_matchups.map((mu, i) =>
+              isStructuredMatchup(mu) ? (
+                <div key={i} className="wr-br-battle">
+                  <span className="wr-br-battle-num">{i + 1}</span>
+                  <div className="wr-br-battle-body">
+                    <div className="wr-br-battle-players">
+                      <div className="wr-br-battle-side">
+                        <span className="wr-br-battle-name" style={{ color: `var(--${mu.player1_team.toLowerCase()})` }}>
+                          {mu.player1}
+                        </span>
+                        <span className="wr-br-battle-role">{mu.player1_team} &middot; {mu.player1_role}</span>
+                      </div>
+                      <span className="wr-br-battle-x">&times;</span>
+                      <div className="wr-br-battle-side right">
+                        <span className="wr-br-battle-name" style={{ color: `var(--${mu.player2_team.toLowerCase()})` }}>
+                          {mu.player2}
+                        </span>
+                        <span className="wr-br-battle-role">{mu.player2_team} &middot; {mu.player2_role}</span>
+                      </div>
                     </div>
-                    <span className="wr-br-battle-x">&times;</span>
-                    <div className="wr-br-battle-side right">
-                      <span className="wr-br-battle-name" style={{ color: `var(--${mu.player2_team.toLowerCase()})` }}>
-                        {mu.player2}
-                      </span>
-                      <span className="wr-br-battle-role">{mu.player2_team} &middot; {mu.player2_role}</span>
-                    </div>
+                    <div className="wr-br-battle-insight">{mu.insight}</div>
                   </div>
-                  <div className="wr-br-battle-insight">{mu.insight}</div>
                 </div>
-              </div>
-            ) : (
-              <div key={i} className="wr-br-matchup">
-                <div className="wr-br-mu-name">{mu.matchup}</div>
-                <div className="wr-br-mu-insight">{mu.insight}</div>
-              </div>
-            ),
-          )
+              ) : (
+                <div key={i} className="wr-br-matchup">
+                  <div className="wr-br-mu-name">{mu.matchup}</div>
+                  <div className="wr-br-mu-insight">{mu.insight}</div>
+                </div>
+              ),
+            )}
+          </div>
         ) : (
           <div className="wr-empty">No matchups available</div>
         )}
@@ -341,6 +352,7 @@ function FormTab({ briefing }: { briefing: WRBriefing }) {
 
     const nrr = typeof f.nrr === "number" ? f.nrr : parseFloat(String(f.nrr));
     const mood = nrr > 0 ? "rising" : nrr < -0.5 ? "falling" : "steady";
+    const ps = briefing.phase_stats?.[team];
 
     return (
       <div
@@ -368,9 +380,33 @@ function FormTab({ briefing }: { briefing: WRBriefing }) {
             <span className="wr-bp-form-run-label">FORM</span>
             <div className="wr-br-mh-dots">
               {f.last5.map((r, i) => (
-                <span key={i} className={`wr-br-fo-dot ${r === "W" ? "w" : "l"}`} />
+                <span key={i} className={`wr-br-fo-dot ${r === "W" ? "w" : r === "NR" ? "nr" : "l"}`} />
               ))}
             </div>
+          </div>
+        )}
+        {ps && (ps.pp_bat_sr || ps.death_bowl_econ) && (
+          <div className="wr-bp-phase-grid">
+            {/* Column headers: time-based */}
+            <span className="wr-bp-pg-corner" />
+            <span className="wr-bp-pg-col">Since {ps.since ?? "2025"}</span>
+            <span className="wr-bp-pg-col wr-bp-pg-col-szn">
+              This season{ps.season?.till_match ? ` (M${ps.season.till_match})` : ""}
+            </span>
+            {/* Powerplay rows */}
+            <span className="wr-bp-pg-row">PP BAT SR</span>
+            <span className="wr-bp-pg-val">{ps.pp_bat_sr ?? "—"}</span>
+            <span className="wr-bp-pg-val wr-bp-pg-szn-val">{ps.season?.pp_bat_sr ?? "—"}</span>
+            <span className="wr-bp-pg-row">PP BOWL ECON</span>
+            <span className="wr-bp-pg-val">{ps.pp_bowl_econ ?? "—"}</span>
+            <span className="wr-bp-pg-val wr-bp-pg-szn-val">{ps.season?.pp_bowl_econ ?? "—"}</span>
+            {/* Death rows */}
+            <span className="wr-bp-pg-row">DEATH BAT SR</span>
+            <span className="wr-bp-pg-val">{ps.death_bat_sr ?? "—"}</span>
+            <span className="wr-bp-pg-val wr-bp-pg-szn-val">{ps.season?.death_bat_sr ?? "—"}</span>
+            <span className="wr-bp-pg-row">DEATH BOWL ECON</span>
+            <span className="wr-bp-pg-val">{ps.death_bowl_econ ?? "—"}</span>
+            <span className="wr-bp-pg-val wr-bp-pg-szn-val">{ps.season?.death_bowl_econ ?? "—"}</span>
           </div>
         )}
         {f.trend && <div className="wr-bp-form-trend">{f.trend}</div>}
@@ -422,6 +458,20 @@ function VenueTab({ briefing }: { briefing: WRBriefing }) {
                 <span className="wr-br-fact-detail">Chase baseline</span>
               </div>
             )}
+            {vs.avg_2nd_inn_recent != null && (
+              <div className="wr-br-fact">
+                <span className="wr-br-fact-label">AVG 2ND INNS (3Y)</span>
+                <span className="wr-br-fact-value">{vs.avg_2nd_inn_recent}</span>
+                <span className="wr-br-fact-detail">Since 2023</span>
+              </div>
+            )}
+            {vs.avg_pp_score != null && (
+              <div className="wr-br-fact">
+                <span className="wr-br-fact-label">AVG POWERPLAY</span>
+                <span className="wr-br-fact-value">{vs.avg_pp_score}</span>
+                <span className="wr-br-fact-detail">Since 2023</span>
+              </div>
+            )}
             {vs.highest != null && (
               <div className="wr-br-fact">
                 <span className="wr-br-fact-label">HIGHEST</span>
@@ -449,6 +499,22 @@ function VenueTab({ briefing }: { briefing: WRBriefing }) {
             <div className="wr-empty">No ground notes</div>
           )}
         </div>
+        {vs.team_records && Object.keys(vs.team_records).length > 0 && (
+          <div className="wr-br-section">
+            <div className="wr-br-label">At This Venue</div>
+            <div className="wr-br-venue-records">
+              {Object.entries(vs.team_records).map(([team, rec]) => (
+                <div key={team} className="wr-br-venue-record" style={{ borderLeftColor: `var(--${team.toLowerCase()})` }}>
+                  <span className="wr-br-venue-record-team" style={{ color: `var(--${team.toLowerCase()})` }}>{team}</span>
+                  <span className="wr-br-venue-record-stat">
+                    <strong>{rec.wins}W</strong>-{rec.losses}L
+                    <span className="wr-br-venue-record-pct">({rec.played > 0 ? Math.round(rec.wins / rec.played * 100) : 0}%)</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

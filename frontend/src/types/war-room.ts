@@ -224,6 +224,12 @@ export interface WRRecords {
 
 // ── briefing.json ──
 
+export interface WRVenueTeamRecord {
+  played: number;
+  wins: number;
+  losses: number;
+}
+
 export interface WRVenueStats {
   name: string;
   city: string;
@@ -231,6 +237,7 @@ export interface WRVenueStats {
   avg_1st_inn?: number;
   avg_1st_inn_recent?: number;      // last 3 seasons (if ≥6 matches)
   avg_2nd_inn?: number;
+  avg_2nd_inn_recent?: number;      // last 3 seasons (if ≥6 matches)
   chase_win_pct?: number;
   toss_field_pct?: number;
   defend_180_pct?: number;
@@ -239,6 +246,9 @@ export interface WRVenueStats {
   highest?: number;
   lowest?: number;
   last_5_1st_inn?: number[];
+  last_5_2nd_inn?: number[];
+  avg_pp_score?: number;             // powerplay avg (since 2023)
+  team_records?: Record<string, WRVenueTeamRecord>;
   note?: string;                     // LLM-generated narrative
 }
 
@@ -249,6 +259,20 @@ export interface WRFormEntry {
   position: number;
   last5: string[];                   // ["W", "L", "W", ...]
   trend: string;                     // LLM-generated narrative
+}
+
+export interface WRPhaseStatLine {
+  pp_bat_sr?: number;
+  pp_bowl_econ?: number;
+  death_bat_sr?: number;
+  death_bowl_econ?: number;
+  matches?: number;
+  till_match?: number;
+}
+
+export interface WRPhaseStats extends WRPhaseStatLine {
+  since?: string;                    // mega auction season cutoff
+  season?: WRPhaseStatLine;          // current-season overlay
 }
 
 export interface WRMatchup {
@@ -276,6 +300,7 @@ export interface WRBriefing {
   tactical_edge: string;
   favoured?: string;                 // "PBKS" | "KKR" | "even"
   preview_links?: { title: string; url: string }[];
+  phase_stats?: Record<string, WRPhaseStats>;
 
   // Legacy fields (pre-v2 pipeline) — kept for backward compat
   venue_profile?: {

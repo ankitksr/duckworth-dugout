@@ -194,10 +194,7 @@
     letter-spacing: 2px;
   }
   .wr-bp-vs {
-    font-size: 14px;
-  }
-  .wr-bp-divider {
-    display: none;
+    font-size: 10px;
   }
   .wr-bp-preview {
     display: none;
@@ -206,13 +203,13 @@
     gap: 2px;
   }
   .wr-bp-metric {
-    padding: 0 10px;
+    padding: 4px 8px;
   }
   .wr-bp-metric strong {
-    font-size: 16px;
+    font-size: 14px;
   }
   .wr-bp-metric span {
-    font-size: 6.5px;
+    font-size: 5.5px;
   }
 
   /* --- Briefing/TeamIntel grids: single column --- */
