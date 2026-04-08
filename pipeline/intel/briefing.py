@@ -22,7 +22,7 @@ from typing import Any
 import duckdb
 from rich.console import Console
 
-from pipeline.config import CRICKET_DB_PATH, DATA_DIR
+from pipeline.config import CRICKET_DB_PATH, DATA_DIR, MEGA_AUCTION_SEASON
 from pipeline.intel.articles import retrieve_for_match
 from pipeline.intel.prompts import load_prompt
 from pipeline.intel.tools import execute_tool, get_tool_declarations
@@ -65,6 +65,121 @@ def _load_json(filename: str) -> Any:
         return json.loads(path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
         return None
+
+
+def _query_phase_for_scope(
+    conn: duckdb.DuckDBPyConnection,
+    names: list[str],
+    season_filter: str,
+) -> dict[str, Any]:
+    """Run powerplay + death queries for a single team/scope."""
+    placeholders = ", ".join(["?"] * len(names))
+    stats: dict[str, Any] = {}
+
+    bat_rows = conn.execute(f"""
+        SELECT
+            CASE WHEN d.over_number BETWEEN 0 AND 5 THEN 'pp'
+                 ELSE 'death' END as phase,
+            COUNT(*) as balls,
+            SUM(d.runs_batter) as runs
+        FROM deliveries d
+        JOIN innings i ON d.innings_id = i.id
+        JOIN matches m ON d.match_id = m.id
+        WHERE m.event_name = ?
+          AND i.batting_team IN ({placeholders})
+          AND d.over_number NOT BETWEEN 6 AND 14
+          AND m.season >= ?
+        GROUP BY 1
+    """, [_EVENT, *names, season_filter]).fetchall()
+
+    bowl_rows = conn.execute(f"""
+        SELECT
+            CASE WHEN d.over_number BETWEEN 0 AND 5 THEN 'pp'
+                 ELSE 'death' END as phase,
+            COUNT(*) as balls,
+            SUM(d.runs_total) as runs,
+            SUM(CASE WHEN d.wicket_kind IS NOT NULL
+                THEN 1 ELSE 0 END) as wkts
+        FROM deliveries d
+        JOIN innings i ON d.innings_id = i.id
+        JOIN matches m ON d.match_id = m.id
+        WHERE m.event_name = ?
+          AND i.bowling_team IN ({placeholders})
+          AND d.over_number NOT BETWEEN 6 AND 14
+          AND m.season >= ?
+        GROUP BY 1
+    """, [_EVENT, *names, season_filter]).fetchall()
+
+    for phase, balls, runs in bat_rows:
+        if balls and balls > 0:
+            stats[f"{phase}_bat_sr"] = round(runs / balls * 100, 1)
+
+    for phase, balls, runs, wkts in bowl_rows:
+        if balls and balls > 0:
+            overs = balls / 6
+            stats[f"{phase}_bowl_econ"] = round(runs / overs, 2)
+
+    return stats
+
+
+def _query_phase_stats(match: ScheduleMatch) -> dict[str, dict]:
+    """Query Cricsheet for team-level powerplay and death overs stats.
+
+    Returns {team_short: {pp_bat_sr, ..., since, season: {pp_bat_sr, ...}}}
+    with post-auction baseline and current-season overlay.
+    """
+    current_season = match.date[:4] if match.date else "2026"
+    result: dict[str, dict] = {}
+    try:
+        conn = duckdb.connect(str(CRICKET_DB_PATH), read_only=True)
+
+        for fid in (match.team1, match.team2):
+            names = _cricsheet_names(fid)
+            if not names:
+                continue
+            short = _short(fid)
+
+            # Post-auction baseline
+            stats = _query_phase_for_scope(conn, names, MEGA_AUCTION_SEASON)
+            if stats:
+                stats["since"] = MEGA_AUCTION_SEASON
+
+            # Current-season overlay (only if we have data)
+            szn = _query_phase_for_scope(conn, names, current_season)
+            if szn:
+                # Count completed matches this season for label
+                match_count = conn.execute(f"""
+                    SELECT COUNT(*) FROM matches
+                    WHERE event_name = ?
+                      AND season = ?
+                      AND outcome_winner IS NOT NULL
+                      AND (team1 IN ({", ".join(["?"] * len(names))})
+                           OR team2 IN ({", ".join(["?"] * len(names))}))
+                """, [_EVENT, current_season, *names, *names]).fetchone()
+                szn["matches"] = match_count[0] if match_count else 0
+
+                # Find the latest match number for "till M#" label
+                last_match = conn.execute(f"""
+                    SELECT MAX(m.event_match_number) FROM matches m
+                    WHERE m.event_name = ?
+                      AND m.season = ?
+                      AND m.outcome_winner IS NOT NULL
+                      AND (m.team1 IN ({", ".join(["?"] * len(names))})
+                           OR m.team2 IN ({", ".join(["?"] * len(names))}))
+                """, [_EVENT, current_season, *names, *names]).fetchone()
+                if last_match and last_match[0]:
+                    szn["till_match"] = last_match[0]
+
+                stats["season"] = szn
+
+            if stats:
+                result[short] = stats
+
+        conn.close()
+    except Exception as e:
+        console.print(f"  [yellow]Phase stats query failed: {e}[/yellow]")
+
+    return result
 
 
 def _query_venue_stats(match: ScheduleMatch) -> dict:
@@ -147,12 +262,38 @@ def _query_venue_stats(match: ScheduleMatch) -> dict:
                 (chase_row[1] or 0) / chase_row[0] * 100
             )
 
+        # ── Powerplay avg score at venue ──
+        pp_query = """
+            SELECT COUNT(*), ROUND(AVG(pp_runs), 0)
+            FROM (
+                SELECT SUM(d.runs_total) as pp_runs
+                FROM deliveries d
+                JOIN innings i ON d.innings_id = i.id
+                JOIN matches m ON d.match_id = m.id
+                WHERE m.event_name = ?
+                  AND m.city LIKE ?
+                  AND d.over_number BETWEEN 0 AND 5
+                  AND m.outcome_winner IS NOT NULL
+                  {season_filter}
+                GROUP BY d.match_id, i.innings_number
+            )
+        """
+        # Since 2023 (recent era baseline)
+        pp_recent = conn.execute(
+            pp_query.format(season_filter="AND m.season >= '2023'"),
+            [_EVENT, f"%{city}%"],
+        ).fetchone()
+        if pp_recent and pp_recent[0] and pp_recent[0] >= 6:
+            stats["avg_pp_score"] = int(pp_recent[1])
+
         # ── Recent era (last 3 seasons) ──
         recent_row = conn.execute("""
             SELECT
                 COUNT(DISTINCT m.id) as matches,
                 ROUND(AVG(CASE WHEN i.innings_number = 1
-                          THEN i.total_runs END), 0) as avg_1st
+                          THEN i.total_runs END), 0) as avg_1st,
+                ROUND(AVG(CASE WHEN i.innings_number = 2
+                          THEN i.total_runs END), 0) as avg_2nd
             FROM matches m
             JOIN innings i ON i.match_id = m.id
             WHERE m.event_name = ?
@@ -164,6 +305,7 @@ def _query_venue_stats(match: ScheduleMatch) -> dict:
 
         if recent_row and (recent_row[0] or 0) >= 6:
             stats["avg_1st_inn_recent"] = int(recent_row[1] or 0)
+            stats["avg_2nd_inn_recent"] = int(recent_row[2] or 0)
 
         # ── Defend thresholds ──
         defend_rows = conn.execute("""
@@ -208,6 +350,49 @@ def _query_venue_stats(match: ScheduleMatch) -> dict:
 
         if recent_scores:
             stats["last_5_1st_inn"] = [int(r[0]) for r in recent_scores]
+
+        # ── Last 5 second-innings scores ──
+        recent_2nd = conn.execute("""
+            SELECT i.total_runs
+            FROM innings i
+            JOIN matches m ON i.match_id = m.id
+            WHERE m.event_name = ?
+              AND m.city LIKE ?
+              AND i.innings_number = 2
+            ORDER BY m.start_date DESC
+            LIMIT 5
+        """, [_EVENT, f"%{city}%"]).fetchall()
+
+        if recent_2nd:
+            stats["last_5_2nd_inn"] = [int(r[0]) for r in recent_2nd]
+
+        # ── Team records at this venue ──
+        team_records: dict[str, dict] = {}
+        for fid in (match.team1, match.team2):
+            names = _cricsheet_names(fid)
+            if not names:
+                continue
+            placeholders = ", ".join(["?"] * len(names))
+            tr = conn.execute(f"""
+                SELECT
+                    COUNT(*) as played,
+                    SUM(CASE WHEN outcome_winner IN ({placeholders})
+                        THEN 1 ELSE 0 END) as wins
+                FROM matches
+                WHERE event_name = ?
+                  AND city LIKE ?
+                  AND outcome_winner IS NOT NULL
+                  AND (team1 IN ({placeholders}) OR team2 IN ({placeholders}))
+            """, [*names, _EVENT, f"%{city}%", *names, *names]).fetchone()
+
+            if tr and tr[0] > 0:
+                team_records[_short(fid)] = {
+                    "played": tr[0],
+                    "wins": tr[1],
+                    "losses": tr[0] - tr[1],
+                }
+        if team_records:
+            stats["team_records"] = team_records
 
         conn.close()
     except Exception as e:
@@ -327,7 +512,8 @@ def _build_form_context(match: ScheduleMatch) -> str:
                 and (m["team1"] == fid or m["team2"] == fid)
             ]
             form = "".join(
-                "W" if m.get("winner") == fid else "L"
+                "W" if m.get("winner") == fid
+                else ("NR" if m.get("winner") is None else "L")
                 for m in team_matches[-5:]
             )
             parts.append(
@@ -363,7 +549,8 @@ def _get_structured_form(match: ScheduleMatch) -> dict[str, dict]:
             and (m["team1"] == fid or m["team2"] == fid)
         ]
         last5 = [
-            "W" if m.get("winner") == fid else "L"
+            "W" if m.get("winner") == fid
+            else ("NR" if m.get("winner") is None else "L")
             for m in team_matches[-5:]
         ]
 
@@ -415,6 +602,9 @@ def _inject_post_llm(
         data["trend"] = llm_entry.get("trend", "")
         llm_form[short] = data
     parsed["form"] = llm_form
+
+    # ── Phase stats (from Cricsheet, not LLM) ──
+    parsed["phase_stats"] = _query_phase_stats(match)
 
     return parsed
 

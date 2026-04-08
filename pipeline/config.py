@@ -52,6 +52,13 @@ USER_AGENTS = [
     ),
 ]
 
+# ── IPL Season Constants ──────────────────────────────────────────────────
+
+# Year of the most recent IPL mega auction — used as the cutoff for
+# team-composition-dependent stats (phase performance, form, etc.).
+# Update this when a new mega auction occurs.
+MEGA_AUCTION_SEASON = "2025"
+
 # ── LLM Settings ──────────────────────────────────────────────────────────
 
 GEMINI_API_KEY = os.environ.get("CT_LLM_API_KEY", "")
