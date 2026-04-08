@@ -1,8 +1,9 @@
 """Live match crawler — enriches live matches via ESPNcricinfo page scraping.
 
-Crawls the match URL for live IPL matches to extract rich data that RSS
-doesn't provide: overs, current run rate, win probability, live forecast,
-toss result, batting/bowling figures, and ball-by-ball status.
+Crawls the match URL for live IPL matches and extracts structured data from
+the __NEXT_DATA__ JSON embedded by Next.js. This replaces fragile regex
+parsing on markdown with direct JSON extraction — structured, typed, and
+stable across ESPNcricinfo UI redesigns.
 
 Data is stored in a JSON sidecar file (live-match.json) and also patched
 back into schedule.json so the frontend can display overs/CRR/etc.
@@ -24,6 +25,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from rich.console import Console
+
+from pipeline.ipl.franchise_metadata import IPL_FRANCHISES
 
 console = Console()
 
@@ -73,7 +76,7 @@ class LiveMatchData:
     required_rr: float | None = None
     win_prob_team1: float | None = None
     win_prob_team2: float | None = None
-    live_forecast: str | None = None  # "KKR 189"
+    live_forecast: str | None = None  # deprecated — win prob is better
     status_text: str | None = None  # "Match delayed by rain"
 
     # Toss
@@ -89,238 +92,218 @@ class LiveMatchData:
     crawled_at: str = ""  # ISO 8601
 
 
-# ── Parsing helpers ─────────────────────────────────────────────────
+# ── __NEXT_DATA__ extraction ──────────────────────────────────────
 
-# Match header score line: "(3.4/20 ov) 25/2" or "186/4"
-# Overs may include target: "(8.6/20 ov, T:211) 97/1"
-_HEADER_SCORE_RE = re.compile(
-    r"(?:\((\d+\.?\d*)/\d+\s*[Oo]v[^)]*\)\s*)?(\d{1,3}/\d{1,2})"
+# ESPN abbreviation (uppercase) → franchise_id
+_ABBREV_TO_FID: dict[str, str] = {
+    v["short_name"].upper(): k
+    for k, v in IPL_FRANCHISES.items()
+    if not v.get("defunct")
+}
+
+_NEXT_DATA_RE = re.compile(
+    r'<script\s+id="__NEXT_DATA__"[^>]*>(.*?)</script>',
+    re.DOTALL,
 )
 
 
-def _is_valid_cricket_score(score: str) -> bool:
-    """Reject impossible scores like 900/41."""
-    if "/" not in score:
-        return False
-    try:
-        runs, wkts = score.split("/")
-        return int(wkts) <= 10 and int(runs) <= 500
-    except ValueError:
-        return False
-_CRR_RE = re.compile(r"Current RR:\s*([\d.]+)")
-_RRR_RE = re.compile(r"Required RR:\s*([\d.]+)")
-_FORECAST_RE = re.compile(r"Live Forecast:\s*(\S.+)")
-_CURRENT_OVER_RE = re.compile(r"Current Over\s+(\d+)")
+def _extract_next_data(html: str) -> dict | None:
+    """Extract and parse the __NEXT_DATA__ JSON from ESPNcricinfo HTML.
 
-
-def _extract_match_zone(markdown: str, team1: str, team2: str) -> str:
-    """Extract just the match-specific content, excluding sidebar scores."""
-    lines = markdown.split("\n")
-    # Find the match title line: "# RR vs MI, 13th Match..."
-    # Must be a heading (starts with #) to avoid matching sidebar links
-    t1u, t2u = team1.upper(), team2.upper()
-    start = 0
-    for i, line in enumerate(lines):
-        if line.startswith("#") and t1u in line.upper() and t2u in line.upper():
-            start = i
-            break
-
-    # End at footer/terms section
-    end = len(lines)
-    for i in range(start + 1, len(lines)):
-        if "Terms of Use" in lines[i] or "© 20" in lines[i]:
-            end = i
-            break
-
-    return "\n".join(lines[start:end])
-
-
-def _find_score_block(zone_lines: list[str], team_id: str) -> tuple[str | None, str | None]:
-    """Find score and overs for a team in the match header.
-
-    ESPNcricinfo format in crawled markdown (first ~15 lines of zone):
-        ![KKR Flag](...)[KKR](...)
-        (3.4/20 ov) 25/2
-        ![PBKS Flag](...)[PBKS](...)
-        KKR chose to bat.
-    Only searches the header area to avoid picking up scores from
-    Scoring Breakdown / other sections further down.
+    Returns a dict with 'match' and 'content' keys, or None on failure.
+    Handles both live page (data.data.match) and scorecard page (data.match).
     """
-    team_upper = team_id.upper()
-    # Only look in the first 15 lines (match header area)
-    header = zone_lines[:15]
-    for i, line in enumerate(header):
-        if team_upper in line.upper() and ("Flag" in line or f"[{team_upper}]" in line):
-            # Check the next line only for a score pattern
-            if i + 1 < len(header):
-                m = _HEADER_SCORE_RE.search(header[i + 1])
-                if m:
-                    overs = m.group(1)
-                    score = m.group(2)
-                    if _is_valid_cricket_score(score):
-                        return score, overs
-            # No score on the next line = team hasn't batted yet
-            return None, None
-    return None, None
+    m = _NEXT_DATA_RE.search(html)
+    if not m:
+        return None
+    try:
+        raw = json.loads(m.group(1))
+        data = raw["props"]["appPageProps"]["data"]
+        # Live pages nest under data.data; scorecard pages don't
+        inner = data.get("data", data)
+        match = inner.get("match")
+        content = inner.get("content")
+        if not match:
+            return None
+        return {"match": match, "content": content or {}}
+    except (json.JSONDecodeError, KeyError, TypeError):
+        return None
 
 
-def parse_live_match(
-    markdown: str,
+def _resolve_fid(abbreviation: str) -> str:
+    """Map ESPN team abbreviation to our franchise_id."""
+    return _ABBREV_TO_FID.get(abbreviation.upper(), abbreviation.lower())
+
+
+def _overs_to_float(val: float | int | str) -> float:
+    """Convert cricket overs notation to actual overs as a float.
+
+    ESPNcricinfo uses 19.3 to mean 19 overs + 3 balls = 19.5 actual overs.
+    Also handles 2-digit ball encoding: 19.06 = 19 overs + 6 balls.
+    """
+    val = float(val)
+    if val == 0:
+        return 0.0
+    completed = int(val)
+    frac = round((val - completed) * 100)  # e.g. 19.06 → 6, 19.3 → 30
+    # If fraction > 6, it's 2-digit encoding (e.g. .06 = 6 balls)
+    # If fraction <= 6, it's 1-digit (e.g. .3 = 3 balls)
+    if frac > 6:
+        balls = frac
+    else:
+        balls = round((val - completed) * 10)
+    return completed + balls / 6
+
+
+def _parse_from_json(
+    data: dict,
     match_number: int,
     team1: str,
     team2: str,
 ) -> LiveMatchData:
-    """Parse crawled ESPNcricinfo match page markdown into structured data."""
-    data = LiveMatchData(
+    """Parse __NEXT_DATA__ JSON into LiveMatchData."""
+    match = data["match"]
+    content = data.get("content", {})
+
+    result = LiveMatchData(
         match_number=match_number,
         team1=team1,
         team2=team2,
         status="live",
         crawled_at=datetime.now(timezone.utc).isoformat(),
-        raw_markdown=markdown,
     )
 
-    # Extract match-specific zone (exclude sidebar with other matches)
-    zone = _extract_match_zone(markdown, team1, team2)
-    zone_lines = zone.split("\n")
-    t1u, t2u = team1.upper(), team2.upper()
+    # ── Match status ───────────────────────────────────────────
+    stage = match.get("stage", "")
+    if stage != "RUNNING":
+        result.status = "completed"
 
-    # Extract scores and overs for each team
-    score1, overs1 = _find_score_block(zone_lines, team1)
-    score2, overs2 = _find_score_block(zone_lines, team2)
-    if score1:
-        data.score1 = score1
-    if score2:
-        data.score2 = score2
-    if overs1:
-        data.overs1 = overs1
-    if overs2:
-        data.overs2 = overs2
+    result.status_text = match.get("statusText")
 
-    # Batting team: look for "chose to bat/field" or score with overs (active innings)
-    for line in zone_lines:
-        lower = line.lower()
-        if "chose to bat" in lower:
-            if t1u in line.upper():
-                data.batting = team1
-            elif t2u in line.upper():
-                data.batting = team2
-            break
-        if "chose to field" in lower:
-            if t1u in line.upper():
-                data.batting = team2  # Other team bats
-            elif t2u in line.upper():
-                data.batting = team1
-            break
+    # ── Build ESPN team ID → franchise_id mapping ──────────────
+    espn_teams = match.get("teams", [])
+    espn_id_to_fid: dict[int, str] = {}
+    abbrev_to_espn_id: dict[str, int] = {}
+    for t in espn_teams:
+        team_obj = t.get("team", {})
+        espn_id = team_obj.get("id")
+        abbr = team_obj.get("abbreviation", "")
+        fid = _resolve_fid(abbr)
+        if espn_id:
+            espn_id_to_fid[espn_id] = fid
+            abbrev_to_espn_id[abbr.upper()] = espn_id
 
-    # If second innings, batting team is the one with overs in header
-    if data.score2 and data.overs2 and not data.batting:
-        data.batting = team2
-    elif data.score1 and data.overs1 and not data.score2:
-        data.batting = team1
+    # ── Scores from match.teams[] ──────────────────────────────
+    for t in espn_teams:
+        team_obj = t.get("team", {})
+        fid = _resolve_fid(team_obj.get("abbreviation", ""))
+        score = t.get("score")
+        if score and fid == team1:
+            result.score1 = score
+        elif score and fid == team2:
+            result.score2 = score
 
-    # "Current Over X • TEAM score" is the strongest batting signal
-    if not data.batting:
-        for line in zone_lines:
-            co = re.search(r"Current Over\s+\d+\s*[•·]\s*(\w+)", line)
-            if co:
-                tn = co.group(1).upper()
-                if tn == t1u or t1u.startswith(tn):
-                    data.batting = team1
-                elif tn == t2u or t2u.startswith(tn):
-                    data.batting = team2
+    # ── Innings data (overs, batting, batters/bowlers) ─────────
+    innings = content.get("innings", [])
+    current_inn = None
+    for inn in innings:
+        inn_team = inn.get("team", {})
+        fid = _resolve_fid(inn_team.get("abbreviation", ""))
+        overs = inn.get("overs")
+        overs_str = str(overs) if overs is not None else None
+
+        if fid == team1 and overs_str:
+            result.overs1 = overs_str
+        elif fid == team2 and overs_str:
+            result.overs2 = overs_str
+
+        if inn.get("isCurrent"):
+            result.batting = fid
+            current_inn = inn
+
+    # ── Current run rate (calculated) ──────────────────────────
+    if current_inn:
+        live_overs_raw = match.get("liveOvers")
+        inn_runs = current_inn.get("runs", 0)
+        if live_overs_raw is not None:
+            live_overs = _overs_to_float(live_overs_raw)
+            if live_overs > 0:
+                result.current_rr = round(inn_runs / live_overs, 2)
+
+    # ── Required run rate (2nd innings only) ───────────────────
+    if current_inn and current_inn.get("inningNumber", 0) == 2:
+        # Find 1st innings runs for target
+        for inn in innings:
+            if inn.get("inningNumber") == 1:
+                target = inn.get("runs", 0) + 1
+                remaining_runs = target - current_inn.get("runs", 0)
+                live_overs_raw = match.get("liveOvers")
+                if live_overs_raw is not None:
+                    current_ov = _overs_to_float(live_overs_raw)
+                    total_overs = float(
+                        current_inn.get("totalOvers", 20)
+                    )
+                    remaining_ov = total_overs - current_ov
+                    if remaining_ov > 0 and remaining_runs > 0:
+                        result.required_rr = round(
+                            remaining_runs / remaining_ov, 2,
+                        )
                 break
 
-    # Current run rate
-    crr_match = _CRR_RE.search(zone)
-    if crr_match:
-        data.current_rr = float(crr_match.group(1))
+    # ── Win probability ────────────────────────────────────────
+    ball_comments = (
+        content.get("recentBallCommentary", {})
+        .get("ballComments", [])
+    )
+    if ball_comments and result.batting:
+        latest = ball_comments[0]
+        preds = latest.get("predictions", {})
+        win_prob = preds.get("winProbability")
+        if win_prob is not None and isinstance(win_prob, (int, float)):
+            # winProbability is the batting team's probability
+            if result.batting == team1:
+                result.win_prob_team1 = round(float(win_prob), 1)
+                result.win_prob_team2 = round(100 - float(win_prob), 1)
+            else:
+                result.win_prob_team2 = round(float(win_prob), 1)
+                result.win_prob_team1 = round(100 - float(win_prob), 1)
 
-    # Required run rate
-    rrr_match = _RRR_RE.search(zone)
-    if rrr_match:
-        data.required_rr = float(rrr_match.group(1))
+    # ── Toss ───────────────────────────────────────────────────
+    toss_winner_id = match.get("tossWinnerTeamId")
+    toss_choice = match.get("tossWinnerChoice")
+    if toss_winner_id and toss_choice:
+        toss_fid = espn_id_to_fid.get(toss_winner_id)
+        if toss_fid:
+            choice_str = "bat" if toss_choice == 1 else "field"
+            result.toss = f"{toss_fid.upper()} chose to {choice_str}"
 
-    # Live forecast
-    forecast_match = _FORECAST_RE.search(zone)
-    if forecast_match:
-        data.live_forecast = forecast_match.group(1).strip()
+    # ── Live batters & bowlers ─────────────────────────────────
+    live_perf = content.get("livePerformance", {})
+    for b in live_perf.get("batsmen", []):
+        player = b.get("player", {})
+        name = player.get("longName") or player.get("name", "")
+        if name:
+            result.batters.append(LiveBatter(
+                name=name,
+                runs=b.get("runs", 0),
+                balls=b.get("balls", 0),
+                fours=b.get("fours", 0),
+                sixes=b.get("sixes", 0),
+            ))
 
-    # Win probability — ESPNcricinfo shows "TEAM XX.XX%" near "Win Probability"
-    # The detailed section with actual percentages is further down the page,
-    # so find the LAST "Win Prob" occurrence (not the nav heading).
-    t1u, t2u = team1.upper(), team2.upper()
-    prob_idx = zone.rfind("Win Prob")
-    if prob_idx >= 0:
-        prob_section = zone[prob_idx:prob_idx + 300]
-        for m in re.finditer(r"(\w+)\s+([\d.]+)%", prob_section):
-            tn, pct = m.group(1).upper(), float(m.group(2))
-            if pct > 1:
-                if tn == t1u or t1u.startswith(tn):
-                    data.win_prob_team1 = pct
-                elif tn == t2u or t2u.startswith(tn):
-                    data.win_prob_team2 = pct
+    for b in live_perf.get("bowlers", []):
+        player = b.get("player", {})
+        name = player.get("longName") or player.get("name", "")
+        if name:
+            result.bowlers.append(LiveBowler(
+                name=name,
+                overs=str(b.get("overs", 0)),
+                runs=b.get("conceded", 0),
+                wickets=b.get("wickets", 0),
+                econ=b.get("economy"),
+            ))
 
-    # Toss — only from match zone, look for "chose to bat/field"
-    for line in zone_lines:
-        lower = line.lower()
-        if "chose to" in lower or "elected to" in lower:
-            clean = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", line.strip())
-            # Only keep if it mentions our teams
-            if team1.upper() in clean.upper() or team2.upper() in clean.upper():
-                # Trim trailing noise like ".Stats view"
-                clean = re.sub(r"\.\s*Stats.*$", "", clean, flags=re.IGNORECASE)
-                data.toss = clean.rstrip(".")
-                break
-
-    # Status text from match zone only
-    for line in zone_lines:
-        lower = line.lower().strip()
-        if not lower or lower.startswith("[") or lower.startswith("!"):
-            continue
-        if "delayed" in lower and "rain" in lower:
-            data.status_text = re.sub(r"\*{1,2}", "", line.strip())
-            break
-        if "need" in lower and ("ball" in lower or "run" in lower):
-            # Ensure it's about our teams
-            if t1u in line.upper() or t2u in line.upper():
-                clean = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", line.strip())
-                clean = re.sub(r"\*{1,2}", "", clean)
-                # Strip trailing link text like "Stats view"
-                clean = re.sub(r"\s*Stats view\s*$", "", clean)
-                data.status_text = clean.strip()
-                break
-
-    # If batting team's overs are missing, fall back to "Current Over X"
-    if data.batting:
-        batting_has_overs = (
-            (data.batting == team1 and data.overs1)
-            or (data.batting == team2 and data.overs2)
-        )
-        if not batting_has_overs:
-            co_match = _CURRENT_OVER_RE.search(zone)
-            if co_match:
-                current_over = co_match.group(1)
-                if data.batting == team1:
-                    data.overs1 = current_over
-                else:
-                    data.overs2 = current_over
-
-    # In 2nd innings, forecast from 1st innings is stale — clear it
-    if data.required_rr is not None and data.live_forecast:
-        # Forecast mentions the team that already batted → drop it
-        batting_name = (data.batting or "").upper()
-        if batting_name and batting_name not in data.live_forecast.upper():
-            data.live_forecast = None
-
-    # Detect completion — only in match zone header area (first 20 lines)
-    for line in zone_lines[:20]:
-        lower = line.lower()
-        if "won by" in lower or "match tied" in lower or "no result" in lower:
-            data.status = "completed"
-            break
-
-    return data
+    return result
 
 
 # ── Crawl orchestration ─────────────────────────────────────────────
@@ -339,10 +322,16 @@ async def crawl_live_match(
                 config=CrawlerRunConfig(),
             )
             r = result._results[0] if hasattr(result, "_results") else result
-            md = r.markdown_v2.raw_markdown if hasattr(r, "markdown_v2") else r.markdown
-            if not md:
+            html = r.html if hasattr(r, "html") else ""
+            if not html:
                 return None
-            return parse_live_match(md, match_number, team1, team2)
+            data = _extract_next_data(html)
+            if not data:
+                console.print(
+                    "  [yellow]__NEXT_DATA__ extraction failed[/yellow]"
+                )
+                return None
+            return _parse_from_json(data, match_number, team1, team2)
     except Exception as e:
         console.print(f"  [yellow]Live crawl error: {e}[/yellow]")
         return None
@@ -374,11 +363,13 @@ def crawl_live_matches_sync(schedule_path: Path | None = None) -> list[LiveMatch
         )
         if data:
             results.append(data)
+            batters = ", ".join(
+                f"{b.name} {b.runs}({b.balls})" for b in data.batters
+            ) or "—"
             console.print(
-                f"    Score: {data.score1 or '?'}"
-                f" ({data.overs1 or '?'} ov)"
+                f"    {data.score1 or '?'} vs {data.score2 or '?'}"
                 f"  CRR: {data.current_rr or '?'}"
-                f"  Forecast: {data.live_forecast or '?'}"
+                f"  Batters: {batters}"
             )
 
     return results
