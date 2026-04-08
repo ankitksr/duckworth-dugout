@@ -120,10 +120,11 @@ jobs:
       # Self-chain: trigger next run while a match is live.
       # GITHUB_TOKEN + workflow_dispatch is exempt from the anti-recursion
       # rule, so the workflow can dispatch itself. Cron is the kick-starter;
-      # once live, chaining keeps updates at workflow-runtime cadence (~3-5 min)
+      # once live, chaining keeps updates at workflow-runtime cadence (~5 min)
       # instead of waiting for GitHub's unreliable cron scheduler.
+      # 3-min cooldown prevents the chain from spinning faster than needed.
       - name: Chain next update
-        if: steps.live.outputs.has_updates == 'true'
+        if: steps.live.outputs.has_updates == 'true' && steps.deploy.outcome == 'success'
         run: |
           HOUR=$(date -u +%-H)
           DOW=$(date -u +%u)  # 1=Mon .. 7=Sun
@@ -140,7 +141,9 @@ jobs:
           fi
 
           if [ "$IN_WINDOW" = "true" ]; then
-            echo "Match live & in window — chaining next update"
+            echo "Match live & in window — cooldown before next chain"
+            sleep 180
+            echo "Chaining next update"
             gh workflow run live-update.yml
           else
             echo "Outside match window — letting cron take over"
