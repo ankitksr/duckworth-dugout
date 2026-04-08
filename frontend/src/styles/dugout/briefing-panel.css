@@ -67,7 +67,7 @@
 .wr-bp-identity {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
-  align-items: center;
+  align-items: start;
   gap: 14px;
   min-width: 0;
   padding: 4px 0;
@@ -96,12 +96,27 @@
   line-height: 1;
 }
 
+.wr-bp-form-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wr-bp-side.right .wr-bp-form-line {
+  flex-direction: row-reverse;
+}
+.wr-bp-standing {
+  font: 500 8.5px 'JetBrains Mono', monospace;
+  color: var(--wr-t3);
+  letter-spacing: 0.5px;
+}
+
 .wr-bp-vs {
   color: var(--wr-brand);
   font: 800 18px 'Anybody', sans-serif;
   letter-spacing: 2px;
   flex-shrink: 0;
   opacity: 0.85;
+  line-height: 34px;  /* match team name height so vs aligns to their baseline */
 }
 
 .wr-bp-record {

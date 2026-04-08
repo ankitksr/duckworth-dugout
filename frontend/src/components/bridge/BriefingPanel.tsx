@@ -3,7 +3,7 @@ import { useWarRoomState } from "../../hooks/useWarRoom";
 import type { WRBriefing, WRScenarios, WRVenueStats } from "../../types/war-room";
 import { getFormEntry, isStructuredMatchup } from "../helpers";
 
-type BriefingTab = "edge" | "intel" | "form" | "venue";
+type BriefingTab = "edge" | "intel" | "matchups" | "form" | "venue";
 
 function splitMatch(match: string): [string, string] {
   const parts = match.split(/\s+vs\s+/i);
@@ -62,11 +62,11 @@ function HeroStrip({ briefing }: { briefing: WRBriefing }) {
   const f2 = getFormEntry(briefing.form, t2);
 
   const vs = briefing.venue_stats;
-  const parScore = vs?.avg_1st_inn_recent ?? vs?.avg_1st_inn ?? briefing.venue_profile?.avg_score ?? null;
-  const hasRecent = vs?.avg_1st_inn_recent != null && vs?.avg_1st_inn != null
-    && Math.abs((vs.avg_1st_inn_recent ?? 0) - (vs.avg_1st_inn ?? 0)) >= 10;
+  const isRecent = vs?.avg_1st_inn_recent != null;
+  const avgScore = vs?.avg_1st_inn_recent ?? vs?.avg_1st_inn ?? briefing.venue_profile?.avg_score ?? null;
   const chaseWin = vs?.chase_win_pct ?? null;
   const tossField = vs?.toss_field_pct ?? null;
+  const highest = vs?.highest ?? null;
   const h2h = briefing.h2h as { total?: number; [k: string]: unknown } | null;
   const t1Wins = h2h ? (h2h[`${t1}_wins`] as number ?? 0) : 0;
   const t2Wins = h2h ? (h2h[`${t2}_wins`] as number ?? 0) : 0;
@@ -80,11 +80,16 @@ function HeroStrip({ briefing }: { briefing: WRBriefing }) {
   const teamSide = (team: string, f: ReturnType<typeof getFormEntry>, lower: string, right?: boolean) => (
     <div className={`wr-bp-side${right ? " right" : ""}`}>
       <span className="wr-bp-name" style={{ color: `var(--${lower})` }}>{team}</span>
-      {f?.last5 && f.last5.length > 0 && (
-        <div className="wr-br-mh-dots">
-          {f.last5.map((r, i) => (
-            <span key={i} className={`wr-br-fo-dot ${r === "W" ? "w" : "l"}`} />
-          ))}
+      {f && (
+        <div className="wr-bp-form-line">
+          <span className="wr-bp-standing">#{f.position}</span>
+          {f.last5 && f.last5.length > 0 && (
+            <div className="wr-br-mh-dots">
+              {f.last5.map((r, i) => (
+                <span key={i} className={`wr-br-fo-dot ${r === "W" ? "w" : "l"}`} />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -130,10 +135,10 @@ function HeroStrip({ briefing }: { briefing: WRBriefing }) {
 
       {/* Section 3: Stats — metric on top, label below */}
       <div className="wr-bp-metrics">
-        {parScore != null && (
+        {avgScore != null && (
           <div className="wr-bp-metric">
-            <strong>{parScore}{hasRecent ? "*" : ""}</strong>
-            <span>PAR</span>
+            <strong>{avgScore}</strong>
+            <span>{isRecent ? "1ST INN (3Y)" : "1ST INN AVG"}</span>
           </div>
         )}
         {chaseWin != null && (
@@ -142,16 +147,22 @@ function HeroStrip({ briefing }: { briefing: WRBriefing }) {
             <span>CHASE</span>
           </div>
         )}
+        {tossField != null && (
+          <div className="wr-bp-metric">
+            <strong>{tossField}%</strong>
+            <span>TOSS&rarr;FIELD</span>
+          </div>
+        )}
         {h2hTotal > 0 && (
           <div className="wr-bp-metric">
             <strong>{t1Wins}&ndash;{t2Wins}</strong>
             <span>H2H</span>
           </div>
         )}
-        {tossField != null && (
+        {highest != null && (
           <div className="wr-bp-metric">
-            <strong>{tossField}%</strong>
-            <span>TOSS&rarr;FIELD</span>
+            <strong>{highest}</strong>
+            <span>HIGHEST</span>
           </div>
         )}
       </div>
@@ -245,72 +256,74 @@ function EdgeTab({ briefing, ifTonight }: {
 
 function IntelTab({ briefing }: { briefing: WRBriefing }) {
   return (
-    <div className="wr-br wr-br-grid">
-      {/* Left: Squad news + preview links */}
-      <div className="wr-br-main">
-        <div className="wr-br-section">
-          <div className="wr-br-label">Squad News <span className="wr-br-via">{briefing.squad_news.length}</span></div>
-          {briefing.squad_news.length > 0 ? (
-            briefing.squad_news.map((item, i) => (
-              <div key={i} className="wr-br-item">{item}</div>
-            ))
-          ) : (
-            <div className="wr-empty">No squad updates tracked</div>
-          )}
-        </div>
-
-        {briefing.preview_links && briefing.preview_links.length > 0 && (
-          <div className="wr-br-section wr-br-links">
-            <div className="wr-br-label">On ESPNcricinfo</div>
-            {briefing.preview_links.map((link, i) => (
-              <a key={i} href={link.url} target="_blank" rel="noopener noreferrer" className="wr-br-link-card">
-                <span className="wr-br-link-title">{link.title}</span>
-                <span className="wr-br-link-arrow">&#x2197;</span>
-              </a>
-            ))}
-          </div>
+    <div className="wr-br">
+      <div className="wr-br-section">
+        <div className="wr-br-label">Squad News <span className="wr-br-via">{briefing.squad_news.length}</span></div>
+        {briefing.squad_news.length > 0 ? (
+          briefing.squad_news.map((item, i) => (
+            <div key={i} className="wr-br-item">{item}</div>
+          ))
+        ) : (
+          <div className="wr-empty">No squad updates tracked</div>
         )}
       </div>
 
-      {/* Right: Key matchups */}
-      <div className="wr-br-sidebar">
-        <div className="wr-br-section">
-          <div className="wr-br-label">Key Matchups</div>
-          {briefing.key_matchups.length > 0 ? (
-            briefing.key_matchups.map((mu, i) =>
-              isStructuredMatchup(mu) ? (
-                <div key={i} className="wr-br-battle">
-                  <span className="wr-br-battle-num">{i + 1}</span>
-                  <div className="wr-br-battle-body">
-                    <div className="wr-br-battle-players">
-                      <div className="wr-br-battle-side">
-                        <span className="wr-br-battle-name" style={{ color: `var(--${mu.player1_team.toLowerCase()})` }}>
-                          {mu.player1}
-                        </span>
-                        <span className="wr-br-battle-role">{mu.player1_team} &middot; {mu.player1_role}</span>
-                      </div>
-                      <span className="wr-br-battle-x">&times;</span>
-                      <div className="wr-br-battle-side right">
-                        <span className="wr-br-battle-name" style={{ color: `var(--${mu.player2_team.toLowerCase()})` }}>
-                          {mu.player2}
-                        </span>
-                        <span className="wr-br-battle-role">{mu.player2_team} &middot; {mu.player2_role}</span>
-                      </div>
-                    </div>
-                    <div className="wr-br-battle-insight">{mu.insight}</div>
-                  </div>
-                </div>
-              ) : (
-                <div key={i} className="wr-br-matchup">
-                  <div className="wr-br-mu-name">{mu.matchup}</div>
-                  <div className="wr-br-mu-insight">{mu.insight}</div>
-                </div>
-              ),
-            )
-          ) : (
-            <div className="wr-empty">No matchups available</div>
-          )}
+      {briefing.preview_links && briefing.preview_links.length > 0 && (
+        <div className="wr-br-section wr-br-links">
+          <div className="wr-br-label">On ESPNcricinfo</div>
+          {briefing.preview_links.map((link, i) => (
+            <a key={i} href={link.url} target="_blank" rel="noopener noreferrer" className="wr-br-link-card">
+              <span className="wr-br-link-title">{link.title}</span>
+              <span className="wr-br-link-arrow">&#x2197;</span>
+            </a>
+          ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+// ── Tab: MATCHUPS ──
+
+function MatchupsTab({ briefing }: { briefing: WRBriefing }) {
+  return (
+    <div className="wr-br">
+      <div className="wr-br-section">
+        <div className="wr-br-label">Key Matchups <span className="wr-br-via">{briefing.key_matchups.length}</span></div>
+        {briefing.key_matchups.length > 0 ? (
+          briefing.key_matchups.map((mu, i) =>
+            isStructuredMatchup(mu) ? (
+              <div key={i} className="wr-br-battle">
+                <span className="wr-br-battle-num">{i + 1}</span>
+                <div className="wr-br-battle-body">
+                  <div className="wr-br-battle-players">
+                    <div className="wr-br-battle-side">
+                      <span className="wr-br-battle-name" style={{ color: `var(--${mu.player1_team.toLowerCase()})` }}>
+                        {mu.player1}
+                      </span>
+                      <span className="wr-br-battle-role">{mu.player1_team} &middot; {mu.player1_role}</span>
+                    </div>
+                    <span className="wr-br-battle-x">&times;</span>
+                    <div className="wr-br-battle-side right">
+                      <span className="wr-br-battle-name" style={{ color: `var(--${mu.player2_team.toLowerCase()})` }}>
+                        {mu.player2}
+                      </span>
+                      <span className="wr-br-battle-role">{mu.player2_team} &middot; {mu.player2_role}</span>
+                    </div>
+                  </div>
+                  <div className="wr-br-battle-insight">{mu.insight}</div>
+                </div>
+              </div>
+            ) : (
+              <div key={i} className="wr-br-matchup">
+                <div className="wr-br-mu-name">{mu.matchup}</div>
+                <div className="wr-br-mu-insight">{mu.insight}</div>
+              </div>
+            ),
+          )
+        ) : (
+          <div className="wr-empty">No matchups available</div>
+        )}
       </div>
     </div>
   );
@@ -392,7 +405,14 @@ function VenueTab({ briefing }: { briefing: WRBriefing }) {
               <div className="wr-br-fact">
                 <span className="wr-br-fact-label">AVG 1ST INNS</span>
                 <span className="wr-br-fact-value">{vs.avg_1st_inn}</span>
-                <span className="wr-br-fact-detail">All IPL matches</span>
+                <span className="wr-br-fact-detail">All-time at venue</span>
+              </div>
+            )}
+            {vs.avg_1st_inn_recent != null && (
+              <div className="wr-br-fact">
+                <span className="wr-br-fact-label">AVG 1ST INNS (3Y)</span>
+                <span className="wr-br-fact-value">{vs.avg_1st_inn_recent}</span>
+                <span className="wr-br-fact-detail">Since 2023</span>
               </div>
             )}
             {vs.avg_2nd_inn != null && (
@@ -468,6 +488,7 @@ export function BriefingPanel() {
 
   const tabs: { key: BriefingTab; label: string }[] = [
     { key: "edge", label: "MATCH EDGE" },
+    { key: "matchups", label: "MATCHUPS" },
     { key: "intel", label: "INTEL" },
     { key: "form", label: "FORM" },
     { key: "venue", label: "VENUE" },
@@ -475,6 +496,7 @@ export function BriefingPanel() {
 
   let content;
   switch (activeTab) {
+    case "matchups": content = <MatchupsTab briefing={briefing} />; break;
     case "intel": content = <IntelTab briefing={briefing} />; break;
     case "form": content = <FormTab briefing={briefing} />; break;
     case "venue": content = <VenueTab briefing={briefing} />; break;
