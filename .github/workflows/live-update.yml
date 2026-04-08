@@ -3,6 +3,7 @@ name: Live Score Update
 on:
   workflow_dispatch:
   schedule:
+    # Cron acts as chain-starter — self-chaining takes over once live.
     # Weekday evenings: 7 PM – 1 AM IST (UTC 13-19)
     - cron: '*/5 13-19 * 3-5 1-5'
     # Weekends: day + evening games (3 PM – 1 AM IST, UTC 9-19)
@@ -124,3 +125,34 @@ jobs:
         if: steps.live.outputs.has_updates == 'true'
         id: deploy
         uses: actions/deploy-pages@v4
+
+      # Self-chain: trigger next run while a match is live.
+      # GITHUB_TOKEN + workflow_dispatch is exempt from the anti-recursion
+      # rule, so the workflow can dispatch itself. Cron is the kick-starter;
+      # once live, chaining keeps updates at workflow-runtime cadence (~3-5 min)
+      # instead of waiting for GitHub's unreliable cron scheduler.
+      - name: Chain next update
+        if: steps.live.outputs.has_updates == 'true'
+        run: |
+          HOUR=$(date -u +%-H)
+          DOW=$(date -u +%u)  # 1=Mon .. 7=Sun
+          MONTH=$(date -u +%-m)
+
+          # Stay within IPL season months
+          [ "$MONTH" -lt 3 ] || [ "$MONTH" -gt 5 ] && exit 0
+
+          IN_WINDOW=false
+          if [ "$DOW" -ge 1 ] && [ "$DOW" -le 5 ]; then
+            [ "$HOUR" -ge 13 ] && [ "$HOUR" -le 19 ] && IN_WINDOW=true
+          else
+            [ "$HOUR" -ge 9 ] && [ "$HOUR" -le 19 ] && IN_WINDOW=true
+          fi
+
+          if [ "$IN_WINDOW" = "true" ]; then
+            echo "Match live & in window — chaining next update"
+            gh workflow run live-update.yml
+          else
+            echo "Outside match window — letting cron take over"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
