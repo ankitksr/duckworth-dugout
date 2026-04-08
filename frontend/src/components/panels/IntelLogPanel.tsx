@@ -8,18 +8,25 @@ export function IntelLogPanel() {
   const [feedFilter, setFeedFilter] = useState<string | null>(null);
   if (!intelLog) return null;
 
-  // Derive unique sources, ESPNcricinfo always first
+  // Derive unique sources, pinned order: ESPNcricinfo, r/Cricket, then rest alpha
   const sources = useMemo(() => {
+    const pinned = ["espncricinfo", "reddit"];
+    const tabLabel: Record<string, string> = { reddit: "r/Cricket" };
     const seen = new Map<string, string>();
     for (const item of intelLog) {
       if (item.source && !seen.has(item.source)) {
-        seen.set(item.source, item.source_name);
+        seen.set(item.source, tabLabel[item.source] ?? item.source_name);
       }
     }
     const all = Array.from(seen.entries()).map(([key, name]) => ({ key, name }));
-    return all.sort((a, b) =>
-      a.key === "espncricinfo" ? -1 : b.key === "espncricinfo" ? 1 : 0,
-    );
+    return all.sort((a, b) => {
+      const ai = pinned.indexOf(a.key);
+      const bi = pinned.indexOf(b.key);
+      if (ai !== -1 && bi !== -1) return ai - bi;
+      if (ai !== -1) return -1;
+      if (bi !== -1) return 1;
+      return a.name.localeCompare(b.name);
+    });
   }, [intelLog]);
 
   const filtered = feedFilter
