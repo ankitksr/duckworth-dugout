@@ -230,6 +230,19 @@ export interface WRVenueTeamRecord {
   losses: number;
 }
 
+export interface WRPlayerVenueStat {
+  player: string;
+  team: string;          // franchise short name
+  type: "bat" | "bowl";
+  matches: number;
+  runs?: number;
+  avg?: number;
+  sr?: number;
+  highest?: number;
+  wickets?: number;
+  econ?: number;
+}
+
 export interface WRVenueStats {
   name: string;
   city: string;
@@ -249,6 +262,7 @@ export interface WRVenueStats {
   last_5_2nd_inn?: number[];
   avg_pp_score?: number;             // powerplay avg (since 2023)
   team_records?: Record<string, WRVenueTeamRecord>;
+  player_venue_stats?: WRPlayerVenueStat[];
   note?: string;                     // LLM-generated narrative
 }
 

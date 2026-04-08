@@ -394,11 +394,139 @@ def _query_venue_stats(match: ScheduleMatch) -> dict:
         if team_records:
             stats["team_records"] = team_records
 
+        # ── Player records at this venue (from current squads) ──
+        player_stats = _query_player_venue_stats(conn, match, city)
+        if player_stats:
+            stats["player_venue_stats"] = player_stats
+
         conn.close()
     except Exception as e:
         console.print(f"  [yellow]Venue stats query failed: {e}[/yellow]")
 
     return stats
+
+
+def _query_player_venue_stats(
+    conn: duckdb.DuckDBPyConnection,
+    match: ScheduleMatch,
+    city: str,
+) -> list[dict]:
+    """Query per-player batting/bowling stats at this venue.
+
+    Returns top 2 batters (by runs) + top 1 bowler (by wickets) per team,
+    filtered to current season squads. Min 3 innings at venue.
+    """
+    from pipeline.db.connection import get_connection
+
+    # Get squad names from enrichment DB (separate connection)
+    try:
+        econn = get_connection()
+        squad_map = _get_squad_names_for_match(econn, match, "2026")
+    except Exception:
+        return []
+
+    if not squad_map:
+        return []
+
+    # Build surname → (squad_name, team_short) index
+    surname_to_squad: dict[str, tuple[str, str]] = {}
+    for team_short, names in squad_map.items():
+        for name in names:
+            surname = name.split()[-1].lower()
+            # Avoid collisions — first match wins (rare for same venue)
+            if surname not in surname_to_squad:
+                surname_to_squad[surname] = (name, team_short)
+
+    city_pattern = f"%{city}%"
+    results: list[dict] = []
+
+    # ── Batting at venue ──
+    bat_rows = conn.execute("""
+        SELECT p.name,
+               COUNT(*) as innings,
+               SUM(bs.runs) as runs,
+               ROUND(AVG(bs.runs), 1) as avg,
+               ROUND(
+                   SUM(bs.runs)::FLOAT
+                   / NULLIF(SUM(bs.balls_faced), 0) * 100, 1
+               ) as sr,
+               MAX(bs.runs) as highest
+        FROM batting_scorecard bs
+        JOIN players p ON bs.player_id = p.id
+        JOIN matches m ON bs.match_id = m.id
+        WHERE m.event_name = ?
+          AND m.city LIKE ?
+        GROUP BY p.id, p.name
+        HAVING COUNT(*) >= 3
+        ORDER BY SUM(bs.runs) DESC
+    """, [_EVENT, city_pattern]).fetchall()
+
+    # Match Cricsheet names to squad by surname
+    seen_players: set[str] = set()  # track squad names already used
+    team_bat_count: dict[str, int] = {}
+    for name, innings, runs, avg, sr, highest in bat_rows:
+        surname = name.split()[-1].lower()
+        if surname not in surname_to_squad:
+            continue
+        squad_name, team_short = surname_to_squad[surname]
+        if squad_name in seen_players:
+            continue
+        if team_bat_count.get(team_short, 0) >= 2:
+            continue
+        seen_players.add(squad_name)
+        team_bat_count[team_short] = team_bat_count.get(team_short, 0) + 1
+        results.append({
+            "player": squad_name,
+            "team": team_short,
+            "type": "bat",
+            "matches": innings,
+            "runs": int(runs),
+            "avg": round(float(avg), 1) if avg else 0,
+            "sr": round(float(sr), 1) if sr else 0,
+            "highest": int(highest),
+        })
+
+    # ── Bowling at venue ──
+    bowl_rows = conn.execute("""
+        SELECT p.name,
+               COUNT(*) as innings,
+               SUM(bs.wickets) as wickets,
+               ROUND(
+                   SUM(bs.runs_conceded)::FLOAT
+                   / NULLIF(SUM(bs.overs), 0), 2
+               ) as econ
+        FROM bowling_scorecard bs
+        JOIN players p ON bs.player_id = p.id
+        JOIN matches m ON bs.match_id = m.id
+        WHERE m.event_name = ?
+          AND m.city LIKE ?
+        GROUP BY p.id, p.name
+        HAVING COUNT(*) >= 3
+        ORDER BY SUM(bs.wickets) DESC
+    """, [_EVENT, city_pattern]).fetchall()
+
+    team_bowl_count: dict[str, int] = {}
+    for name, innings, wickets, econ in bowl_rows:
+        surname = name.split()[-1].lower()
+        if surname not in surname_to_squad:
+            continue
+        squad_name, team_short = surname_to_squad[surname]
+        if squad_name in seen_players:
+            continue
+        if team_bowl_count.get(team_short, 0) >= 1:
+            continue
+        seen_players.add(squad_name)
+        team_bowl_count[team_short] = team_bowl_count.get(team_short, 0) + 1
+        results.append({
+            "player": squad_name,
+            "team": team_short,
+            "type": "bowl",
+            "matches": innings,
+            "wickets": int(wickets),
+            "econ": round(float(econ), 2) if econ else 0,
+        })
+
+    return results
 
 
 def _build_venue_context(venue_stats: dict) -> str:
@@ -438,6 +566,24 @@ def _build_venue_context(venue_stats: dict) -> str:
     last5 = venue_stats.get("last_5_1st_inn")
     if last5:
         parts.append(f"  Last 5 first-innings scores: {', '.join(map(str, last5))}.")
+
+    # Player records at this venue (from squad members)
+    pvs = venue_stats.get("player_venue_stats", [])
+    if pvs:
+        lines = ["PLAYER RECORDS AT THIS VENUE:"]
+        for p in pvs:
+            if p["type"] == "bat":
+                lines.append(
+                    f"  {p['player']} ({p['team']}): {p['matches']} inn,"
+                    f" {p['runs']} runs, avg {p['avg']}, SR {p['sr']},"
+                    f" HS {p['highest']}"
+                )
+            else:
+                lines.append(
+                    f"  {p['player']} ({p['team']}): {p['matches']} inn,"
+                    f" {p['wickets']} wkts, econ {p['econ']}"
+                )
+        parts.append("\n".join(lines))
 
     return "\n".join(parts)
 

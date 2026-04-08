@@ -515,6 +515,26 @@ function VenueTab({ briefing }: { briefing: WRBriefing }) {
             </div>
           </div>
         )}
+        {vs.player_venue_stats && vs.player_venue_stats.length > 0 && (
+          <div className="wr-br-section">
+            <div className="wr-br-label">Player Records at Venue</div>
+            <div className="wr-br-venue-records">
+              {vs.player_venue_stats.map((p) => (
+                <div key={`${p.player}-${p.type}`} className="wr-br-venue-record" style={{ borderLeftColor: `var(--${p.team.toLowerCase()})` }}>
+                  <span className="wr-br-venue-record-team" style={{ color: `var(--${p.team.toLowerCase()})` }}>
+                    {p.player}
+                  </span>
+                  <span className="wr-br-venue-record-stat">
+                    {p.type === "bat"
+                      ? <>{p.runs} runs · avg {p.avg} · SR {p.sr}</>
+                      : <>{p.wickets} wkts · econ {p.econ}</>}
+                    <span className="wr-br-venue-record-pct">{p.matches} inn</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
