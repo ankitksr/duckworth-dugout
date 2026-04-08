@@ -117,26 +117,61 @@ export function MatchTimeline() {
             </span>
             <span className="wr-tmc-live-badge">LIVE</span>
           </div>
-          {m.score1 && (
-            <div className="wr-tmc-detail">
-              {m.team1.toUpperCase()} {m.score1}{m.overs1 ? ` (${m.overs1})` : ""}
-            </div>
-          )}
-          {m.score2 && (
-            <div className="wr-tmc-detail">
-              {m.team2.toUpperCase()} {m.score2}{m.overs2 ? ` (${m.overs2})` : ""}
-            </div>
-          )}
-          {(m.current_rr || m.live_forecast) && (
-            <div className="wr-tmc-detail wr-tmc-forecast">
-              {m.current_rr && <span>CRR {m.current_rr.toFixed(1)}</span>}
-              {m.live_forecast && <span> · ↗ {m.live_forecast}</span>}
-              {m.required_rr && <span> · RRR {m.required_rr.toFixed(1)}</span>}
-            </div>
-          )}
-          {m.status_text && (
-            <div className="wr-tmc-detail" style={{ color: "var(--wr-win)" }}>{m.status_text}</div>
-          )}
+          {(() => {
+            // Determine innings context
+            const is2ndInnings = m.required_rr != null;
+            // Batting team's score goes first with overs
+            const batting = m.batting;
+            const lines: { team: string; score: string; overs: string | null }[] = [];
+
+            if (is2ndInnings) {
+              // 2nd innings: show completed innings first, batting second
+              const [firstTeam, firstScore, firstOvers, secTeam, secScore, secOvers] =
+                batting === m.team2
+                  ? [m.team1, m.score1, m.overs1, m.team2, m.score2, m.overs2]
+                  : [m.team2, m.score2, m.overs2, m.team1, m.score1, m.overs1];
+              if (firstScore) lines.push({ team: firstTeam, score: firstScore, overs: firstOvers });
+              if (secScore) lines.push({ team: secTeam, score: secScore, overs: secOvers });
+            } else {
+              // 1st innings: team1 first, team2 second
+              if (m.score1) lines.push({ team: m.team1, score: m.score1, overs: m.overs1 });
+              if (m.score2) lines.push({ team: m.team2, score: m.score2, overs: m.overs2 });
+            }
+
+            // Win probability
+            const winProb = (m.win_prob_team1 != null || m.win_prob_team2 != null)
+              ? ((m.win_prob_team1 ?? 0) >= (m.win_prob_team2 ?? 0)
+                ? { team: m.team1.toUpperCase(), pct: m.win_prob_team1! }
+                : { team: m.team2.toUpperCase(), pct: m.win_prob_team2! })
+              : null;
+
+            return (
+              <>
+                {lines.map((l) => (
+                  <div key={l.team} className="wr-tmc-detail">
+                    {l.team.toUpperCase()} {l.score}{l.overs ? ` (${l.overs})` : ""}
+                  </div>
+                ))}
+                {(m.current_rr || m.live_forecast || m.required_rr) && (
+                  <div className="wr-tmc-detail wr-tmc-forecast">
+                    {m.current_rr && <span>CRR {m.current_rr.toFixed(1)}</span>}
+                    {!is2ndInnings && m.live_forecast && <span> · ↗ {m.live_forecast}</span>}
+                    {m.required_rr && <span> · RRR {m.required_rr.toFixed(1)}</span>}
+                  </div>
+                )}
+                {winProb && (
+                  <div className="wr-tmc-detail wr-tmc-winprob">
+                    {winProb.team} {winProb.pct.toFixed(0)}% WIN PROB
+                  </div>
+                )}
+                {m.status_text && (
+                  <div className="wr-tmc-detail wr-tmc-forecast" style={{ color: "var(--wr-win)" }}>
+                    {m.status_text}
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
       </div>
     );

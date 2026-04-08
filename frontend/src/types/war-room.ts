@@ -49,6 +49,8 @@ export interface WRFixture {
   current_rr: number | null;
   required_rr: number | null;
   live_forecast: string | null;
+  win_prob_team1: number | null;
+  win_prob_team2: number | null;
 }
 
 // ── caps.json ──

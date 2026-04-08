@@ -193,5 +193,12 @@
   font: 500 9px 'JetBrains Mono', monospace;
   color: var(--wr-brand);
   opacity: 0.7;
+  white-space: normal;
+  overflow: visible;
+}
+.wr-tmc-winprob {
+  font: 700 10px 'JetBrains Mono', monospace;
+  color: var(--wr-brand);
+  white-space: nowrap;
 }
 

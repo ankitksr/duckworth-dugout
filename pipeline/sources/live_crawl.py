@@ -92,8 +92,9 @@ class LiveMatchData:
 # ── Parsing helpers ─────────────────────────────────────────────────
 
 # Match header score line: "(3.4/20 ov) 25/2" or "186/4"
+# Overs may include target: "(8.6/20 ov, T:211) 97/1"
 _HEADER_SCORE_RE = re.compile(
-    r"(?:\((\d+\.?\d*)/\d+\s*[Oo]v\)\s*)?(\d{1,3}/\d{1,2})"
+    r"(?:\((\d+\.?\d*)/\d+\s*[Oo]v[^)]*\)\s*)?(\d{1,3}/\d{1,2})"
 )
 
 
@@ -182,6 +183,7 @@ def parse_live_match(
     # Extract match-specific zone (exclude sidebar with other matches)
     zone = _extract_match_zone(markdown, team1, team2)
     zone_lines = zone.split("\n")
+    t1u, t2u = team1.upper(), team2.upper()
 
     # Extract scores and overs for each team
     score1, overs1 = _find_score_block(zone_lines, team1)
@@ -199,26 +201,35 @@ def parse_live_match(
     for line in zone_lines:
         lower = line.lower()
         if "chose to bat" in lower:
-            # The team that chose to bat is batting first
-            t1u, t2u = team1.upper(), team2.upper()
             if t1u in line.upper():
                 data.batting = team1
             elif t2u in line.upper():
                 data.batting = team2
             break
         if "chose to field" in lower:
-            t1u, t2u = team1.upper(), team2.upper()
             if t1u in line.upper():
                 data.batting = team2  # Other team bats
             elif t2u in line.upper():
                 data.batting = team1
             break
 
-    # If second innings, batting team is the one without completed overs
+    # If second innings, batting team is the one with overs in header
     if data.score2 and data.overs2 and not data.batting:
         data.batting = team2
     elif data.score1 and data.overs1 and not data.score2:
         data.batting = team1
+
+    # "Current Over X • TEAM score" is the strongest batting signal
+    if not data.batting:
+        for line in zone_lines:
+            co = re.search(r"Current Over\s+\d+\s*[•·]\s*(\w+)", line)
+            if co:
+                tn = co.group(1).upper()
+                if tn == t1u or t1u.startswith(tn):
+                    data.batting = team1
+                elif tn == t2u or t2u.startswith(tn):
+                    data.batting = team2
+                break
 
     # Current run rate
     crr_match = _CRR_RE.search(zone)
@@ -235,11 +246,13 @@ def parse_live_match(
     if forecast_match:
         data.live_forecast = forecast_match.group(1).strip()
 
-    # Win probability — look for "TEAM XX.XX%" pattern near "Win Prob"
-    prob_idx = zone.find("Win Prob")
+    # Win probability — ESPNcricinfo shows "TEAM XX.XX%" near "Win Probability"
+    # The detailed section with actual percentages is further down the page,
+    # so find the LAST "Win Prob" occurrence (not the nav heading).
+    t1u, t2u = team1.upper(), team2.upper()
+    prob_idx = zone.rfind("Win Prob")
     if prob_idx >= 0:
         prob_section = zone[prob_idx:prob_idx + 300]
-        t1u, t2u = team1.upper(), team2.upper()
         for m in re.finditer(r"(\w+)\s+([\d.]+)%", prob_section):
             tn, pct = m.group(1).upper(), float(m.group(2))
             if pct > 1:
@@ -270,10 +283,35 @@ def parse_live_match(
             break
         if "need" in lower and ("ball" in lower or "run" in lower):
             # Ensure it's about our teams
-            t1u, t2u = team1.upper(), team2.upper()
             if t1u in line.upper() or t2u in line.upper():
-                data.status_text = re.sub(r"\*{1,2}", "", line.strip())
+                clean = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", line.strip())
+                clean = re.sub(r"\*{1,2}", "", clean)
+                # Strip trailing link text like "Stats view"
+                clean = re.sub(r"\s*Stats view\s*$", "", clean)
+                data.status_text = clean.strip()
                 break
+
+    # If batting team's overs are missing, fall back to "Current Over X"
+    if data.batting:
+        batting_has_overs = (
+            (data.batting == team1 and data.overs1)
+            or (data.batting == team2 and data.overs2)
+        )
+        if not batting_has_overs:
+            co_match = _CURRENT_OVER_RE.search(zone)
+            if co_match:
+                current_over = co_match.group(1)
+                if data.batting == team1:
+                    data.overs1 = current_over
+                else:
+                    data.overs2 = current_over
+
+    # In 2nd innings, forecast from 1st innings is stale — clear it
+    if data.required_rr is not None and data.live_forecast:
+        # Forecast mentions the team that already batted → drop it
+        batting_name = (data.batting or "").upper()
+        if batting_name and batting_name not in data.live_forecast.upper():
+            data.live_forecast = None
 
     # Detect completion — only in match zone header area (first 20 lines)
     for line in zone_lines[:20]:
@@ -368,14 +406,15 @@ def patch_schedule_with_live(results: list[LiveMatchData]) -> int:
                     m["overs2"] = f"{data.overs2} ov"
                 if data.batting:
                     m["batting"] = data.batting
-                if data.current_rr is not None:
-                    m["current_rr"] = data.current_rr
-                if data.required_rr is not None:
-                    m["required_rr"] = data.required_rr
-                if data.live_forecast:
-                    m["live_forecast"] = data.live_forecast
-                if data.status_text:
-                    m["status_text"] = data.status_text
+                # Always sync innings-specific fields — clears stale
+                # data when value is absent (e.g. 1st-innings forecast
+                # after 2nd innings starts).
+                m["current_rr"] = data.current_rr
+                m["required_rr"] = data.required_rr
+                m["live_forecast"] = data.live_forecast
+                m["status_text"] = data.status_text
+                m["win_prob_team1"] = data.win_prob_team1
+                m["win_prob_team2"] = data.win_prob_team2
                 if data.toss and not m.get("toss"):
                     m["toss"] = data.toss
                 if data.status == "completed":
