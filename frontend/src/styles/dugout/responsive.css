@@ -183,6 +183,38 @@
     height: 200px;
   }
 
+  /* --- Briefing hero strip: compact on mobile --- */
+  .wr-bp-hero {
+    margin: 4px 6px 0;
+    padding: 8px 12px;
+    gap: 6px;
+  }
+  .wr-bp-name {
+    font-size: 22px;
+    letter-spacing: 2px;
+  }
+  .wr-bp-vs {
+    font-size: 14px;
+  }
+  .wr-bp-divider {
+    display: none;
+  }
+  .wr-bp-preview {
+    display: none;
+  }
+  .wr-bp-details {
+    gap: 2px;
+  }
+  .wr-bp-metric {
+    padding: 0 10px;
+  }
+  .wr-bp-metric strong {
+    font-size: 16px;
+  }
+  .wr-bp-metric span {
+    font-size: 6.5px;
+  }
+
   /* --- Briefing/TeamIntel grids: single column --- */
   .wr-br-grid,
   .wr-ti-grid,
