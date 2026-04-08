@@ -84,19 +84,10 @@ jobs:
             echo "has_updates=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # Save updated API data back
-      - name: Update API data cache
-        if: steps.live.outputs.has_updates == 'true'
-        run: gh cache delete api-data || true
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      - name: Save API data cache
-        if: steps.live.outputs.has_updates == 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: frontend/public/api/ipl/war-room
-          key: api-data
+      # Live-update does NOT write back to the api-data cache.
+      # scheduled-sync owns that cache — live overlays are ephemeral
+      # (scores expire in minutes) and re-applied from the base cache
+      # on each run. This avoids a delete/save race with scheduled-sync.
 
       # Build + deploy (only when live scores changed)
       - uses: actions/setup-node@v4
