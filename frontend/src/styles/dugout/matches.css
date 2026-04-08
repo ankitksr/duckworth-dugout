@@ -191,14 +191,14 @@
 }
 .wr-tmc-forecast {
   font: 500 9px 'JetBrains Mono', monospace;
-  color: var(--wr-brand);
+  color: var(--wr-t2);
   opacity: 0.7;
   white-space: normal;
   overflow: visible;
 }
 .wr-tmc-winprob {
   font: 700 10px 'JetBrains Mono', monospace;
-  color: var(--wr-brand);
+  color: #4fc3f7;
   white-space: nowrap;
 }
 
