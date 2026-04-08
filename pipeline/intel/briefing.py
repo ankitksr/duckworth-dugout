@@ -41,12 +41,20 @@ def _short(fid: str) -> str:
 
 
 def _cricsheet_name(fid: str) -> str | None:
-    """Get Cricsheet team name from franchise ID."""
+    """Get primary Cricsheet team name from franchise ID."""
     fdata = IPL_FRANCHISES.get(fid)
     if not fdata:
         return None
     names = fdata.get("cricsheet_names", [])
     return names[0] if names else None
+
+
+def _cricsheet_names(fid: str) -> list[str]:
+    """Get all Cricsheet team name variants for a franchise ID."""
+    fdata = IPL_FRANCHISES.get(fid)
+    if not fdata:
+        return []
+    return fdata.get("cricsheet_names", [])
 
 
 def _load_json(filename: str) -> Any:
@@ -249,24 +257,26 @@ def _build_venue_context(venue_stats: dict) -> str:
     return "\n".join(parts)
 
 
-def _build_h2h_context(match: ScheduleMatch) -> str:
-    """Query Cricsheet for all-time H2H between the two teams."""
-    n1 = _cricsheet_name(match.team1)
-    n2 = _cricsheet_name(match.team2)
-    if not n1 or not n2:
-        return ""
+def _query_h2h(match: ScheduleMatch) -> dict:
+    """Query Cricsheet for franchise H2H (all name variants)."""
+    names1 = _cricsheet_names(match.team1)
+    names2 = _cricsheet_names(match.team2)
+    if not names1 or not names2:
+        return {"total": 0, f"{_short(match.team1)}_wins": 0, f"{_short(match.team2)}_wins": 0}
 
     try:
         conn = duckdb.connect(str(CRICKET_DB_PATH), read_only=True)
-        rows = conn.execute("""
+        ph1 = ", ".join(["?"] * len(names1))
+        ph2 = ", ".join(["?"] * len(names2))
+        rows = conn.execute(f"""
             SELECT outcome_winner, COUNT(*) as cnt
             FROM matches
             WHERE event_name = ?
-              AND ((team1 = ? AND team2 = ?)
-                   OR (team1 = ? AND team2 = ?))
+              AND ((team1 IN ({ph1}) AND team2 IN ({ph2}))
+                   OR (team1 IN ({ph2}) AND team2 IN ({ph1})))
               AND outcome_winner IS NOT NULL
             GROUP BY outcome_winner
-        """, [_EVENT, n1, n2, n2, n1]).fetchall()
+        """, [_EVENT, *names1, *names2, *names2, *names1]).fetchall()
         conn.close()
 
         from pipeline.sources.cricsheet import _CRICSHEET_TO_FID
@@ -279,12 +289,23 @@ def _build_h2h_context(match: ScheduleMatch) -> str:
 
         w1 = wins.get(match.team1, 0)
         w2 = wins.get(match.team2, 0)
-        return (
-            f"ALL-TIME H2H: {_short(match.team1)} {w1}"
-            f" - {w2} {_short(match.team2)}"
-        )
-    except Exception as e:
-        return f"(H2H query failed: {e})"
+        s1 = _short(match.team1)
+        s2 = _short(match.team2)
+        return {"total": w1 + w2, f"{s1}_wins": w1, f"{s2}_wins": w2}
+    except Exception:
+        return {"total": 0, f"{_short(match.team1)}_wins": 0, f"{_short(match.team2)}_wins": 0}
+
+
+def _build_h2h_context(match: ScheduleMatch) -> str:
+    """Build H2H text context for LLM prompt."""
+    h2h = _query_h2h(match)
+    s1 = _short(match.team1)
+    s2 = _short(match.team2)
+    w1 = h2h.get(f"{s1}_wins", 0)
+    w2 = h2h.get(f"{s2}_wins", 0)
+    if w1 + w2 == 0:
+        return f"ALL-TIME H2H: {s1} and {s2} have never met."
+    return f"ALL-TIME H2H: {s1} {w1} - {w2} {s2}"
 
 
 def _build_form_context(match: ScheduleMatch) -> str:
@@ -365,7 +386,7 @@ def _inject_post_llm(
     """Enrich LLM response with authoritative source data.
 
     Numbers from Cricsheet/standings override any LLM-generated values.
-    LLM-generated narratives (trend, venue note) are preserved.
+    LLM-generated narratives (trend, venue note, h2h note) are preserved.
     """
     # ── Match metadata (from ScheduleMatch, not LLM) ──
     parsed["team1_id"] = match.team1
@@ -375,18 +396,21 @@ def _inject_post_llm(
     parsed["match_number"] = match.match_number
 
     # ── Venue stats (from Cricsheet queries, not LLM) ──
-    # Preserve LLM's venue_note narrative
     venue_note = parsed.pop("venue_note", None)
-    # Remove old venue_profile if LLM still generated one
     parsed.pop("venue_profile", None)
     venue_stats["note"] = venue_note or ""
     parsed["venue_stats"] = venue_stats
+
+    # ── H2H (from Cricsheet queries, note from LLM) ──
+    h2h = _query_h2h(match)
+    llm_h2h = parsed.get("h2h", {})
+    h2h["note"] = llm_h2h.get("note", "") if isinstance(llm_h2h, dict) else ""
+    parsed["h2h"] = h2h
 
     # ── Form data (structured from standings, trend from LLM) ──
     structured_form = _get_structured_form(match)
     llm_form = parsed.get("form", {})
     for short, data in structured_form.items():
-        # Keep LLM's trend narrative, override numbers
         llm_entry = llm_form.get(short, {})
         data["trend"] = llm_entry.get("trend", "")
         llm_form[short] = data
