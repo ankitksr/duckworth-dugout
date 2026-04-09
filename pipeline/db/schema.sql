@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS war_room_articles (
     content_hash VARCHAR
 );
 
--- Wire dispatches: LLM-generated editorial items
+-- Wire dispatches: LLM-generated editorial items from multiple generators
 CREATE TABLE IF NOT EXISTS war_room_wire (
     id INTEGER PRIMARY KEY,
     headline VARCHAR NOT NULL,
@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS war_room_wire (
     category VARCHAR,
     severity VARCHAR,
     teams VARCHAR[],
+    source VARCHAR DEFAULT 'wire',
     context_hash VARCHAR,
     season VARCHAR NOT NULL,
     match_day VARCHAR,

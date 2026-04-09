@@ -1,6 +1,16 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useWarRoomState } from "../../hooks/useWarRoom";
 import { timeAgo } from "../helpers";
+import type { WRWireSource } from "../../types/war-room";
+
+const SOURCE_LABELS: Record<WRWireSource, string> = {
+  situation: "SITUATION",
+  scout: "SCOUT",
+  newsdesk: "NEWS",
+  preview: "PREVIEW",
+  take: "THE TAKE",
+  wire: "WIRE",
+};
 
 export function AIWirePanel() {
   const { wire, selectedTeam, standings } = useWarRoomState();
@@ -52,16 +62,19 @@ export function AIWirePanel() {
           const sev = item.severity ?? "signal";
           const catLabel = (item.category ?? "").replace(/_/g, " ");
           const isOpen = expanded === i;
+          const source = (item.source ?? "wire") as WRWireSource;
+          const sourceLabel = SOURCE_LABELS[source] || source.toUpperCase();
 
           return (
             <div
               key={i}
-              className={`wr-wire-card wr-wire-${sev}${involves ? " hl" : ""}${isOpen ? " open" : ""}`}
+              className={`wr-wire-card wr-wire-${sev} wr-wire-src-${source}${involves ? " hl" : ""}${isOpen ? " open" : ""}`}
               style={{ opacity: dim ? 0.35 : 1, cursor: "pointer" }}
               onClick={() => setExpanded(isOpen ? null : i)}
             >
               <div className="wr-wire-top">
                 <span className="wr-wire-emoji">{item.emoji}</span>
+                <span className={`wr-wire-source wr-wire-source-${source}`}>{sourceLabel}</span>
                 <span className="wr-wire-cat">{catLabel}</span>
                 {item.teams?.map((tid) => {
                   const info = teamShort[tid];

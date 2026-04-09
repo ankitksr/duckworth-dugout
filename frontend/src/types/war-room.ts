@@ -371,6 +371,14 @@ export interface WRDossier {
 
 // ── wire.json ──
 
+export type WRWireSource =
+  | "situation"
+  | "scout"
+  | "newsdesk"
+  | "preview"
+  | "take"
+  | "wire"; // legacy fallback
+
 export interface WRWireItem {
   headline: string;
   text: string;
@@ -380,6 +388,7 @@ export interface WRWireItem {
   teams: string[];
   generated_at: string;
   match_day: string;
+  source: WRWireSource;
 }
 
 // ── aggregate ──

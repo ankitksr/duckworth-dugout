@@ -120,3 +120,4 @@ class WireEntry:
     teams: list[str]      # franchise IDs referenced: ["srh", "kkr"]
     generated_at: str     # ISO 8601
     match_day: str        # "2026-04-03"
+    source: str = "wire"  # generator: "situation" | "scout" | "newsdesk" | "preview" | "take"

@@ -89,6 +89,45 @@
 .wr-wire-alarm .wr-wire-emoji {
   font-size: 14px;
 }
+/* Source badge — identifies which generator produced this dispatch */
+.wr-wire-source {
+  font: 700 7px 'JetBrains Mono', monospace;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.wr-wire-source-situation {
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+}
+.wr-wire-source-scout {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+}
+.wr-wire-source-newsdesk {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+.wr-wire-source-preview {
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+}
+.wr-wire-source-take {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+}
+.wr-wire-source-wire {
+  color: var(--wr-t3);
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .wr-wire-cat {
   font: 700 8px 'JetBrains Mono', monospace;
   letter-spacing: 1px;
