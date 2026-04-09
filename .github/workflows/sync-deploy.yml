@@ -50,7 +50,7 @@ on:
 
 permissions:
   actions: write
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -175,6 +175,22 @@ jobs:
         with:
           path: data/enrichment.duckdb
           key: enrichment-db
+
+      # Persist enrichment DB as a downloadable release asset.
+      # This ensures wire history, articles, and snapshots survive
+      # cache eviction and are queryable locally.
+      - name: Upload enrichment.duckdb to release
+        run: |
+          TAG="data-snapshot"
+          # Create the release if it doesn't exist (idempotent)
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --title "Data Snapshot" \
+              --notes "Rolling snapshot of pipeline databases. Updated on each sync." \
+              --latest=false
+          # Upload (overwrite) the enrichment DB
+          gh release upload "$TAG" data/enrichment.duckdb --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Update API data cache
         run: |

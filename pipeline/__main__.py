@@ -141,6 +141,25 @@ def live_update(season: str) -> None:
         )
 
 
+@cli.command("pull-enrichment")
+@click.option("--output", default="data/enrichment.duckdb", help="Output path")
+def pull_enrichment(output: str) -> None:
+    """Download enrichment.duckdb from the latest GitHub release snapshot."""
+    import subprocess
+    import sys
+
+    tag = "data-snapshot"
+    asset = "enrichment.duckdb"
+    cmd = ["gh", "release", "download", tag, "-p", asset, "-D", str(output).rsplit("/", 1)[0], "--clobber"]
+    console.print(f"[dim]Downloading {asset} from release '{tag}'…[/dim]")
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        console.print(f"[red]Failed: {result.stderr.strip()}[/red]")
+        console.print("[dim]Ensure 'gh' is installed and you have repo access.[/dim]")
+        sys.exit(1)
+    console.print(f"[green]Downloaded to {output}[/green]")
+
+
 @cli.command("seed-sample")
 def seed_sample() -> None:
     """Copy sample JSON files to frontend public directory."""

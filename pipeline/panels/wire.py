@@ -1,4 +1,8 @@
-"""AI Wire panel — extracted from sync_panel_intel for independent hot-tier scheduling."""
+"""AI Wire panel — multi-generator editorial intelligence.
+
+Orchestrates five specialized wire generators (situation, scout, newsdesk,
+preview, take) and aggregates their output into a single wire.json feed.
+"""
 
 import asyncio
 import json
@@ -26,6 +30,30 @@ def sync(ctx: SyncContext, *, force: bool = False) -> None:
         except Exception as e:
             console.print(f"  [yellow]Wire: DB connection failed: {e}[/yellow]")
             return
+
+    # Ensure source column exists (migration for existing DBs)
+    try:
+        db_conn.execute(
+            "ALTER TABLE war_room_wire ADD COLUMN IF NOT EXISTS source VARCHAR DEFAULT 'wire'"
+        )
+    except Exception:
+        pass
+
+    # One-time migration: expire legacy entries from the monolithic generator
+    try:
+        expired = db_conn.execute(
+            """
+            UPDATE war_room_wire SET expired = TRUE
+            WHERE coalesce(source, 'wire') = 'wire' AND expired = FALSE
+            RETURNING id
+            """
+        ).fetchall()
+        if expired:
+            console.print(
+                f"  [dim]Wire: migrated {len(expired)} legacy entries to expired[/dim]"
+            )
+    except Exception:
+        pass
 
     # Load today's matches if not available
     today_matches = ctx.today_matches

@@ -1,6 +1,16 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useWarRoomState } from "../../hooks/useWarRoom";
 import { timeAgo } from "../helpers";
+import type { WRWireSource } from "../../types/war-room";
+
+const SOURCE_LABELS: Record<WRWireSource, string> = {
+  situation: "SITUATION",
+  scout: "SCOUT",
+  newsdesk: "NEWS",
+  preview: "PREVIEW",
+  take: "THE TAKE",
+  wire: "WIRE",
+};
 
 export function AIWirePanel() {
   const { wire, selectedTeam, standings } = useWarRoomState();
@@ -52,35 +62,36 @@ export function AIWirePanel() {
           const sev = item.severity ?? "signal";
           const catLabel = (item.category ?? "").replace(/_/g, " ");
           const isOpen = expanded === i;
+          const source = (item.source ?? "wire") as WRWireSource;
+          const sourceLabel = SOURCE_LABELS[source] || source.toUpperCase();
 
           return (
             <div
               key={i}
-              className={`wr-wire-card wr-wire-${sev}${involves ? " hl" : ""}${isOpen ? " open" : ""}`}
+              className={`wr-wire-card wr-wire-${sev} wr-wire-src-${source}${involves ? " hl" : ""}${isOpen ? " open" : ""}`}
               style={{ opacity: dim ? 0.35 : 1, cursor: "pointer" }}
               onClick={() => setExpanded(isOpen ? null : i)}
             >
               <div className="wr-wire-top">
                 <span className="wr-wire-emoji">{item.emoji}</span>
+                <span className={`wr-wire-source wr-wire-source-${source}`}>{sourceLabel}</span>
                 <span className="wr-wire-cat">{catLabel}</span>
-                {item.teams?.map((tid) => {
-                  const info = teamShort[tid];
-                  if (!info) return null;
-                  return (
-                    <span
-                      key={tid}
-                      className="wr-wire-team"
-                      style={{ ["--tc" as string]: info.color }}
-                    >
-                      {info.short}
-                    </span>
-                  );
-                })}
-                {sev !== "signal" && (
-                  <span className={`wr-wire-sev wr-wire-sev-${sev}`}>
-                    {sev === "alarm" ? "ALARM" : "ALERT"}
-                  </span>
-                )}
+                <span className="wr-wire-teams">
+                  {item.teams?.map((tid) => {
+                    const info = teamShort[tid];
+                    if (!info) return null;
+                    return (
+                      <span
+                        key={tid}
+                        className="wr-wire-team"
+                        style={{ ["--tc" as string]: info.color }}
+                      >
+                        {info.short}
+                      </span>
+                    );
+                  })}
+                </span>
+                <span className="wr-wire-time">{timeAgo(item.generated_at)}</span>
               </div>
               <div className="wr-wire-hl-row">
                 <div className="wr-wire-headline">{item.headline}</div>
@@ -89,12 +100,6 @@ export function AIWirePanel() {
               {isOpen && (
                 <div className="wr-wire-expand" style={{ display: "block" }}>
                   <div className="wr-wire-body">{item.text}</div>
-                  <div className="wr-wire-time">{timeAgo(item.generated_at)}</div>
-                </div>
-              )}
-              {!isOpen && (
-                <div className="wr-wire-time" style={{ marginTop: 4, borderTop: "none", paddingTop: 0 }}>
-                  {timeAgo(item.generated_at)}
                 </div>
               )}
             </div>

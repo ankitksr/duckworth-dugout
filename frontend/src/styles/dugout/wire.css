@@ -13,11 +13,12 @@
 
 /* Card base — tactile dispatch card with grain + border haze */
 .wr-wire-card {
-  padding: 10px 14px 9px;
-  margin: 6px 5px 0;
+  padding: 8px 12px 7px;
+  margin: 5px 5px 0;
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.04);
+  border-left: 2px solid transparent;
   transition: opacity 0.2s, background 0.2s, border-color 0.2s, padding 0.15s;
   position: relative;
 }
@@ -35,33 +36,35 @@
   border-color: rgba(255, 255, 255, 0.08);
 }
 .wr-wire-card:last-child { margin-bottom: 4px; }
+
+/* Severity via left border accent instead of pill badge */
 .wr-wire-alert {
-  padding: 8px 12px 5px;
-  border-radius: 6px;
-  background: rgba(253, 185, 19, 0.05);
-  border-color: rgba(253, 185, 19, 0.1);
+  background: rgba(253, 185, 19, 0.04);
+  border-color: rgba(253, 185, 19, 0.08);
+  border-left: 2px solid rgba(253, 185, 19, 0.5);
 }
 .wr-wire-alarm {
-  padding: 9px 12px 5px;
-  margin-top: 5px;
-  margin-bottom: 2px;
-  border-radius: 8px;
-  background: rgba(239, 68, 68, 0.05);
-  border-color: rgba(239, 68, 68, 0.12);
+  background: rgba(239, 68, 68, 0.04);
+  border-color: rgba(239, 68, 68, 0.1);
+  border-left: 2px solid rgba(239, 68, 68, 0.6);
 }
 
 /* Highlighted card (selected team involved) */
 .wr-wire-card.hl {
   background:
     linear-gradient(135deg, rgba(253,185,19,0.06) 0%, transparent 50%),
-    rgba(253, 185, 19, 0.05);
+    rgba(253, 185, 19, 0.04);
   border-color: rgba(253, 185, 19, 0.1);
+}
+.wr-wire-card.hl.wr-wire-alert {
+  border-left-color: rgba(253, 185, 19, 0.6);
 }
 .wr-wire-card.hl.wr-wire-alarm {
   background:
     linear-gradient(135deg, rgba(239,68,68,0.08) 0%, transparent 50%),
-    rgba(239, 68, 68, 0.06);
+    rgba(239, 68, 68, 0.05);
   border-color: rgba(239, 68, 68, 0.12);
+  border-left-color: rgba(239, 68, 68, 0.7);
 }
 
 /* Alarm pulse animation — subtle border glow */
@@ -69,82 +72,122 @@
   animation: wire-alarm-pulse 2s ease-in-out 1;
 }
 @keyframes wire-alarm-pulse {
-  0%, 100% { border-color: rgba(239, 68, 68, 0.12); }
-  50% { border-color: rgba(239, 68, 68, 0.3); }
+  0%, 100% { border-left-color: rgba(239, 68, 68, 0.6); }
+  50% { border-left-color: rgba(239, 68, 68, 0.9); }
 }
 
-/* Top row: emoji + category + team chips */
+/* ── Top row: single-line metadata strip ── */
 .wr-wire-top {
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin-bottom: 6px;
-  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 .wr-wire-emoji {
-  font-size: 12px;
+  font-size: 10px;
   line-height: 1;
-}
-.wr-wire-alert .wr-wire-emoji,
-.wr-wire-alarm .wr-wire-emoji {
-  font-size: 14px;
-}
-.wr-wire-cat {
-  font: 700 8px 'JetBrains Mono', monospace;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--wr-t);
-  background: rgba(255,255,255,0.08);
-  padding: 2px 6px;
-  border-radius: 2px;
-}
-.wr-wire-team {
-  font: 700 7px 'JetBrains Mono', monospace;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  padding: 1px 5px;
-  border-radius: 2px;
-  color: var(--tc);
-  background: color-mix(in srgb, var(--tc) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--tc) 20%, transparent);
-}
-
-/* Severity badge — floated right */
-.wr-wire-sev {
-  margin-left: auto;
-  font: 700 7px 'JetBrains Mono', monospace;
-  letter-spacing: 1px;
-  padding: 2px 6px;
-  border-radius: 2px;
   flex-shrink: 0;
 }
-.wr-wire-sev-alert {
-  color: var(--wr-brand);
-  background: rgba(253, 185, 19, 0.15);
+
+/* Source badge — subtle inline label, no border/background for most */
+.wr-wire-source {
+  font: 600 6.5px 'JetBrains Mono', monospace;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 0 3px;
+  border-radius: 1px;
+  flex-shrink: 0;
+  line-height: 1.6;
 }
-.wr-wire-sev-alarm {
-  color: #fca5a5;
-  background: rgba(239, 68, 68, 0.2);
+.wr-wire-source-situation {
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.1);
+}
+.wr-wire-source-scout {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.1);
+}
+.wr-wire-source-newsdesk {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+}
+.wr-wire-source-preview {
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.1);
+}
+.wr-wire-source-take {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+}
+.wr-wire-source-wire {
+  color: var(--wr-tm);
+  background: rgba(255, 255, 255, 0.06);
 }
 
-/* Headline row — headline + expand chevron */
+/* Category label */
+.wr-wire-cat {
+  font: 600 6.5px 'JetBrains Mono', monospace;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--wr-t3);
+  background: rgba(255,255,255,0.06);
+  padding: 0 3px;
+  border-radius: 1px;
+  flex-shrink: 0;
+  line-height: 1.6;
+}
+
+/* Team chips container — truncates overflow */
+.wr-wire-teams {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  overflow: hidden;
+  flex-shrink: 1;
+  min-width: 0;
+}
+.wr-wire-team {
+  font: 700 6.5px 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 0 2px;
+  border-radius: 1px;
+  color: var(--tc);
+  background: color-mix(in srgb, var(--tc) 10%, transparent);
+  flex-shrink: 0;
+  line-height: 1.6;
+}
+
+/* Timestamp — pushed to far right of top row */
+.wr-wire-time {
+  font: 400 7px 'JetBrains Mono', monospace;
+  color: var(--wr-tm);
+  margin-left: auto;
+  flex-shrink: 0;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+/* ── Headline row — headline + expand chevron ── */
 .wr-wire-hl-row {
   display: flex;
   align-items: flex-start;
   gap: 6px;
 }
 .wr-wire-headline {
-  font: 700 12.5px 'Inter', sans-serif;
+  font: 700 12px 'Inter', sans-serif;
   color: var(--wr-t);
-  line-height: 1.5;
-  margin-bottom: 4px;
+  line-height: 1.45;
+  margin-bottom: 2px;
   flex: 1;
 }
 .wr-wire-chevron {
   color: var(--wr-t3);
-  font-size: 10px;
+  font-size: 9px;
   flex-shrink: 0;
-  margin-top: 4px;
+  margin-top: 3px;
   transition: transform 0.2s;
 }
 .wr-wire-chevron.open {
@@ -154,19 +197,20 @@
   color: #fca5a5;
 }
 
+/* ── Expanded state ── */
 .wr-wire-card.open {
   padding: 8px 12px 6px;
-  border-radius: 8px;
+  border-radius: 6px;
   border-color: rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.05);
 }
 .wr-wire-card.open.wr-wire-alert {
-  padding: 9px 14px 6px;
   border-color: rgba(253, 185, 19, 0.14);
+  border-left-color: rgba(253, 185, 19, 0.6);
 }
 .wr-wire-card.open.wr-wire-alarm {
-  padding: 10px 14px 6px;
   border-color: rgba(239, 68, 68, 0.16);
+  border-left-color: rgba(239, 68, 68, 0.7);
 }
 
 /* Body — muted detail paragraph */
@@ -175,13 +219,6 @@
   color: var(--wr-t3);
   line-height: 1.55;
   padding-top: 4px;
-}
-.wr-wire-time {
-  font: 500 8px 'JetBrains Mono', monospace;
-  color: var(--wr-t3);
-  margin-top: 6px;
-  padding: 4px 0 2px;
   border-top: 1px solid rgba(255, 255, 255, 0.04);
-  letter-spacing: 0.5px;
+  margin-top: 2px;
 }
-
