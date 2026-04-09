@@ -17,7 +17,7 @@ permissions:
 
 concurrency:
   group: live-update
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   update:
@@ -117,14 +117,13 @@ jobs:
         id: deploy
         uses: actions/deploy-pages@v4
 
-      # Self-chain: trigger next run while a match is live.
-      # GITHUB_TOKEN + workflow_dispatch is exempt from the anti-recursion
-      # rule, so the workflow can dispatch itself. Cron is the kick-starter;
-      # once live, chaining keeps updates at workflow-runtime cadence (~5 min)
-      # instead of waiting for GitHub's unreliable cron scheduler.
-      # 3-min cooldown prevents the chain from spinning faster than needed.
+      # Self-chain: keep polling during match windows.
+      # Chains on two cadences:
+      #   - Match live → 3-min cooldown (fast updates)
+      #   - In window but no live match → 8-min cooldown (pre-match warmup)
+      # This bridges GitHub's unreliable cron gaps (~10-40 min skips).
+      # cancel-in-progress: false ensures chains queue, never cancel deploys.
       - name: Chain next update
-        if: steps.live.outputs.has_updates == 'true' && steps.deploy.outcome == 'success'
         run: |
           HOUR=$(date -u +%-H)
           DOW=$(date -u +%u)  # 1=Mon .. 7=Sun
@@ -140,13 +139,21 @@ jobs:
             [ "$HOUR" -ge 9 ] && [ "$HOUR" -le 19 ] && IN_WINDOW=true
           fi
 
-          if [ "$IN_WINDOW" = "true" ]; then
-            echo "Match live & in window — cooldown before next chain"
-            sleep 180
-            echo "Chaining next update"
-            gh workflow run live-update.yml
-          else
+          if [ "$IN_WINDOW" != "true" ]; then
             echo "Outside match window — letting cron take over"
+            exit 0
           fi
+
+          HAS_LIVE="${{ steps.live.outputs.has_updates }}"
+          if [ "$HAS_LIVE" = "true" ]; then
+            echo "Match live — 3-min cooldown before next chain"
+            sleep 180
+          else
+            echo "In window, no live match — 8-min warmup chain"
+            sleep 480
+          fi
+
+          echo "Chaining next update"
+          gh workflow run live-update.yml
         env:
           GH_TOKEN: ${{ github.token }}
