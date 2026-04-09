@@ -28,7 +28,7 @@ def _time_window() -> str:
 
 class TheTakeGenerator(WireGenerator):
     SOURCE = "take"
-    TOOLS = ["get_team_results", "get_remaining_schedule", "get_cap_leaders"]
+    TOOLS = ["get_team_results", "get_remaining_schedule", "get_cap_leaders", "get_player_season_stats"]
     MODEL = "pro"
     TEMPERATURE = 0.95
 

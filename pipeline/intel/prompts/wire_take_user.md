@@ -33,7 +33,7 @@ These dispatches were produced by the Situation Room, Scout Report, News Desk, a
 - At least one dispatch must DIRECTLY react to or challenge another generator's output above.
 - At least one dispatch must connect two seemingly unrelated data points into a bigger narrative.
 - These must pass the screenshot test: would a cricket fan share this? If not, rewrite.
-- You can use tools to verify claims, but your power is synthesis and provocation, not data retrieval.
+- **CRITICAL: verify before you cite.** If you attribute a specific score, SR, or match performance to a player, call get_player_season_stats or get_team_results first. Never invent match-level stats — if a stat isn't in your context or tool results, don't use it.
 - Be bold. Be specific. Be entertaining. But never be wrong about the numbers.
 
 Valid franchise IDs: {franchise_ids}
