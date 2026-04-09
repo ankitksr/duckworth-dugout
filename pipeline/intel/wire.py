@@ -170,6 +170,20 @@ async def generate_wire(
     if expired:
         console.print(f"  [dim]Wire: expired {expired} previous-day entries[/dim]")
 
+    # Force mode: expire today's entries too so stale same-day items don't persist
+    if force:
+        force_expired = conn.execute(
+            """
+            UPDATE war_room_wire
+            SET expired = TRUE
+            WHERE season = ? AND expired = FALSE AND match_day = ?
+            RETURNING id
+            """,
+            [season, today_str],
+        ).fetchall()
+        if force_expired:
+            console.print(f"  [dim]Wire: force-expired {len(force_expired)} same-day entries[/dim]")
+
     # Load shared data
     standings = _load_json("standings.json") or []
     caps = _load_json("caps.json")
