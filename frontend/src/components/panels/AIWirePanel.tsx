@@ -77,7 +77,7 @@ export function AIWirePanel() {
                 <span className={`wr-wire-source wr-wire-source-${source}`}>{sourceLabel}</span>
                 <span className="wr-wire-cat">{catLabel}</span>
                 <span className="wr-wire-teams">
-                  {item.teams?.map((tid) => {
+                  {(item.teams?.length ?? 0) <= 3 && item.teams?.map((tid) => {
                     const info = teamShort[tid];
                     if (!info) return null;
                     return (

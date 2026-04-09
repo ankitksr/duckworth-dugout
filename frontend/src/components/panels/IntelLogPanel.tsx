@@ -78,7 +78,7 @@ export function IntelLogPanel() {
                 <div className="wr-log-body">
                   <div className="wr-log-meta">
                     <span className="wr-log-tag">{item.source_name}</span>
-                    {item.teams.map((t) => (
+                    {item.teams.length <= 3 && item.teams.map((t) => (
                       <span key={t} className="wr-log-team" style={{ color: `var(--${t})` }}>{t.toUpperCase()}</span>
                     ))}
                     <span className="wr-log-time">{timeAgo(item.published)}</span>
