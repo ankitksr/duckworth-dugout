@@ -14,9 +14,9 @@ from pipeline.intel.wire_generators import GeneratorContext, WireGenerator
 
 
 def _time_window() -> str:
-    hour = datetime.now(timezone.utc).hour + 5  # IST roughly
-    if hour >= 24:
-        hour -= 24
+    utc_minutes = datetime.now(timezone.utc).hour * 60 + datetime.now(timezone.utc).minute
+    ist_minutes = utc_minutes + 330  # IST = UTC + 5:30
+    hour = (ist_minutes // 60) % 24
     if hour < 12:
         return "morning"
     if hour < 15:

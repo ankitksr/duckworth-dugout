@@ -136,7 +136,11 @@ class WireGenerator(ABC):
         *,
         force: bool = False,
     ) -> list[dict]:
-        """Run this generator: check hash, build context, call LLM, parse, return items."""
+        """Run this generator: check should_run + hash, build context, call LLM, parse, return items."""
+        if not force and not self.should_run(ctx):
+            console.print(f"  [dim]Wire/{self.SOURCE}: skipped (should_run=False)[/dim]")
+            return []
+
         ctx_hash = self.context_hash(ctx)
 
         if not force and self.already_ran(ctx, ctx_hash):

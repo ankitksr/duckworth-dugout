@@ -31,6 +31,20 @@ def _connect() -> duckdb.DuckDBPyConnection:
     return duckdb.connect(str(CRICKET_DB_PATH), read_only=True)
 
 
+def _player_like(name: str) -> str:
+    """Build a LIKE pattern that matches Cricsheet's initial-based names.
+
+    LLMs send full names ("Yashasvi Jaiswal") but Cricsheet stores
+    "YBK Jaiswal". Matching on last name (+ optional first initial)
+    handles both forms.
+    """
+    parts = name.strip().split()
+    if len(parts) >= 2:
+        # Use last name as primary match — covers "% Jaiswal" → "YBK Jaiswal"
+        return f"% {parts[-1]}"
+    return f"%{name.strip()}%"
+
+
 def _load_json(filename: str) -> Any:
     path = DATA_DIR / "war-room" / filename
     if not path.exists():
@@ -55,11 +69,11 @@ def get_batter_vs_bowler(batter: str, bowler: str) -> dict[str, Any]:
         row = conn.execute("""
             SELECT
                 COUNT(*) as balls,
-                SUM(CASE WHEN d.batter_runs > 0 THEN d.batter_runs ELSE 0 END) as runs,
-                SUM(CASE WHEN d.is_wicket AND d.player_dismissed = d.batter
+                SUM(d.runs_batter) as runs,
+                SUM(CASE WHEN d.wicket_kind IS NOT NULL AND d.wicket_player_out = d.batter
                     THEN 1 ELSE 0 END) as dismissals,
-                SUM(d.batter_runs = 4) as fours,
-                SUM(d.batter_runs = 6) as sixes
+                SUM(CASE WHEN d.runs_batter = 4 THEN 1 ELSE 0 END) as fours,
+                SUM(CASE WHEN d.runs_batter = 6 THEN 1 ELSE 0 END) as sixes
             FROM deliveries d
             JOIN players pb ON d.batter_id = pb.id
             JOIN players pw ON d.bowler_id = pw.id
@@ -67,7 +81,7 @@ def get_batter_vs_bowler(batter: str, bowler: str) -> dict[str, Any]:
             WHERE m.event_name = ?
               AND pb.name LIKE ?
               AND pw.name LIKE ?
-        """, [_EVENT, f"%{batter}%", f"%{bowler}%"]).fetchone()
+        """, [_EVENT, _player_like(batter), _player_like(bowler)]).fetchone()
         conn.close()
 
         if not row or row[0] == 0:
@@ -107,8 +121,8 @@ def get_phase_stats(player: str, role: str = "bat") -> dict[str, Any]:
                         ELSE 'death'
                     END as phase,
                     COUNT(*) as balls,
-                    SUM(d.total_runs) as runs,
-                    SUM(CASE WHEN d.is_wicket THEN 1 ELSE 0 END) as wickets
+                    SUM(d.runs_total) as runs,
+                    SUM(CASE WHEN d.wicket_kind IS NOT NULL THEN 1 ELSE 0 END) as wickets
                 FROM deliveries d
                 JOIN players p ON d.bowler_id = p.id
                 JOIN matches m ON d.match_id = m.id
@@ -116,7 +130,7 @@ def get_phase_stats(player: str, role: str = "bat") -> dict[str, Any]:
                   AND p.name LIKE ?
                 GROUP BY 1
                 ORDER BY 1
-            """, [_EVENT, f"%{player}%"]).fetchall()
+            """, [_EVENT, _player_like(player)]).fetchall()
 
             if not rows:
                 conn.close()
@@ -144,9 +158,9 @@ def get_phase_stats(player: str, role: str = "bat") -> dict[str, Any]:
                         ELSE 'death'
                     END as phase,
                     COUNT(*) as balls,
-                    SUM(d.batter_runs) as runs,
-                    SUM(d.batter_runs = 4) as fours,
-                    SUM(d.batter_runs = 6) as sixes
+                    SUM(d.runs_batter) as runs,
+                    SUM(CASE WHEN d.runs_batter = 4 THEN 1 ELSE 0 END) as fours,
+                    SUM(CASE WHEN d.runs_batter = 6 THEN 1 ELSE 0 END) as sixes
                 FROM deliveries d
                 JOIN players p ON d.batter_id = p.id
                 JOIN matches m ON d.match_id = m.id
@@ -154,7 +168,7 @@ def get_phase_stats(player: str, role: str = "bat") -> dict[str, Any]:
                   AND p.name LIKE ?
                 GROUP BY 1
                 ORDER BY 1
-            """, [_EVENT, f"%{player}%"]).fetchall()
+            """, [_EVENT, _player_like(player)]).fetchall()
 
             if not rows:
                 conn.close()
@@ -270,6 +284,8 @@ def get_team_results(team: str, last_n: int = 5) -> dict[str, Any]:
             "score1": f"{_fid_short(m['team1'])} {m.get('score1', '?')}",
             "score2": f"{_fid_short(m['team2'])} {m.get('score2', '?')}",
         }
+        if m.get("toss"):
+            entry["toss"] = m["toss"]
         # Top performers
         for key in ("top_batter1", "top_batter2", "top_bowler1", "top_bowler2"):
             perf = m.get(key)
@@ -457,17 +473,17 @@ def search_articles(query: str, limit: int = 5) -> dict[str, Any]:
     }
 
 
-# ── Cricsheet tools — current season stats ───────────────────────
+# ── Cricsheet tools — career + season stats ──────────────────────
 
 
-def get_player_season_stats(player: str, season: str = "2026") -> dict[str, Any]:
-    """Get a player's current season batting and bowling stats."""
+def get_player_career_stats(player: str) -> dict[str, Any]:
+    """Get a player's all-time IPL career stats, plus current-season breakdown with freshness date."""
     try:
         conn = _connect()
 
-        result: dict[str, Any] = {"player": player, "season": season}
+        result: dict[str, Any] = {"player": player, "scope": "all-time IPL career"}
 
-        # Batting stats
+        # Batting stats — career
         bat_row = conn.execute("""
             SELECT
                 COUNT(DISTINCT bs.match_id) as innings,
@@ -480,9 +496,9 @@ def get_player_season_stats(player: str, season: str = "2026") -> dict[str, Any]
             FROM batting_scorecard bs
             JOIN players p ON bs.player_id = p.id
             JOIN matches m ON bs.match_id = m.id
-            WHERE m.event_name = ? AND m.season = ?
+            WHERE m.event_name = ?
               AND p.name LIKE ?
-        """, [_EVENT, season, f"%{player}%"]).fetchone()
+        """, [_EVENT, _player_like(player)]).fetchone()
 
         if bat_row and bat_row[0] and bat_row[0] > 0:
             result["batting"] = {
@@ -495,7 +511,7 @@ def get_player_season_stats(player: str, season: str = "2026") -> dict[str, Any]
                 "sixes": bat_row[6],
             }
 
-        # Bowling stats
+        # Bowling stats — career
         bowl_row = conn.execute("""
             SELECT
                 COUNT(DISTINCT bw.match_id) as innings,
@@ -507,10 +523,10 @@ def get_player_season_stats(player: str, season: str = "2026") -> dict[str, Any]
             FROM bowling_scorecard bw
             JOIN players p ON bw.player_id = p.id
             JOIN matches m ON bw.match_id = m.id
-            WHERE m.event_name = ? AND m.season = ?
+            WHERE m.event_name = ?
               AND p.name LIKE ?
               AND bw.overs > 0
-        """, [_EVENT, season, f"%{player}%"]).fetchone()
+        """, [_EVENT, _player_like(player)]).fetchone()
 
         if bowl_row and bowl_row[0] and bowl_row[0] > 0:
             result["bowling"] = {
@@ -521,14 +537,167 @@ def get_player_season_stats(player: str, season: str = "2026") -> dict[str, Any]
                 "best": bowl_row[4],
             }
 
+        # Current season breakdown — with freshness marker
+        # Find the latest season available
+        latest = conn.execute("""
+            SELECT MAX(m.season) FROM matches m WHERE m.event_name = ?
+        """, [_EVENT]).fetchone()
+        current_season = latest[0] if latest and latest[0] else None
+
+        if current_season:
+            # Get the latest match date in this season for the freshness marker
+            freshness = conn.execute("""
+                SELECT MAX(m.start_date)::VARCHAR
+                FROM matches m
+                WHERE m.event_name = ? AND m.season = ?
+            """, [_EVENT, current_season]).fetchone()
+            data_through = freshness[0] if freshness and freshness[0] else None
+
+            season_bat = conn.execute("""
+                SELECT
+                    COUNT(DISTINCT bs.match_id) as innings,
+                    SUM(bs.runs) as runs,
+                    MAX(bs.runs) as highest,
+                    ROUND(AVG(bs.runs), 1) as avg,
+                    ROUND(AVG(bs.strike_rate), 1) as sr
+                FROM batting_scorecard bs
+                JOIN players p ON bs.player_id = p.id
+                JOIN matches m ON bs.match_id = m.id
+                WHERE m.event_name = ? AND m.season = ?
+                  AND p.name LIKE ?
+            """, [_EVENT, current_season, _player_like(player)]).fetchone()
+
+            season_bowl = conn.execute("""
+                SELECT
+                    COUNT(DISTINCT bw.match_id) as innings,
+                    SUM(bw.wickets) as wickets,
+                    SUM(bw.runs_conceded) as runs,
+                    ROUND(AVG(bw.economy), 2) as econ
+                FROM bowling_scorecard bw
+                JOIN players p ON bw.player_id = p.id
+                JOIN matches m ON bw.match_id = m.id
+                WHERE m.event_name = ? AND m.season = ?
+                  AND p.name LIKE ?
+                  AND bw.overs > 0
+            """, [_EVENT, current_season, _player_like(player)]).fetchone()
+
+            season: dict[str, Any] = {"season": current_season}
+            if data_through:
+                season["data_through"] = data_through
+                season["note"] = (
+                    f"Cricsheet data may lag 1-2 days. Stats are through {data_through}. "
+                    "For the very latest, cross-reference with get_player_season_stats (RSS)."
+                )
+            if season_bat and season_bat[0] and season_bat[0] > 0:
+                season["batting"] = {
+                    "innings": season_bat[0],
+                    "runs": season_bat[1],
+                    "highest": season_bat[2],
+                    "average": season_bat[3],
+                    "strike_rate": season_bat[4],
+                }
+            if season_bowl and season_bowl[0] and season_bowl[0] > 0:
+                season["bowling"] = {
+                    "innings": season_bowl[0],
+                    "wickets": season_bowl[1],
+                    "runs_conceded": season_bowl[2],
+                    "economy": season_bowl[3],
+                }
+            if "batting" in season or "bowling" in season:
+                result["current_season"] = season
+
         conn.close()
 
-        if "batting" not in result and "bowling" not in result:
-            return {"result": f"No season stats found for {player} in {season}"}
+        if "batting" not in result and "bowling" not in result and "current_season" not in result:
+            return {"result": f"No career stats found for {player}"}
 
         return result
     except Exception as e:
         return {"error": str(e)}
+
+
+# ── JSON-based tools — current season stats (from RSS, not Cricsheet) ─
+
+
+def get_player_season_stats(player: str) -> dict[str, Any]:
+    """Get a player's current-season stats aggregated from synced JSON (caps + scorecards)."""
+    query = player.strip().lower()
+    result: dict[str, Any] = {"player": player, "scope": "current season (from RSS feeds)"}
+
+    # Check cap race standings
+    caps = _load_json("caps.json")
+    if caps:
+        for key, label in [
+            ("orange_cap", "Orange Cap (runs)"),
+            ("purple_cap", "Purple Cap (wickets)"),
+            ("best_sr", "Best Strike Rate"),
+            ("best_econ", "Best Economy"),
+        ]:
+            for e in caps.get(key, []):
+                name = (e.get("player") or "").lower()
+                if query in name or name in query:
+                    result.setdefault("cap_rankings", []).append({
+                        "category": label,
+                        "rank": e.get("rank"),
+                        "stat": e.get("stat"),
+                        "team": e.get("team_short"),
+                    })
+
+    # Aggregate from match scorecards (top performer entries)
+    schedule = _load_json("schedule.json")
+    if schedule:
+        batting_entries: list[dict[str, Any]] = []
+        bowling_entries: list[dict[str, Any]] = []
+        potm_count = 0
+
+        for m in schedule:
+            if m.get("status") != "completed":
+                continue
+            mnum = m.get("match_number")
+            # Check top batters
+            for bkey in ("top_batter1", "top_batter2"):
+                tb = m.get(bkey)
+                if tb and tb.get("name") and query in tb["name"].lower():
+                    batting_entries.append({
+                        "match": mnum,
+                        "runs": tb.get("runs"),
+                        "balls": tb.get("balls"),
+                        "not_out": tb.get("not_out", False),
+                    })
+            # Check top bowlers
+            for bkey in ("top_bowler1", "top_bowler2"):
+                bw = m.get(bkey)
+                if bw and bw.get("name") and query in bw["name"].lower():
+                    bowling_entries.append({
+                        "match": mnum,
+                        "wickets": bw.get("wickets"),
+                        "runs_conceded": bw.get("runs"),
+                    })
+            # POTM
+            if m.get("hero_name") and query in m["hero_name"].lower():
+                potm_count += 1
+
+        if batting_entries:
+            total_runs = sum(e["runs"] for e in batting_entries if e.get("runs"))
+            result["batting_highlights"] = {
+                "appearances_as_top_batter": len(batting_entries),
+                "total_runs_in_highlights": total_runs,
+                "entries": batting_entries,
+            }
+        if bowling_entries:
+            total_wickets = sum(e["wickets"] for e in bowling_entries if e.get("wickets"))
+            result["bowling_highlights"] = {
+                "appearances_as_top_bowler": len(bowling_entries),
+                "total_wickets_in_highlights": total_wickets,
+                "entries": bowling_entries,
+            }
+        if potm_count:
+            result["player_of_the_match_awards"] = potm_count
+
+    if len(result) <= 2:  # only player + scope
+        return {"result": f"No current-season data found for {player} in caps or scorecards"}
+
+    return result
 
 
 def get_venue_stats(city: str) -> dict[str, Any]:
@@ -584,6 +753,7 @@ TOOL_REGISTRY: dict[str, Any] = {
     "get_cap_leaders": get_cap_leaders,
     "get_squad_detail": get_squad_detail,
     "search_articles": search_articles,
+    "get_player_career_stats": get_player_career_stats,
     "get_player_season_stats": get_player_season_stats,
     "get_venue_stats": get_venue_stats,
 }
@@ -771,12 +941,13 @@ def get_tool_declarations(tool_names: list[str] | None = None) -> list:
                 required=["query"],
             ),
         ),
-        "get_player_season_stats": types.FunctionDeclaration(
-            name="get_player_season_stats",
+        "get_player_career_stats": types.FunctionDeclaration(
+            name="get_player_career_stats",
             description=(
-                "Get a player's stats for the current IPL season: batting "
-                "(innings, runs, avg, SR, highest) and bowling (wickets, "
-                "economy, best). Use for verifying current-season claims."
+                "Get a player's all-time IPL career stats plus current-season "
+                "breakdown (with freshness date). Batting: innings, runs, avg, "
+                "SR, highest. Bowling: wickets, economy, best. Season data may "
+                "lag 1-2 days — cross-reference with get_player_season_stats for latest."
             ),
             parameters=types.Schema(
                 type="OBJECT",
@@ -784,6 +955,24 @@ def get_tool_declarations(tool_names: list[str] | None = None) -> list:
                     "player": types.Schema(
                         type="STRING",
                         description="Player's name (e.g. 'Virat Kohli')",
+                    ),
+                },
+                required=["player"],
+            ),
+        ),
+        "get_player_season_stats": types.FunctionDeclaration(
+            name="get_player_season_stats",
+            description=(
+                "Get a player's current-season stats from live RSS data: "
+                "cap race rankings, match-by-match highlights as top batter/"
+                "bowler, and Player of the Match awards. Use for current form."
+            ),
+            parameters=types.Schema(
+                type="OBJECT",
+                properties={
+                    "player": types.Schema(
+                        type="STRING",
+                        description="Player's name (e.g. 'Yashasvi Jaiswal')",
                     ),
                 },
                 required=["player"],

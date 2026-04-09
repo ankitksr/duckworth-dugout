@@ -39,6 +39,22 @@ def sync(ctx: SyncContext, *, force: bool = False) -> None:
     except Exception:
         pass
 
+    # One-time migration: expire legacy entries from the monolithic generator
+    try:
+        expired = db_conn.execute(
+            """
+            UPDATE war_room_wire SET expired = TRUE
+            WHERE coalesce(source, 'wire') = 'wire' AND expired = FALSE
+            RETURNING id
+            """
+        ).fetchall()
+        if expired:
+            console.print(
+                f"  [dim]Wire: migrated {len(expired)} legacy entries to expired[/dim]"
+            )
+    except Exception:
+        pass
+
     # Load today's matches if not available
     today_matches = ctx.today_matches
     if not today_matches:

@@ -18,7 +18,8 @@ class ScoutReportGenerator(WireGenerator):
     SOURCE = "scout"
     TOOLS = [
         "get_phase_stats", "get_batter_vs_bowler",
-        "get_player_season_stats", "get_cap_leaders", "get_squad_detail",
+        "get_player_career_stats", "get_player_season_stats",
+        "get_cap_leaders", "get_squad_detail",
     ]
     MODEL = "pro"
     TEMPERATURE = 0.7
@@ -67,10 +68,12 @@ class ScoutReportGenerator(WireGenerator):
                 for m in recent:
                     t1 = _SHORT.get(m.get("team1", ""), m.get("team1", ""))
                     t2 = _SHORT.get(m.get("team2", ""), m.get("team2", ""))
+                    toss = m.get("toss") or ""
+                    toss_tag = f" | Toss: {toss}" if toss else ""
                     line = (
-                        f"  M{m['match_number']}: {t1} vs {t2}"
-                        f" — {m.get('result', '?')}"
-                        f" ({m.get('score1', '?')} vs {m.get('score2', '?')})"
+                        f"  M{m['match_number']}: {t1} {m.get('score1', '?')}"
+                        f" vs {t2} {m.get('score2', '?')}"
+                        f" — {m.get('result', '?')}{toss_tag}"
                     )
                     result_lines.append(line)
                     # Top performers

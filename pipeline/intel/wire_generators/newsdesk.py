@@ -32,10 +32,26 @@ class NewsDeskGenerator(WireGenerator):
         except Exception:
             return 0
 
+    def _recent_article_ids(self, conn: duckdb.DuckDBPyConnection) -> list[str]:
+        try:
+            rows = conn.execute(
+                """
+                SELECT coalesce(content_hash, url)
+                FROM war_room_articles
+                WHERE is_ipl = TRUE
+                  AND published >= (now() - INTERVAL '6 hours')
+                ORDER BY published DESC
+                LIMIT 10
+                """,
+            ).fetchall()
+            return [r[0] for r in rows if r[0]]
+        except Exception:
+            return []
+
     def context_hash(self, ctx: GeneratorContext) -> str:
         parts = [self.SOURCE]
-        count = self._count_recent_articles(ctx.conn)
-        parts.append(f"articles:{count}")
+        ids = self._recent_article_ids(ctx.conn)
+        parts.append(f"articles:{','.join(ids)}")
         return hashlib.sha256("|".join(parts).encode()).hexdigest()[:16]
 
     def should_run(self, ctx: GeneratorContext) -> bool:

@@ -16,10 +16,10 @@ _SHORT = {fid: d["short_name"] for fid, d in IPL_FRANCHISES.items() if not d.get
 
 
 def _is_morning() -> bool:
-    hour = datetime.now(timezone.utc).hour + 5  # IST roughly
-    if hour >= 24:
-        hour -= 24
-    return hour < 15  # morning + early afternoon — preview window
+    utc_minutes = datetime.now(timezone.utc).hour * 60 + datetime.now(timezone.utc).minute
+    ist_minutes = utc_minutes + 330  # IST = UTC + 5:30
+    ist_hour = (ist_minutes // 60) % 24
+    return ist_hour < 15  # morning + early afternoon — preview window
 
 
 class MatchdayPreviewGenerator(WireGenerator):
