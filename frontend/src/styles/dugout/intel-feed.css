@@ -97,7 +97,8 @@
 .wr-scenarios-scroll,
 .wr-briefing-scroll,
 .wr-team-intel-scroll,
-.wr-log-scroll {
+.wr-log-scroll,
+.wr-wire-scroll {
   --sf-size: 22px;
   mask-image: linear-gradient(
     to bottom,
