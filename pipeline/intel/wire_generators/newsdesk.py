@@ -2,7 +2,8 @@
 
 Trigger: new articles arriving in the article store.
 Voice: news editor — "here's what this actually means."
-Model: Flash @ 0.6 — quick, reactive, grounded in articles.
+Model: Pro @ 0.7 — connects breaking stories to standings / tactical
+implications rather than restating the article in wire voice.
 
 Reads from war_room_article_extractions (populated by article_extraction.py)
 so the LLM gets pre-distilled summaries + key quotes instead of raw bodies —
@@ -27,8 +28,8 @@ from pipeline.intel.wire_generators import (
 class NewsDeskGenerator(WireGenerator):
     SOURCE = "newsdesk"
     TOOLS = ["search_articles", "get_squad_detail"]
-    MODEL = "flash"
-    TEMPERATURE = 0.6
+    MODEL = "pro"
+    TEMPERATURE = 0.7
 
     def _count_recent_extractions(self, conn: duckdb.DuckDBPyConnection) -> int:
         try:
@@ -90,7 +91,7 @@ class NewsDeskGenerator(WireGenerator):
                   AND e.is_relevant = TRUE
                   AND a.published >= (now() - INTERVAL '8 hours')
                 ORDER BY a.published DESC
-                LIMIT 6
+                LIMIT 12
                 """,
                 [EXTRACTION_VERSION],
             ).fetchall()

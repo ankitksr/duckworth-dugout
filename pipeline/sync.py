@@ -56,8 +56,12 @@ def sync_tiers(
         public_dir=PUBLIC_API_DIR,
     )
 
-    # Fetch shared feeds if warm+ panels are active
+    # Fetch shared feeds if any panel that reads articles is active.
+    # intel_log + wire are in this set so hot-only runs also ingest
+    # fresh articles and run per-article extraction before the wire
+    # panel queries war_room_article_extractions.
     needs_feeds = active_panels & {
+        "intel_log", "wire",
         "standings", "caps", "pulse", "schedule",
         "scenarios", "records", "briefing", "narratives", "dossier",
         "availability",
@@ -152,7 +156,14 @@ def _fetch_feeds(ctx: SyncContext) -> None:
 
 
 def _init_db_and_articles(ctx: SyncContext) -> None:
-    """Initialize DB connection and ingest article feeds."""
+    """Initialize DB, ingest article feeds, and extract structured data.
+
+    Extraction runs here (not inside the availability panel) so every
+    tier — including hot-only — drains freshly-ingested articles before
+    the wire's newsdesk generator queries war_room_article_extractions.
+    Without this, new stories were invisible to newsdesk until the next
+    warm cycle up to 4h later.
+    """
     try:
         from pipeline.db.connection import get_connection
         from pipeline.intel.articles import crawl_missing_bodies, ingest_all_feeds
@@ -171,6 +182,21 @@ def _init_db_and_articles(ctx: SyncContext) -> None:
             feed_map["espncricinfo"] = ctx.espn_items
         ingest_all_feeds(ctx.db_conn, feed_map)
         crawl_missing_bodies(ctx.db_conn)
+
+        try:
+            import asyncio
+
+            from pipeline.intel.article_extraction import run_extraction
+
+            ctx.extraction_stats = asyncio.run(
+                run_extraction(ctx.db_conn, ctx.season, max_articles=30)
+            )
+        except Exception as e:
+            console.print(f"  [yellow]Article extraction failed: {e}[/yellow]")
+            ctx.extraction_stats = {
+                "processed": 0, "events": 0, "summaries": 0,
+                "errors": 0, "skipped": 0,
+            }
     except Exception as e:
         console.print(f"  [yellow]Article store: {e}[/yellow]")
         ctx.db_conn = None

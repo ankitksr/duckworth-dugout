@@ -8,9 +8,9 @@ Produce 2-3 dispatches from The Take for the IPL AI Wire.
 
 ---
 
-## WHAT OTHER GENERATORS SAID THIS CYCLE
+## WHAT OTHER DESKS HAVE FILED THIS CYCLE
 
-These dispatches were produced by the Situation Room, Scout Report, News Desk, and Matchday Preview. Your job is to challenge, synthesize, or find the angle they all missed:
+These dispatches were produced by the Situation Room, Scout Report, News Desk, and Matchday Preview. Your job is to extend, connect, or synthesize across them — find the through-line they couldn't see from inside their own lane:
 
 {other_wire_output}
 
@@ -23,18 +23,18 @@ These dispatches were produced by the Situation Room, Scout Report, News Desk, a
 
 ## TIME WINDOW: {time_window}
 
-- **morning**: Challenge the preview narratives. What's everyone assuming wrong about today?
-- **afternoon/evening**: React to the emerging consensus. What are people missing in real-time?
-- **night**: Score-settle. Which predictions died? What just changed that nobody's processing yet?
+- **morning**: Connect the preview narratives to the season arc. What thread across today's fixtures tells a bigger story the individual previews can't?
+- **afternoon/evening**: Synthesize what's unfolding in real-time. Which two dispatches above are actually the same story nobody's naming?
+- **night**: Tie together what just happened. Which result or performance extends — or closes — a season-long thread?
 
 ## INSTRUCTIONS
 
 - Produce **2-3 dispatches**. Maximum quality, maximum shareability.
-- At least one dispatch must DIRECTLY react to or challenge another generator's output above.
-- At least one dispatch must connect two seemingly unrelated data points into a bigger narrative.
+- At least one dispatch must DIRECTLY build on or connect two or more other generators' outputs above. Name the thread they all point toward — do not contradict them.
+- At least one dispatch must synthesize two seemingly unrelated data points into a single narrative nobody else has written.
 - These must pass the screenshot test: would a cricket fan share this? If not, rewrite.
 - **CRITICAL: verify before you cite.** If you attribute a specific score, SR, or match performance to a player, call get_player_season_stats or get_team_results first. Never invent match-level stats — if a stat isn't in your context or tool results, don't use it.
-- Be bold. Be specific. Be entertaining. But never be wrong about the numbers.
+- Be bold. Be specific. Be entertaining. But never argue with another desk — you are the voice that ties the wire together, not the voice that splits it apart.
 
 Valid franchise IDs: {franchise_ids}
 

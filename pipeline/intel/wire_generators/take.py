@@ -1,8 +1,9 @@
-"""The Take — provocative counter-narratives and synthesis.
+"""The Take — cross-desk synthesis, season-arc threading, bigger picture.
 
 Trigger: time-window rotation (runs after other generators).
-Voice: opinionated, high-temperature, shareable hot takes.
-Model: Pro @ 0.95 — maximum creativity.
+Voice: the big-picture columnist — extends and ties together what other
+desks have filed, never refutes them.
+Model: Pro @ 0.95 — maximum creativity, high grounding via tool use.
 """
 
 import hashlib
@@ -33,7 +34,10 @@ def _time_window() -> str:
 
 class TheTakeGenerator(WireGenerator):
     SOURCE = "take"
-    TOOLS = ["get_team_results", "get_remaining_schedule", "get_cap_leaders", "get_player_season_stats"]
+    TOOLS = [
+        "get_team_results", "get_remaining_schedule",
+        "get_cap_leaders", "get_player_season_stats",
+    ]
     MODEL = "pro"
     TEMPERATURE = 0.95
 

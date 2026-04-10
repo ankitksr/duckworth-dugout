@@ -2,20 +2,23 @@
 
 TIERS: dict[str, list[str]] = {
     "hot": ["intel_log", "wire"],
-    "warm": ["standings", "caps", "schedule", "ticker", "pulse", "availability"],
+    "warm": ["standings", "caps", "schedule", "ticker", "pulse", "availability", "roster"],
     "cool": ["scenarios", "records", "briefing", "narratives",
              "dossier", "match_notes"],
 }
 
-# availability runs in warm tier (when articles get ingested via
-# _init_db_and_articles) but lives BEFORE wire in PANEL_ORDER so that on
-# combined runs (hot+warm+cool, e.g. the 6x-daily CI cron), wire's roster
-# context sees the freshly extracted availability state. On hot-only runs,
-# availability is skipped and wire reads whatever events are already in the
-# DB from the most recent warm cycle.
+# availability is a warm-tier read-side panel: the per-article extraction
+# that populates availability events now runs upstream in
+# sync._init_db_and_articles on every tier (including hot), so the wire's
+# newsdesk generator always sees freshly-extracted articles regardless of
+# which tier is active. availability still lives before wire in PANEL_ORDER
+# so its derived state is current when downstream panels read it.
+#
+# roster sits next to availability — both are pure read-side warm panels
+# that emit JSON for the frontend (squad list and current injury state).
 PANEL_ORDER: list[str] = [
-    "intel_log", "availability", "standings", "caps", "schedule", "pulse",
-    "wire", "ticker", "scenarios", "records", "briefing",
+    "intel_log", "availability", "roster", "standings", "caps", "schedule",
+    "pulse", "wire", "ticker", "scenarios", "records", "briefing",
     "narratives", "dossier", "match_notes",
 ]
 

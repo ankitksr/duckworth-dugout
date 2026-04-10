@@ -26,3 +26,7 @@ class SyncContext:
     standings_rows: list | None = None
     schedule_matches: list | None = None
     today_matches: list = field(default_factory=list)
+
+    # Per-article extraction stats populated by sync._init_db_and_articles
+    # and read by the availability panel for its payload telemetry.
+    extraction_stats: dict = field(default_factory=dict)
