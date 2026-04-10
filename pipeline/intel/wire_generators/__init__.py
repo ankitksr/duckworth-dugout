@@ -37,7 +37,7 @@ _VALID_SEVERITIES = {"signal", "alert", "alarm"}
 # Bumped when context_hash semantics change. Prefixed onto every hash so
 # legacy DB rows can never collide with hashes from a newer generator
 # version — on deploy, generators run fresh exactly once.
-HASH_VERSION = "v4"
+HASH_VERSION = "v5"
 
 # Hard ceiling on non-expired entries per source per day. Backstop against
 # unbounded accumulation if hashes keep changing despite the previous-entries

@@ -48,15 +48,52 @@ _SHORT = {fid: d["short_name"] for fid, d in IPL_FRANCHISES.items() if not d.get
 
 # ── Base context builder ────────────────────────────────────────────
 
+def _build_availability_block(availability: dict | None) -> str:
+    """Format availability.json as a verified-facts block.
+
+    The wire system prompts instruct all five generators to only make
+    injury/availability claims that appear in this block. Without it, Pro
+    models happily invent plausible-sounding injuries from stale training
+    data (e.g. a player who was injured in a past season). Every generator
+    sees this because it's in the shared base_context.
+    """
+    if not availability:
+        return ""
+    by_team = availability.get("by_team") or {}
+    if not by_team:
+        return ""
+
+    lines: list[str] = []
+    for fid, entries in by_team.items():
+        for e in entries:
+            player = e.get("player", "").strip()
+            status = e.get("status", "").strip()
+            reason = e.get("reason", "").strip()
+            if not player or not status:
+                continue
+            short = _SHORT.get(fid, fid.upper())
+            tail = f" — {reason}" if reason else ""
+            lines.append(f"  {player} ({short}, {status}){tail}")
+    if not lines:
+        return ""
+    return (
+        "INJURY/AVAILABILITY (the ONLY verified facts — do not invent any "
+        "other player as injured, doubtful, missing, or unavailable):\n"
+        + "\n".join(lines)
+    )
+
+
 def _build_base_context(
     conn: duckdb.DuckDBPyConnection,
     season: str,
     standings: list[dict],
     schedule: list[dict] | None,
+    availability: dict | None = None,
 ) -> str:
     """Build the shared grounding context (~400 tokens) for all generators.
 
-    Contains: season info, roster summary (names only), table snapshot.
+    Contains: season info, roster summary, table snapshot, and the
+    verified injury/availability block.
     """
     parts: list[str] = []
 
@@ -84,6 +121,13 @@ def _build_base_context(
             for s in standings
         )
         parts.append(f"TABLE SNAPSHOT:\n{table_line}")
+
+    # Injury/availability ground truth (appears near the bottom of
+    # base_context so it's adjacent to the focused context the LLM reads
+    # most carefully)
+    avail_block = _build_availability_block(availability)
+    if avail_block:
+        parts.append(avail_block)
 
     return "\n\n".join(parts)
 
@@ -224,6 +268,7 @@ async def generate_wire(
     standings = _load_json("standings.json") or []
     caps = _load_json("caps.json")
     schedule = _load_json("schedule.json")
+    availability = _load_json("availability.json")
 
     if not standings:
         console.print("  [yellow]Wire: no standings — skipping[/yellow]")
@@ -233,8 +278,10 @@ async def generate_wire(
     from pipeline.intel.tools import set_enrichment_conn
     set_enrichment_conn(conn)
 
-    # Build shared base context
-    base_context = _build_base_context(conn, season, standings, schedule)
+    # Build shared base context (includes injury/availability block)
+    base_context = _build_base_context(
+        conn, season, standings, schedule, availability
+    )
 
     # Drop already-completed matches so generators (esp. Preview) only see
     # fixtures that still need editorial coverage. Without this, the LLM
