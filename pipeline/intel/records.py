@@ -11,11 +11,11 @@ Usage:
 
 import json
 import re
-from datetime import date
 from typing import Any
 
 from rich.console import Console
 
+from pipeline.clock import today_ist_iso
 from pipeline.config import DATA_DIR
 from pipeline.intel.prompts import load_prompt
 from pipeline.intel.schemas import RecordsResponse
@@ -280,7 +280,7 @@ async def generate_records(season: str) -> dict | None:
     """Generate the record watchlist."""
     # Cache by date (daily refresh)
     cache = LLMCache()
-    today = date.today().isoformat()
+    today = today_ist_iso()
     cache_key = f"records_{today}"
 
     # Active player filter + franchise lookup runs on every path

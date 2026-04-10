@@ -7,10 +7,11 @@ hasn't changed.
 
 import asyncio
 import json
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 
 from rich.console import Console
 
+from pipeline.clock import today_ist_iso
 from pipeline.context import SyncContext
 from pipeline.models import ScheduleMatch
 from pipeline.writer import write_panel
@@ -29,7 +30,7 @@ def sync(ctx: SyncContext) -> None:
         return
 
     all_matches = json.loads(sched_path.read_text(encoding="utf-8"))
-    today_str = date.today().isoformat()
+    today_str = today_ist_iso()
 
     # Find next upcoming matches (scheduled/live, today or future)
     upcoming = [

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useWarRoomState } from "../../hooks/useWarRoom";
-import { asOfIST, isFresh } from "../helpers";
+import { isFresh, timeAgo } from "../helpers";
 import type { WRWireSource } from "../../types/war-room";
 
 const SOURCE_LABELS: Record<WRWireSource, string> = {
@@ -143,9 +143,7 @@ export function AIWirePanel() {
                   {fresh && (
                     <span className="wr-wire-fresh-dot" title="New (< 2h)" />
                   )}
-                  <span className="wr-wire-time">
-                    as of {asOfIST(item.generated_at)}
-                  </span>
+                  <span className="wr-wire-time">{timeAgo(item.generated_at)}</span>
                 </span>
               </div>
               {sev === "alarm" && (

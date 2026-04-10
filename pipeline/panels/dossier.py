@@ -1,10 +1,11 @@
 """Dossier panel — opposition scouting report (cool tier, match-day only)."""
 
 import asyncio
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 
 from rich.console import Console
 
+from pipeline.clock import today_ist_iso
 from pipeline.context import SyncContext
 from pipeline.writer import write_panel
 
@@ -16,7 +17,7 @@ def sync(ctx: SyncContext) -> None:
     if ctx.db_conn is None:
         return
 
-    today_str = date.today().isoformat()
+    today_str = today_ist_iso()
     today_scheduled = [
         m for m in ctx.today_matches
         if m.date == today_str and m.status in ("scheduled", "live")

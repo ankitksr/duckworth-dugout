@@ -23,6 +23,7 @@ import duckdb
 from rich.console import Console
 
 from pipeline.config import CRICKET_DB_PATH, DATA_DIR, MEGA_AUCTION_SEASON
+from pipeline.db.connection import connect_readonly
 from pipeline.intel.articles import retrieve_summaries_for_match
 from pipeline.intel.prompts import load_prompt
 from pipeline.intel.tools import execute_tool, get_tool_declarations
@@ -131,7 +132,7 @@ def _query_phase_stats(match: ScheduleMatch) -> dict[str, dict]:
     current_season = match.date[:4] if match.date else "2026"
     result: dict[str, dict] = {}
     try:
-        conn = duckdb.connect(str(CRICKET_DB_PATH), read_only=True)
+        conn = connect_readonly(CRICKET_DB_PATH)
 
         for fid in (match.team1, match.team2):
             names = _cricsheet_names(fid)
@@ -196,7 +197,7 @@ def _query_venue_stats(match: ScheduleMatch) -> dict:
     }
 
     try:
-        conn = duckdb.connect(str(CRICKET_DB_PATH), read_only=True)
+        conn = connect_readonly(CRICKET_DB_PATH)
 
         # ── Core averages (from innings join) ──
         row = conn.execute("""
@@ -623,7 +624,7 @@ def _query_h2h(match: ScheduleMatch) -> dict:
         return {"total": 0, f"{_short(match.team1)}_wins": 0, f"{_short(match.team2)}_wins": 0}
 
     try:
-        conn = duckdb.connect(str(CRICKET_DB_PATH), read_only=True)
+        conn = connect_readonly(CRICKET_DB_PATH)
         ph1 = ", ".join(["?"] * len(names1))
         ph2 = ", ".join(["?"] * len(names2))
         rows = conn.execute(f"""

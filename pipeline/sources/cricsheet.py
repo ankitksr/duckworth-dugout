@@ -8,6 +8,7 @@ import duckdb
 from rich.console import Console
 
 from pipeline.config import CRICKET_DB_PATH
+from pipeline.db.connection import connect_readonly
 from pipeline.ipl.franchise_metadata import IPL_FRANCHISES
 from pipeline.models import CapEntry, CapsData, StandingsRow
 
@@ -39,7 +40,7 @@ def _color(fid: str) -> str:
 
 
 def _connect() -> duckdb.DuckDBPyConnection:
-    return duckdb.connect(str(CRICKET_DB_PATH), read_only=True)
+    return connect_readonly(CRICKET_DB_PATH)
 
 
 def _parse_overs(overs: float | None) -> float:

@@ -8,10 +8,11 @@ import asyncio
 import json
 import re as _re
 from dataclasses import asdict
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 
 from rich.console import Console
 
+from pipeline.clock import today_ist_iso
 from pipeline.context import SyncContext
 from pipeline.writer import write_panel
 
@@ -20,7 +21,7 @@ console = Console()
 
 def sync(ctx: SyncContext) -> None:
     """Sync the Ticker panel."""
-    today_str = date.today().isoformat()
+    today_str = today_ist_iso()
     today_only = [
         m for m in ctx.today_matches
         if m.date == today_str

@@ -18,6 +18,7 @@ import duckdb
 from rich.console import Console
 
 from pipeline.config import CRICKET_DB_PATH, DATA_DIR
+from pipeline.db.connection import connect_readonly
 from pipeline.ipl.franchise_metadata import IPL_FRANCHISES
 
 console = Console()
@@ -28,7 +29,7 @@ _SHORT = {fid: d["short_name"] for fid, d in IPL_FRANCHISES.items() if not d.get
 
 
 def _connect() -> duckdb.DuckDBPyConnection:
-    return duckdb.connect(str(CRICKET_DB_PATH), read_only=True)
+    return connect_readonly(CRICKET_DB_PATH)
 
 
 def _player_like(name: str) -> str:
@@ -57,6 +58,15 @@ def _load_json(filename: str) -> Any:
 
 def _fid_short(fid: str) -> str:
     return _SHORT.get(fid, fid.upper())
+
+
+def _utc_iso(value: object) -> str:
+    if value is None:
+        return ""
+    if hasattr(value, "isoformat"):
+        text = value.isoformat()
+        return text.replace("+00:00", "Z")
+    return str(value)
 
 
 # ── Tool implementations ────────────────────────────────────────────
@@ -443,7 +453,7 @@ def search_articles(query: str, limit: int = 5) -> dict[str, Any]:
         rows = _enrichment_conn.execute(
             """
             SELECT source, title, coalesce(snippet, left(body, 300)) as excerpt,
-                   published::VARCHAR
+                   published
             FROM war_room_articles
             WHERE is_ipl = TRUE
               AND (title ILIKE ? OR coalesce(snippet, body, '') ILIKE ?)
@@ -466,7 +476,7 @@ def search_articles(query: str, limit: int = 5) -> dict[str, Any]:
                 "source": r[0],
                 "title": r[1],
                 "excerpt": (r[2] or "")[:400],
-                "published": r[3],
+                "published": _utc_iso(r[3]),
             }
             for r in rows
         ],

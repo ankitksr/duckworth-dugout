@@ -38,6 +38,8 @@ jobs:
   migrate:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      TZ: UTC
     steps:
       - uses: actions/checkout@v4
 

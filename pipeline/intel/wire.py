@@ -25,11 +25,12 @@ Usage:
 """
 
 import asyncio
-from datetime import date
+from datetime import datetime, timezone
 
 import duckdb
 from rich.console import Console
 
+from pipeline.clock import today_ist_iso
 from pipeline.intel.roster_context import summary as roster_summary
 from pipeline.intel.wire_generators import HASH_VERSION, GeneratorContext, _load_json
 from pipeline.intel.wire_generators.newsdesk import NewsDeskGenerator
@@ -65,7 +66,7 @@ def _build_base_context(
     if schedule:
         completed = sum(1 for m in schedule if m.get("status") == "completed")
         total = len(schedule)
-    today = date.today().isoformat()
+    today = today_ist_iso()
     parts.append(
         f"SEASON: IPL {season} | {completed}/{total} matches completed | TODAY: {today}"
     )
@@ -189,7 +190,7 @@ async def generate_wire(
 
     Returns all newly generated items.
     """
-    today_str = date.today().isoformat()
+    today_str = today_ist_iso()
 
     # Daily reset
     expired = _expire_previous_day(conn, season, today_str)
@@ -311,6 +312,32 @@ _MAX_CONSECUTIVE_SAME_SOURCE = 2
 _SEVERITY_ORDER = ("alarm", "alert", "signal")
 
 
+def _wire_generated_at_utc_iso(value: object) -> str:
+    """Serialize wire timestamps as explicit UTC ISO 8601.
+
+    The DuckDB column is a naive TIMESTAMP. Our DuckDB sessions are
+    standardized to UTC, so naive values here represent UTC wall time.
+    """
+    if value is None:
+        return ""
+
+    dt: datetime | None = None
+    if isinstance(value, datetime):
+        dt = value
+    elif isinstance(value, str):
+        try:
+            dt = datetime.fromisoformat(value.replace(" ", "T"))
+        except ValueError:
+            return value
+
+    if dt is None:
+        return str(value)
+
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
 def export_wire_json(
     conn: duckdb.DuckDBPyConnection,
     season: str,
@@ -332,7 +359,7 @@ def export_wire_json(
     rows = conn.execute(
         """
         SELECT headline, text, emoji, category, severity,
-               teams, generated_at::VARCHAR, match_day,
+               teams, generated_at, match_day,
                coalesce(source, 'wire') as source
         FROM war_room_wire
         WHERE season = ? AND expired = FALSE
@@ -364,7 +391,7 @@ def export_wire_json(
             "category": r[3],
             "severity": r[4],
             "teams": r[5] or [],
-            "generated_at": r[6],
+            "generated_at": _wire_generated_at_utc_iso(r[6]),
             "match_day": r[7],
             "source": r[8],
         }

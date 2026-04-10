@@ -6,10 +6,11 @@ preview, take) and aggregates their output into a single wire.json feed.
 
 import asyncio
 import json
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 
 from rich.console import Console
 
+from pipeline.clock import today_ist_iso
 from pipeline.context import SyncContext
 from pipeline.models import ScheduleMatch
 from pipeline.writer import write_panel
@@ -69,7 +70,7 @@ def sync(ctx: SyncContext, *, force: bool = False) -> None:
     if not today_matches:
         sched_path = ctx.public_dir / "schedule.json"
         if sched_path.exists():
-            today_str = date.today().isoformat()
+            today_str = today_ist_iso()
             for m in json.loads(sched_path.read_text(encoding="utf-8")):
                 if m.get("date") == today_str:
                     today_matches.append(ScheduleMatch.from_schedule_dict(m))

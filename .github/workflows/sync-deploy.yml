@@ -111,6 +111,8 @@ jobs:
   sync-and-deploy:
     needs: resolve
     runs-on: ubuntu-latest
+    env:
+      TZ: UTC
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}

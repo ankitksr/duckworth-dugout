@@ -11,7 +11,8 @@ import re
 
 from rich.console import Console
 
-from pipeline.config import DATA_DIR, ROOT_DIR
+from pipeline.config import CRICKET_DB_PATH, DATA_DIR, ROOT_DIR
+from pipeline.db.connection import connect_readonly
 from pipeline.ipl.franchise_metadata import IPL_FRANCHISES
 from pipeline.models import ScheduleMatch
 from pipeline.sources.feeds import FEEDS
@@ -81,12 +82,8 @@ def _short(fid: str) -> str:
 
 def _build_venue_city_map() -> dict[str, str]:
     """Query Cricsheet venues table for venue_name → city mapping."""
-    import duckdb
-
-    from pipeline.config import CRICKET_DB_PATH
-
     try:
-        conn = duckdb.connect(str(CRICKET_DB_PATH), read_only=True)
+        conn = connect_readonly(CRICKET_DB_PATH)
         rows = conn.execute(
             "SELECT DISTINCT name, city FROM venues WHERE city IS NOT NULL"
         ).fetchall()

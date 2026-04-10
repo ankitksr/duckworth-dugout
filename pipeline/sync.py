@@ -9,11 +9,12 @@ Usage (via __main__.py):
 
 import importlib
 import json
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 
 from rich.console import Console
 from rich.panel import Panel as RichPanel
 
+from pipeline.clock import today_ist_iso
 from pipeline.config import DATA_DIR, ROOT_DIR
 from pipeline.context import SyncContext
 from pipeline.panels import PANEL_ORDER, resolve_panels
@@ -92,7 +93,7 @@ def sync_tiers(
             if sched_path.exists():
                 from pipeline.models import ScheduleMatch
 
-                today_str = date.today().isoformat()
+                today_str = today_ist_iso()
                 for m in json.loads(sched_path.read_text(encoding="utf-8")):
                     if m.get("date") == today_str:
                         ctx.today_matches.append(

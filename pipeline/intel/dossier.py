@@ -12,13 +12,14 @@ Usage:
 
 import json
 import re
-from datetime import date
 from typing import Any
 
 import duckdb
 from rich.console import Console
 
+from pipeline.clock import today_ist_iso
 from pipeline.config import CRICKET_DB_PATH, DATA_DIR
+from pipeline.db.connection import connect_readonly
 from pipeline.intel.articles import retrieve_summaries_for_team
 from pipeline.intel.prompts import load_prompt
 from pipeline.intel.tools import execute_tool, get_tool_declarations
@@ -98,7 +99,7 @@ def _query_team_batting_profile(
 
     parts: list[str] = []
     try:
-        conn = duckdb.connect(str(CRICKET_DB_PATH), read_only=True)
+        conn = connect_readonly(CRICKET_DB_PATH)
 
         if squad_ids:
             # Squad-filtered: career IPL stats across all teams
@@ -206,7 +207,7 @@ def _query_team_bowling_profile(
 
     parts: list[str] = []
     try:
-        conn = duckdb.connect(str(CRICKET_DB_PATH), read_only=True)
+        conn = connect_readonly(CRICKET_DB_PATH)
 
         if squad_ids:
             placeholders = ", ".join(["?"] * len(squad_ids))
@@ -342,7 +343,7 @@ async def generate_dossier(
     """
     cache = LLMCache()
     # Include today's date so dossier refreshes daily with new match data
-    cache_key = f"dossier_{perspective}_{opponent}_{season}_{date.today().isoformat()}"
+    cache_key = f"dossier_{perspective}_{opponent}_{season}_{today_ist_iso()}"
 
     cached = cache.get(_CACHE_TASK, cache_key)
     if cached and cached.get("parsed"):

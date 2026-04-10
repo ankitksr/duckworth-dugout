@@ -15,11 +15,11 @@ Usage:
 import hashlib
 import json
 import re
-from datetime import date
 from typing import Any
 
 from rich.console import Console
 
+from pipeline.clock import today_ist_iso
 from pipeline.config import DATA_DIR
 from pipeline.intel.prompts import load_prompt
 from pipeline.intel.schemas import TickerItemResponse
@@ -256,7 +256,7 @@ def _build_season_context(
             parts.append("RECENT RESULTS:\n" + "\n".join(lines))
 
         # Today's/upcoming matches
-        today_str = date.today().isoformat()
+        today_str = today_ist_iso()
         upcoming = [
             m for m in schedule
             if m.get("status") == "scheduled" and m["date"] >= today_str

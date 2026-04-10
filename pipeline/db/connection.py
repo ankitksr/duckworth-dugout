@@ -18,8 +18,16 @@ def get_connection() -> duckdb.DuckDBPyConnection:
     """Get a DuckDB connection to the enrichment DB with cricket.duckdb attached."""
     ENRICHMENT_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = duckdb.connect(str(ENRICHMENT_DB_PATH))
+    _configure_connection(conn)
     _attach_cricket_db(conn)
     init_db(conn)
+    return conn
+
+
+def connect_readonly(path: str | Path) -> duckdb.DuckDBPyConnection:
+    """Open a read-only DuckDB connection with UTC session timezone."""
+    conn = duckdb.connect(str(path), read_only=True)
+    _configure_connection(conn)
     return conn
 
 
@@ -44,6 +52,11 @@ def _attach_cricket_db(conn: duckdb.DuckDBPyConnection) -> None:
     ).fetchone()
     if not attached:
         conn.execute(f"ATTACH '{CRICKET_DB_PATH}' AS cricket (READ_ONLY)")
+
+
+def _configure_connection(conn: duckdb.DuckDBPyConnection) -> None:
+    """Standardize all session-level time operations to UTC."""
+    conn.execute("SET TimeZone = 'UTC'")
 
 
 def preflight_check(conn: duckdb.DuckDBPyConnection) -> int:

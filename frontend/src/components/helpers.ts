@@ -2,8 +2,18 @@ import type { WRFixture, WRFormEntry, WRMatchup } from "../types/war-room";
 
 // ── Time formatting ──
 
+const IST_OFFSET_MS = 5.5 * 3600000;
+
+function parseTimestamp(iso: string): Date | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 export function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
+  const d = parseTimestamp(iso);
+  if (!d) return "";
+  const diff = Date.now() - d.getTime();
   const mins = Math.floor(diff / 60_000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
@@ -14,23 +24,23 @@ export function timeAgo(iso: string): string {
 }
 
 export function asOfIST(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  const ist = new Date(d.getTime() + 5.5 * 3600000);
+  const d = parseTimestamp(iso);
+  if (!d) return "";
+  const ist = new Date(d.getTime() + IST_OFFSET_MS);
   const hh = String(ist.getUTCHours()).padStart(2, "0");
   const mm = String(ist.getUTCMinutes()).padStart(2, "0");
-  return `${hh}:${mm}`;
+  return `${hh}:${mm} IST`;
 }
 
 export function isFresh(iso: string, hours = 2): boolean {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return false;
+  const d = parseTimestamp(iso);
+  if (!d) return false;
   return Date.now() - d.getTime() < hours * 3600_000;
 }
 
 export function istClock(): string {
   const now = new Date();
-  const ist = new Date(now.getTime() + 5.5 * 3600000);
+  const ist = new Date(now.getTime() + IST_OFFSET_MS);
   return [ist.getUTCHours(), ist.getUTCMinutes(), ist.getUTCSeconds()]
     .map((v) => String(v).padStart(2, "0"))
     .join(":") + " IST";

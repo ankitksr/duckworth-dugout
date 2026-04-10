@@ -13,11 +13,11 @@ Usage:
 import hashlib
 import json
 import re
-from datetime import date
 from typing import Any
 
 from rich.console import Console
 
+from pipeline.clock import today_ist_iso
 from pipeline.config import DATA_DIR
 from pipeline.intel.prompts import load_prompt
 from pipeline.intel.schemas import ScenariosResponse
@@ -92,7 +92,7 @@ async def generate_scenarios(season: str) -> dict | None:
         )
     standings_text = "\n".join(standings_lines)
 
-    today_str = date.today().isoformat()
+    today_str = today_ist_iso()
     upcoming = [
         m for m in schedule
         if m.get("status") in ("scheduled", "live")
