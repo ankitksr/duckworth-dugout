@@ -1,92 +1,383 @@
-/* ── Briefing ── */
+/* ═══════════════════════════════════════════════════════════
+   Briefing tab system — atom-based design language
+   ───────────────────────────────────────────────────────────
+   Five atoms cover every tab in the briefing panel:
+
+     .wr-br-section   section container (label + content)
+     .wr-br-card      bordered card (neutral or team-tinted)
+     .wr-br-row       aligned grid row (badge | primary | trailing)
+     .wr-br-metric    stacked value/label block
+     .wr-br-cols      main+sidebar 2-column grid
+     .wr-br-stack     vertical stack with consistent gap
+
+   Plus a small set of inline pieces (form dots, double-header
+   pills, mood symbols) that don't justify their own atom but
+   are reused across tabs and need to stay consistent.
+
+   No left accent bars. Team color appears as a subtle background
+   tint only on cards explicitly keyed to one team (Form, Edge
+   "FAVOURED", Standings Swing). Everything else is neutral.
+   ═══════════════════════════════════════════════════════════ */
 
 .wr-br { padding: 0; }
 .wr-br-shell .wr-br { padding-top: 10px; }
 .wr-br-shell .wr-br + .wr-br { border-top: 1px solid var(--wr-b1); }
 
-/* Two-column grid: main (editorial) + sidebar (context) */
-.wr-br-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.9fr);
-  gap: 0;
-  min-height: 0;
-}
-.wr-br-main {
-  border-right: 1px solid var(--wr-b1);
-  min-width: 0;
-}
-.wr-br-sidebar {
-  min-width: 0;
-}
-@media (max-width: 1000px) {
-  .wr-br-grid { grid-template-columns: 1fr; }
-  .wr-br-main { border-right: none; }
-  .wr-br-matchup-summary { grid-template-columns: 1fr; }
-}
 
-/* ── Fact cards (venue stats, etc.) ── */
-.wr-br-facts {
+/* ── Layout primitives ────────────────────────────────────── */
+
+/* Two-column main+sidebar grid. Used by Edge, Form, Venue.
+   Collapses to single column under 600px container width. */
+.wr-br-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.9fr);
+  gap: 12px;
+  padding: 10px 12px 12px;
+}
+.wr-br-cols > * { min-width: 0; }
+
+/* Vertical stack with rhythm. Used inside cards/sections. */
+.wr-br-stack {
   display: grid;
   gap: 8px;
 }
-.wr-br-fact {
+.wr-br-stack-tight { gap: 4px; }
+
+/* Auto-fit card grid — used by Matchups and Form to spread cards
+   across the available width without manual column splitting. Two
+   cards on desktop, single column on narrow widths. */
+.wr-br-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 8px;
+  padding: 10px 12px 12px;
+}
+
+
+/* ── Section ──────────────────────────────────────────────── */
+/* Top-level section: label + (optional aside) + content stack. */
+
+.wr-br-section {
+  padding: 0;
+}
+.wr-br-section + .wr-br-section {
+  margin-top: 12px;
+}
+
+.wr-br-section-hd {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 11px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.04);
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 6px;
 }
-.wr-br-fact.accent {
-  background: rgba(253, 185, 19, 0.08);
-  border-color: rgba(253, 185, 19, 0.2);
-}
-.wr-br-fact.good {
-  background: rgba(0, 230, 118, 0.08);
-  border-color: rgba(0, 230, 118, 0.14);
-}
-.wr-br-fact.warn {
-  background: rgba(43, 188, 224, 0.08);
-  border-color: rgba(43, 188, 224, 0.14);
-}
-.wr-br-fact-label {
-  font: 600 7px 'JetBrains Mono', monospace;
+
+.wr-br-label {
+  font: 600 9px 'JetBrains Mono', monospace;
   letter-spacing: 1.4px;
   text-transform: uppercase;
   color: var(--wr-tm);
-}
-.wr-br-fact-value {
-  font: 700 16px 'Anybody', sans-serif;
-  line-height: 1;
-  color: var(--wr-t);
-}
-.wr-br-matchup-summary {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-bottom: 10px;
-}
-.wr-br-fact-detail {
-  font: 400 10.5px 'Inter', sans-serif;
-  line-height: 1.45;
-  color: var(--wr-t3);
+  flex-shrink: 0;
 }
 
-/* ── W/L dots ── */
+.wr-br-count {
+  font: 500 8px 'JetBrains Mono', monospace;
+  color: var(--wr-tm);
+  opacity: 0.6;
+  letter-spacing: 0.6px;
+}
+
+.wr-br-section-aside {
+  margin-left: auto;
+  font: 500 8px 'JetBrains Mono', monospace;
+  color: var(--wr-tm);
+  letter-spacing: 0.5px;
+}
+
+
+/* ── Card ─────────────────────────────────────────────────── */
+/* Bordered surface — neutral by default. Team variant tints
+   the background subtly using color-mix on the team CSS var.   */
+
+.wr-br-card {
+  position: relative;
+  padding: 12px 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+    var(--wr-s2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+}
+.wr-br-card + .wr-br-card { margin-top: 8px; }
+
+.wr-br-card-hd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.wr-br-card-hd .wr-br-label { margin: 0; }
+.wr-br-card-hd-aside {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wr-br-card-body {
+  font: 400 12px 'Inter', sans-serif;
+  color: var(--wr-t);
+  line-height: 1.6;
+}
+
+.wr-br-card-foot {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  font: 400 11px 'Inter', sans-serif;
+  color: var(--wr-t2);
+  line-height: 1.55;
+}
+
+/* Team-tinted card variant — applied via inline style for the
+   tint color since team vars are dynamic. The base atom only
+   sets the structural rules; the tint is composed at the JSX
+   layer with style={{ background: ... }}. */
+.wr-br-card.team {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+
+/* ── Row ──────────────────────────────────────────────────── */
+/* Aligned 3-column row: leading | primary | trailing.
+   Replaces venue-record, squad-news item, stake, link-card.    */
+
+.wr-br-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s;
+}
+.wr-br-row:last-child { border-bottom: none; }
+.wr-br-row:hover { background: rgba(255, 255, 255, 0.025); }
+
+.wr-br-row-lead {
+  font: 700 10px 'Anybody', sans-serif;
+  letter-spacing: 0.5px;
+  color: var(--wr-t2);
+  white-space: nowrap;
+}
+
+.wr-br-row-main {
+  font: 500 12px 'Inter', sans-serif;
+  color: var(--wr-t);
+  line-height: 1.45;
+  min-width: 0;
+}
+.wr-br-row-main strong {
+  font-weight: 700;
+}
+.wr-br-row-sub {
+  display: block;
+  font: 400 10px 'JetBrains Mono', monospace;
+  color: var(--wr-t3);
+  letter-spacing: 0.3px;
+  margin-top: 2px;
+}
+
+.wr-br-row-trail {
+  font: 600 10px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+  letter-spacing: 0.4px;
+  text-align: right;
+  white-space: nowrap;
+}
+.wr-br-row-trail strong { color: var(--wr-t); font-weight: 700; }
+.wr-br-row-trail .muted {
+  color: var(--wr-tm);
+  font-size: 9px;
+  margin-left: 4px;
+}
+
+
+/* ── Metric ───────────────────────────────────────────────── */
+/* Stacked value over label, used in metric grids. */
+
+.wr-br-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+}
+
+.wr-br-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  background: var(--wr-s2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+.wr-br-metric-value {
+  font: 800 17px 'Anybody', sans-serif;
+  color: var(--wr-t);
+  line-height: 1;
+}
+.wr-br-metric-label {
+  font: 600 7px 'JetBrains Mono', monospace;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  color: var(--wr-tm);
+}
+.wr-br-metric-detail {
+  font: 400 10px 'Inter', sans-serif;
+  color: var(--wr-t3);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+
+/* ── Inline pieces (shared across atoms) ─────────────────── */
+
+/* W/L form dots — used in hero strip + form tab + rows */
 .wr-br-mh-dots {
   display: flex;
   gap: 3px;
-  margin-top: 1px;
+  align-items: center;
 }
 .wr-br-fo-dot {
   width: 7px;
   height: 7px;
   border-radius: 1px;
+  flex-shrink: 0;
 }
 .wr-br-fo-dot.w { background: var(--wr-win); }
 .wr-br-fo-dot.l { background: var(--wr-loss); opacity: 0.7; }
 .wr-br-fo-dot.nr { background: var(--wr-tm); opacity: 0.5; }
 
-/* ── Double-header match pills (inline in panel header) ── */
+/* Edge badge — used in match-edge card header */
+.wr-br-edge-badge {
+  font: 700 7px 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+  padding: 2px 7px;
+  border-radius: 1px;
+  color: #0a0b0e;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.wr-br-edge-badge.even {
+  background: var(--wr-tm);
+  color: var(--wr-t);
+}
+
+/* Form mood symbol — rising/falling/steady */
+.wr-br-form-mood {
+  font: 700 9px 'JetBrains Mono', monospace;
+}
+.wr-br-form-mood.rising  { color: var(--wr-win); }
+.wr-br-form-mood.falling { color: var(--wr-loss); }
+.wr-br-form-mood.steady  { color: var(--wr-tm); }
+.wr-br-form-pos {
+  font: 600 8px 'JetBrains Mono', monospace;
+  color: var(--wr-tm);
+  margin-left: auto;
+}
+
+/* Form team name — large display name in form-tab card header */
+.wr-br-form-name {
+  font: 800 16px 'Anybody', sans-serif;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+.wr-br-form-stats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+  font: 600 10px 'JetBrains Mono', monospace;
+  color: var(--wr-tm);
+  letter-spacing: 0.4px;
+}
+.wr-br-form-stats strong { color: var(--wr-t2); font-weight: 700; }
+.wr-br-form-stats strong.up   { color: var(--wr-win); }
+.wr-br-form-stats strong.down { color: var(--wr-loss); }
+
+/* Matchup player names + cross — used in Matchups tab card headers */
+.wr-br-mu-player {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font: 700 12px 'Anybody', sans-serif;
+  letter-spacing: 0.3px;
+  line-height: 1.15;
+  flex: 1;
+  min-width: 0;
+}
+.wr-br-mu-player.right { align-items: flex-end; text-align: right; }
+.wr-br-mu-player small {
+  font: 500 7px 'JetBrains Mono', monospace;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--wr-tm);
+}
+.wr-br-mu-x {
+  font: 600 14px 'Anybody', sans-serif;
+  color: var(--wr-tm);
+  flex-shrink: 0;
+  padding: 0 4px;
+}
+
+/* Venue defend row — paired safe/danger thresholds */
+.wr-br-defend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font: 600 9px 'JetBrains Mono', monospace;
+  letter-spacing: 0.4px;
+}
+.wr-br-defend-good { color: var(--wr-win); }
+.wr-br-defend-bad  { color: var(--wr-loss); opacity: 0.85; }
+
+/* Inline label + chip strip (e.g. "1ST INN · LAST 5  ▢ ▢ ▢ ▢ ▢") */
+.wr-br-chips-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wr-br-chips-label {
+  font: 600 7px 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--wr-tm);
+}
+
+/* Score chips for venue last-5 readings */
+.wr-br-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+.wr-br-chip {
+  font: 600 10px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+  padding: 3px 7px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 2px;
+}
+.wr-br-chip.high { color: var(--wr-win); background: rgba(0, 230, 118, 0.08); }
+.wr-br-chip.low  { color: var(--wr-loss); background: rgba(255, 61, 81, 0.08); }
+
+
+/* ── Double-header match pills (in panel header) ─────────── */
+
 .wr-br-match-pills {
   display: inline-flex;
   gap: 3px;
@@ -103,327 +394,24 @@
   color: var(--wr-t3);
   cursor: pointer;
 }
-.wr-br-match-pill:hover { color: var(--wr-t2); background: rgba(255,255,255,0.04); }
+.wr-br-match-pill:hover { color: var(--wr-t2); background: rgba(255, 255, 255, 0.04); }
 .wr-br-match-pill.on {
   background: var(--wr-brand);
   color: #0a0b0e;
   border-color: var(--wr-brand);
 }
 
-/* ── Venue Intel (defend thresholds + last 5) ── */
-.wr-br-venue-intel {
-  padding: 10px 18px 4px;
-}
-.wr-br-defend-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font: 500 10px 'JetBrains Mono', monospace;
-  letter-spacing: 0.3px;
-  margin-bottom: 2px;
-}
-.wr-br-defend-safe { color: var(--wr-win); }
-.wr-br-defend-sep { color: var(--wr-tm); }
-.wr-br-defend-danger { color: var(--wr-loss); opacity: 0.8; }
-.wr-br-last5 {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-}
-.wr-br-last5-label {
-  font: 600 7.5px 'JetBrains Mono', monospace;
-  letter-spacing: 1px;
-  color: var(--wr-tm);
-  margin-right: 4px;
-}
-.wr-br-last5-score {
-  font: 600 11px 'JetBrains Mono', monospace;
-  color: var(--wr-t2);
-  padding: 3px 7px;
-  background: rgba(255,255,255,0.04);
-  border-radius: 2px;
-}
-.wr-br-last5-score.high { color: var(--wr-win); background: rgba(0,230,118,0.08); }
-.wr-br-last5-score.low  { color: var(--wr-loss); background: rgba(255,61,81,0.08); }
 
-.wr-br-ground-note {
-  font: 400 11.5px 'Inter', sans-serif;
-  color: var(--wr-t2);
-  line-height: 1.7;
-  padding: 0 18px;
-}
+/* ── Phase stats grid (Form tab — kept as-is) ─────────────── */
+/* Reused from briefing-panel.css; styles live there. */
 
-/* ── Team Venue Records ── */
-.wr-br-venue-records {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 0 14px;
-}
-.wr-br-venue-record {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 5px 8px;
-  border-left: 3px solid var(--wr-tm);
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 0 2px 2px 0;
-}
-.wr-br-venue-record-team {
-  font: 700 10px 'Anybody', sans-serif;
-  letter-spacing: 0.5px;
-}
-.wr-br-venue-record-stat {
-  font: 500 10px 'JetBrains Mono', monospace;
-  color: var(--wr-t2);
-  letter-spacing: 0.3px;
-}
-.wr-br-venue-record-stat strong {
-  color: var(--wr-t);
-}
-.wr-br-venue-record-pct {
-  color: var(--wr-tm);
-  margin-left: 3px;
-  font-size: 8px;
-}
 
-/* ── Section blocks ── */
-.wr-br-section {
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--wr-b1);
-}
-.wr-br-label {
-  font: 600 8px 'JetBrains Mono', monospace;
-  letter-spacing: 1.4px;
-  text-transform: uppercase;
-  color: var(--wr-t3);
-  margin-bottom: 8px;
-  padding-left: 8px;
-  border-left: 2px solid var(--wr-brand);
-}
-.wr-br-via {
-  font-weight: 400;
-  opacity: 0.5;
-  margin-left: 4px;
-}
+/* ── Container collapse: single column under 600px ───────── */
 
-/* ── Tactical Edge with favoured badge ── */
-.wr-br-edge {
-  margin: 10px 14px 0;
-  padding: 10px 12px 12px 14px;
-  background: #0e1528;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-left: 3px solid var(--wr-win);
-  border-radius: 2px;
+@container briefing (max-width: 600px) {
+  .wr-br-cols {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 8px 10px 10px;
+  }
 }
-.wr-br-edge-hd {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 7px;
-}
-.wr-br-edge-label {
-  font: 600 8px 'JetBrains Mono', monospace;
-  letter-spacing: 1.3px;
-  text-transform: uppercase;
-  color: var(--wr-t3);
-}
-.wr-br-edge-badge {
-  font: 700 7px 'JetBrains Mono', monospace;
-  letter-spacing: 1px;
-  padding: 2px 6px;
-  border-radius: 1px;
-  color: #0a0b0e;
-}
-.wr-br-edge-badge.even {
-  background: var(--wr-tm);
-  color: var(--wr-t);
-}
-.wr-br-edge-text {
-  font: 400 11.5px 'Inter', sans-serif;
-  color: var(--wr-t);
-  line-height: 1.6;
-}
-
-/* ── Form mood indicators (shared with wr-bp-form) ── */
-.wr-br-form-mood {
-  font: 700 9px 'JetBrains Mono', monospace;
-  margin-left: auto;
-  margin-right: 4px;
-}
-.wr-br-form-mood.rising  { color: var(--wr-win); }
-.wr-br-form-mood.falling { color: var(--wr-loss); }
-.wr-br-form-mood.steady  { color: var(--wr-tm); }
-.wr-br-form-pos {
-  font: 600 8px 'JetBrains Mono', monospace;
-  color: var(--wr-tm);
-}
-
-/* ── Battle Cards (structured matchups) ── */
-.wr-br-battle-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-}
-@media (max-width: 700px) {
-  .wr-br-battle-grid { grid-template-columns: 1fr; }
-}
-.wr-br-battle {
-  display: flex;
-  gap: 8px;
-  padding: 7px 9px;
-  background: var(--wr-s2);
-  border: 1px solid var(--wr-b1);
-  border-radius: 2px;
-}
-.wr-br-battle-num {
-  flex-shrink: 0;
-  font: 700 11px 'JetBrains Mono', monospace;
-  color: var(--wr-brand);
-  opacity: 0.5;
-  min-width: 14px;
-  padding-top: 2px;
-}
-.wr-br-battle-body { flex: 1; min-width: 0; }
-.wr-br-battle-players {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-.wr-br-battle-side {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.wr-br-battle-side.right {
-  align-items: flex-end;
-  text-align: right;
-}
-.wr-br-battle-name {
-  font: 700 11px 'Anybody', sans-serif;
-  letter-spacing: 0.3px;
-  line-height: 1.2;
-}
-.wr-br-battle-role {
-  font: 500 7px 'JetBrains Mono', monospace;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  color: var(--wr-tm);
-}
-.wr-br-battle-x {
-  font: 600 16px 'Anybody', sans-serif;
-  color: var(--wr-brand);
-  opacity: 0.6;
-  flex-shrink: 0;
-  padding-top: 1px;
-}
-.wr-br-battle-insight {
-  font: 400 10.5px 'Inter', sans-serif;
-  color: var(--wr-t2);
-  line-height: 1.55;
-  margin-top: 6px;
-  padding-top: 6px;
-  border-top: 1px solid rgba(255,255,255,0.04);
-}
-
-/* Legacy matchup fallback */
-.wr-br-matchup {
-  padding: 8px 10px;
-  margin-bottom: 4px;
-  background: var(--wr-s2);
-  border: 1px solid var(--wr-b1);
-  border-left: 2px solid var(--wr-brand);
-  border-radius: 2px;
-}
-.wr-br-matchup:last-child { margin-bottom: 0; }
-.wr-br-mu-name {
-  font: 700 11px 'Anybody', sans-serif;
-  color: var(--wr-brand);
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
-}
-.wr-br-mu-insight {
-  font: 400 10.5px 'Inter', sans-serif;
-  color: var(--wr-t2);
-  line-height: 1.55;
-}
-
-/* ── Squad intel items ── */
-.wr-br-item {
-  font: 400 11px 'Inter', sans-serif;
-  color: var(--wr-t2);
-  line-height: 1.6;
-  padding: 5px 0 5px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
-  position: relative;
-}
-.wr-br-item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 11px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--wr-brand);
-  opacity: 0.55;
-}
-.wr-br-item:last-child { border-bottom: none; }
-
-/* ── Tonight's Stakes ── */
-.wr-br-stake {
-  padding: 6px 8px;
-  margin-bottom: 3px;
-  background: rgba(255, 255, 255, 0.045);
-  border-left: 3px solid var(--tc, var(--wr-b2));
-  border-radius: 1px;
-}
-.wr-br-stake-team {
-  font: 700 9.5px 'JetBrains Mono', monospace;
-  letter-spacing: 0.5px;
-  margin-bottom: 3px;
-}
-.wr-br-stake-impact {
-  font: 400 10px 'Inter', sans-serif;
-  color: var(--wr-t3);
-  line-height: 1.5;
-}
-
-/* ── Preview Link Cards ── */
-.wr-br-links { padding-bottom: 12px; }
-.wr-br-link-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 7px 10px;
-  margin-bottom: 3px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--wr-b1);
-  border-radius: 2px;
-  text-decoration: none;
-  transition: all 0.15s;
-}
-.wr-br-link-card:last-child { margin-bottom: 0; }
-.wr-br-link-card:hover {
-  background: rgba(255,255,255,0.07);
-  border-color: var(--wr-b2);
-}
-.wr-br-link-title {
-  font: 500 10px 'Inter', sans-serif;
-  color: var(--wr-t2);
-  line-height: 1.4;
-  flex: 1;
-  min-width: 0;
-}
-.wr-br-link-card:hover .wr-br-link-title { color: var(--wr-t); }
-.wr-br-link-arrow {
-  font-size: 12px;
-  color: var(--wr-tm);
-  flex-shrink: 0;
-}
-.wr-br-link-card:hover .wr-br-link-arrow { color: var(--wr-brand); }

@@ -25,6 +25,12 @@ function nrrFmt(nrr: number | string): string {
 
 // ── Venue Intel (defend thresholds + last 5 first-innings scores) ──
 
+// Helper: build a subtle team-tinted gradient over the card body color.
+// Used by Edge (favoured), Standings Swing, Form team cards.
+function teamTint(lower: string): string {
+  return `linear-gradient(180deg, color-mix(in srgb, var(--${lower}) 8%, transparent), color-mix(in srgb, var(--${lower}) 2%, transparent)), var(--wr-s2)`;
+}
+
 function VenueIntel({ vs }: { vs: WRVenueStats }) {
   const d180 = vs.defend_180_pct;
   const dUnder = vs.defend_under_160_pct;
@@ -32,29 +38,31 @@ function VenueIntel({ vs }: { vs: WRVenueStats }) {
   const last5_2nd = vs.last_5_2nd_inn;
   if (d180 == null && !last5?.length && !last5_2nd?.length) return null;
 
+  const chipClass = (s: number) =>
+    `wr-br-chip${s >= 180 ? " high" : s < 150 ? " low" : ""}`;
+
   return (
-    <div className="wr-br-venue-intel">
+    <div className="wr-br-stack wr-br-stack-tight">
       {d180 != null && dUnder != null && (
-        <div className="wr-br-defend-row">
-          <span className="wr-br-defend-safe">180+ defended {d180}%</span>
-          <span className="wr-br-defend-sep">&middot;</span>
-          <span className="wr-br-defend-danger">&lt;160 defended {dUnder}%</span>
+        <div className="wr-br-defend">
+          <span className="wr-br-defend-good">180+ DEFENDED {d180}%</span>
+          <span className="wr-br-defend-bad">&lt;160 DEFENDED {dUnder}%</span>
         </div>
       )}
       {last5 && last5.length > 0 && (
-        <div className="wr-br-last5">
-          <span className="wr-br-last5-label">1ST INN &middot; LAST 5</span>
-          {last5.map((s, i) => (
-            <span key={i} className={`wr-br-last5-score${s >= 180 ? " high" : s < 150 ? " low" : ""}`}>{s}</span>
-          ))}
+        <div className="wr-br-chips-row">
+          <span className="wr-br-chips-label">1ST INN &middot; LAST 5</span>
+          <div className="wr-br-chips">
+            {last5.map((s, i) => <span key={i} className={chipClass(s)}>{s}</span>)}
+          </div>
         </div>
       )}
       {last5_2nd && last5_2nd.length > 0 && (
-        <div className="wr-br-last5">
-          <span className="wr-br-last5-label">2ND INN &middot; LAST 5</span>
-          {last5_2nd.map((s, i) => (
-            <span key={i} className={`wr-br-last5-score${s >= 180 ? " high" : s < 150 ? " low" : ""}`}>{s}</span>
-          ))}
+        <div className="wr-br-chips-row">
+          <span className="wr-br-chips-label">2ND INN &middot; LAST 5</span>
+          <div className="wr-br-chips">
+            {last5_2nd.map((s, i) => <span key={i} className={chipClass(s)}>{s}</span>)}
+          </div>
         </div>
       )}
     </div>
@@ -200,94 +208,126 @@ function EdgeTab({ briefing, ifTonight }: {
   const t2Wins = h2h ? (h2h[`${t2}_wins`] as number ?? 0) : 0;
   const h2hTotal = h2h?.total ?? (t1Wins + t2Wins);
 
+  const teamFavoured = favoured && favoured !== "even";
+
   return (
-    <div className="wr-bp-edge-wrap">
-      <div className="wr-bp-edge-grid">
-        {/* Left: match edge card + H2H card stacked */}
-        <div className="wr-bp-edge-col">
-          <div className="wr-bp-edge-card">
-            <div className="wr-br-edge-hd">
-              <span className="wr-br-edge-label">Match Edge</span>
-              {favoured && favoured !== "even" && (
-                <span className="wr-br-edge-badge" style={{ background: `var(--${favouredLower})` }}>
-                  {favoured} FAVOURED
-                </span>
-              )}
-              {favoured === "even" && (
-                <span className="wr-br-edge-badge even">EVEN CONTEST</span>
-              )}
-            </div>
-            {briefing.tactical_edge && (
-              <div className="wr-br-edge-text">{briefing.tactical_edge}</div>
+    <div className="wr-br-cols">
+      {/* Main column: Match Edge + Head to Head cards */}
+      <div className="wr-br-stack">
+        <div
+          className={`wr-br-card${teamFavoured ? " team" : ""}`}
+          style={teamFavoured ? { background: teamTint(favouredLower) } : undefined}
+        >
+          <div className="wr-br-card-hd">
+            <span className="wr-br-label">Match Edge</span>
+            {teamFavoured && (
+              <span className="wr-br-edge-badge" style={{ background: `var(--${favouredLower})` }}>
+                {favoured} FAVOURED
+              </span>
+            )}
+            {favoured === "even" && (
+              <span className="wr-br-edge-badge even">EVEN CONTEST</span>
             )}
           </div>
-
-          {h2hNote && (
-            <div className="wr-bp-h2h-card">
-              <div className="wr-br-edge-hd">
-                <span className="wr-br-edge-label">Head to Head</span>
-                {h2hTotal > 0 && (
-                  <span className="wr-bp-h2h-score">
-                    <span style={{ color: `var(--${t1L})` }}>{t1} {t1Wins}</span>
-                    <span className="wr-bp-h2h-sep">&ndash;</span>
-                    <span style={{ color: `var(--${t2L})` }}>{t2Wins} {t2}</span>
-                  </span>
-                )}
-              </div>
-              <div className="wr-bp-h2h-note">{h2hNote}</div>
-            </div>
+          {briefing.tactical_edge && (
+            <div className="wr-br-card-body">{briefing.tactical_edge}</div>
           )}
         </div>
 
-        {/* Right: standings swing — standalone */}
-        <div className="wr-bp-edge-aside">
-          <div className="wr-br-label">Standings Swing</div>
-          {ifTonight && ifTonight.scenarios.length >= 2 ? (
-            ifTonight.scenarios.slice(0, 2).map((s, i) => {
+        {h2hNote && (
+          <div className="wr-br-card">
+            <div className="wr-br-card-hd">
+              <span className="wr-br-label">Head to Head</span>
+              {h2hTotal > 0 && (
+                <span className="wr-br-card-hd-aside" style={{ font: "700 9px 'JetBrains Mono', monospace", letterSpacing: "0.5px" }}>
+                  <span style={{ color: `var(--${t1L})` }}>{t1} {t1Wins}</span>
+                  <span style={{ color: "var(--wr-tm)" }}>&ndash;</span>
+                  <span style={{ color: `var(--${t2L})` }}>{t2Wins} {t2}</span>
+                </span>
+              )}
+            </div>
+            <div className="wr-br-card-body">{h2hNote}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Sidebar column: Standings Swing — two team-tinted cards */}
+      <div className="wr-br-section">
+        <div className="wr-br-section-hd">
+          <span className="wr-br-label">Standings Swing</span>
+        </div>
+        {ifTonight && ifTonight.scenarios.length >= 2 ? (
+          <div className="wr-br-stack">
+            {ifTonight.scenarios.slice(0, 2).map((s, i) => {
               const isT1 = s.result.toLowerCase().includes(t1L);
               const winTeam = isT1 ? t1 : t2;
               const teamVar = isT1 ? t1L : t2L;
               return (
-                <div key={i} className="wr-br-stake" style={{ ["--tc" as string]: `var(--${teamVar})` }}>
-                  <div className="wr-br-stake-team" style={{ color: `var(--${teamVar})` }}>{winTeam} win</div>
-                  <div className="wr-br-stake-impact">{s.impact}</div>
+                <div key={i} className="wr-br-card team" style={{ background: teamTint(teamVar) }}>
+                  <div className="wr-br-card-hd">
+                    <span className="wr-br-label" style={{ color: `var(--${teamVar})` }}>
+                      {winTeam} WIN
+                    </span>
+                  </div>
+                  <div className="wr-br-card-body">{s.impact}</div>
                 </div>
               );
-            })
-          ) : (
-            <div className="wr-empty">No standings scenarios available</div>
-          )}
-        </div>
+            })}
+          </div>
+        ) : (
+          <div className="wr-empty">No standings scenarios available</div>
+        )}
       </div>
     </div>
   );
 }
 
-// ── Tab: INTEL (Squads + Matchups) ──
+// ── Tab: INTEL ──
 
 function IntelTab({ briefing }: { briefing: WRBriefing }) {
+  const news = briefing.squad_news ?? [];
+  const links = briefing.preview_links ?? [];
+
   return (
-    <div className="wr-br">
+    <div className="wr-br-cols" style={{ gridTemplateColumns: "1fr" }}>
       <div className="wr-br-section">
-        <div className="wr-br-label">Squad News <span className="wr-br-via">{briefing.squad_news.length}</span></div>
-        {briefing.squad_news.length > 0 ? (
-          briefing.squad_news.map((item, i) => (
-            <div key={i} className="wr-br-item">{item}</div>
-          ))
+        <div className="wr-br-section-hd">
+          <span className="wr-br-label">Squad News</span>
+          <span className="wr-br-count">{news.length}</span>
+        </div>
+        {news.length > 0 ? (
+          <div className="wr-br-card" style={{ padding: 0 }}>
+            {news.map((item, i) => (
+              <div key={i} className="wr-br-row">
+                <span className="wr-br-row-lead" aria-hidden>&#9656;</span>
+                <div className="wr-br-row-main">{item}</div>
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="wr-empty">No squad updates tracked</div>
         )}
       </div>
 
-      {briefing.preview_links && briefing.preview_links.length > 0 && (
-        <div className="wr-br-section wr-br-links">
-          <div className="wr-br-label">On ESPNcricinfo</div>
-          {briefing.preview_links.map((link, i) => (
-            <a key={i} href={link.url} target="_blank" rel="noopener noreferrer" className="wr-br-link-card">
-              <span className="wr-br-link-title">{link.title}</span>
-              <span className="wr-br-link-arrow">&#x2197;</span>
-            </a>
-          ))}
+      {links.length > 0 && (
+        <div className="wr-br-section">
+          <div className="wr-br-section-hd">
+            <span className="wr-br-label">On ESPNcricinfo</span>
+          </div>
+          <div className="wr-br-card" style={{ padding: 0 }}>
+            {links.map((link, i) => (
+              <a
+                key={i}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="wr-br-row"
+              >
+                <span className="wr-br-row-lead" aria-hidden>&#x2197;</span>
+                <div className="wr-br-row-main">{link.title}</div>
+              </a>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -297,47 +337,43 @@ function IntelTab({ briefing }: { briefing: WRBriefing }) {
 // ── Tab: MATCHUPS ──
 
 function MatchupsTab({ briefing }: { briefing: WRBriefing }) {
+  const matchups = briefing.key_matchups ?? [];
+
+  if (matchups.length === 0) {
+    return (
+      <div className="wr-br-cards" style={{ gridTemplateColumns: "1fr" }}>
+        <div className="wr-empty">No matchups available</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="wr-br">
-      <div className="wr-br-section">
-        <div className="wr-br-label">Key Matchups <span className="wr-br-via">{briefing.key_matchups.length}</span></div>
-        {briefing.key_matchups.length > 0 ? (
-          <div className="wr-br-battle-grid">
-            {briefing.key_matchups.map((mu, i) =>
-              isStructuredMatchup(mu) ? (
-                <div key={i} className="wr-br-battle">
-                  <span className="wr-br-battle-num">{i + 1}</span>
-                  <div className="wr-br-battle-body">
-                    <div className="wr-br-battle-players">
-                      <div className="wr-br-battle-side">
-                        <span className="wr-br-battle-name" style={{ color: `var(--${mu.player1_team.toLowerCase()})` }}>
-                          {mu.player1}
-                        </span>
-                        <span className="wr-br-battle-role">{mu.player1_team} &middot; {mu.player1_role}</span>
-                      </div>
-                      <span className="wr-br-battle-x">&times;</span>
-                      <div className="wr-br-battle-side right">
-                        <span className="wr-br-battle-name" style={{ color: `var(--${mu.player2_team.toLowerCase()})` }}>
-                          {mu.player2}
-                        </span>
-                        <span className="wr-br-battle-role">{mu.player2_team} &middot; {mu.player2_role}</span>
-                      </div>
-                    </div>
-                    <div className="wr-br-battle-insight">{mu.insight}</div>
-                  </div>
-                </div>
-              ) : (
-                <div key={i} className="wr-br-matchup">
-                  <div className="wr-br-mu-name">{mu.matchup}</div>
-                  <div className="wr-br-mu-insight">{mu.insight}</div>
-                </div>
-              ),
-            )}
+    <div className="wr-br-cards">
+      {matchups.map((mu, i) =>
+        isStructuredMatchup(mu) ? (
+          <div key={i} className="wr-br-card">
+            <div className="wr-br-card-hd">
+              <span className="wr-br-mu-player" style={{ color: `var(--${mu.player1_team.toLowerCase()})` }}>
+                {mu.player1}
+                <small>{mu.player1_team} &middot; {mu.player1_role}</small>
+              </span>
+              <span className="wr-br-mu-x" aria-hidden>&times;</span>
+              <span className="wr-br-mu-player right" style={{ color: `var(--${mu.player2_team.toLowerCase()})` }}>
+                {mu.player2}
+                <small>{mu.player2_team} &middot; {mu.player2_role}</small>
+              </span>
+            </div>
+            <div className="wr-br-card-body">{mu.insight}</div>
           </div>
         ) : (
-          <div className="wr-empty">No matchups available</div>
-        )}
-      </div>
+          <div key={i} className="wr-br-card">
+            <div className="wr-br-card-hd">
+              <span className="wr-br-label">{mu.matchup}</span>
+            </div>
+            <div className="wr-br-card-body">{mu.insight}</div>
+          </div>
+        ),
+      )}
     </div>
   );
 }
@@ -347,62 +383,56 @@ function MatchupsTab({ briefing }: { briefing: WRBriefing }) {
 function FormTab({ briefing }: { briefing: WRBriefing }) {
   const [t1, t2] = splitMatch(briefing.match);
 
-  const TeamForm = ({ team }: { team: string }) => {
+  const TeamCard = ({ team }: { team: string }) => {
     const lower = team.toLowerCase();
     const f = getFormEntry(briefing.form, team);
-    if (!f) return <div className="wr-empty">No form data</div>;
+    if (!f) {
+      return (
+        <div className="wr-br-card">
+          <div className="wr-empty">No form data for {team}</div>
+        </div>
+      );
+    }
 
     const nrr = typeof f.nrr === "number" ? f.nrr : parseFloat(String(f.nrr));
     const mood = nrr > 0 ? "rising" : nrr < -0.5 ? "falling" : "steady";
     const ps = briefing.phase_stats?.[team];
 
     return (
-      <div
-        className="wr-bp-form-card"
-        style={{
-          borderLeftColor: `var(--${lower})`,
-          background: `linear-gradient(135deg, color-mix(in srgb, var(--${lower}) 8%, transparent), rgba(12, 14, 19, 0.85))`,
-        }}
-      >
-        <div className="wr-bp-form-hd">
-          <span className="wr-bp-form-name" style={{ color: `var(--${lower})` }}>{team}</span>
+      <div className="wr-br-card team" style={{ background: teamTint(lower) }}>
+        <div className="wr-br-card-hd">
+          <span className="wr-br-form-name" style={{ color: `var(--${lower})` }}>{team}</span>
           <span className={`wr-br-form-mood ${mood}`}>
             {mood === "rising" ? "\u25B2" : mood === "falling" ? "\u25BC" : "\u25B8"}
           </span>
           <span className="wr-br-form-pos">#{f.position}</span>
         </div>
-        <div className="wr-bp-form-stats">
-          <span className="wr-bp-form-stat"><strong>{f.wins}W {f.losses}L</strong></span>
-          <span className="wr-bp-form-stat">
+        <div className="wr-br-form-stats">
+          <span><strong>{f.wins}W {f.losses}L</strong></span>
+          <span>
             NRR <strong className={nrr > 0 ? "up" : nrr < 0 ? "down" : ""}>{nrrFmt(nrr)}</strong>
           </span>
-        </div>
-        {f.last5 && f.last5.length > 0 && (
-          <div className="wr-bp-form-run">
-            <span className="wr-bp-form-run-label">FORM</span>
+          {f.last5 && f.last5.length > 0 && (
             <div className="wr-br-mh-dots">
               {f.last5.map((r, i) => (
                 <span key={i} className={`wr-br-fo-dot ${r === "W" ? "w" : r === "NR" ? "nr" : "l"}`} />
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
         {ps && (ps.pp_bat_sr || ps.death_bowl_econ) && (
           <div className="wr-bp-phase-grid">
-            {/* Column headers: time-based */}
             <span className="wr-bp-pg-corner" />
             <span className="wr-bp-pg-col">Since {ps.since ?? "2025"}</span>
             <span className="wr-bp-pg-col wr-bp-pg-col-szn">
               This season{ps.season?.till_match ? ` (M${ps.season.till_match})` : ""}
             </span>
-            {/* Powerplay rows */}
             <span className="wr-bp-pg-row">PP BAT SR</span>
             <span className="wr-bp-pg-val">{ps.pp_bat_sr ?? "—"}</span>
             <span className="wr-bp-pg-val wr-bp-pg-szn-val">{ps.season?.pp_bat_sr ?? "—"}</span>
             <span className="wr-bp-pg-row">PP BOWL ECON</span>
             <span className="wr-bp-pg-val">{ps.pp_bowl_econ ?? "—"}</span>
             <span className="wr-bp-pg-val wr-bp-pg-szn-val">{ps.season?.pp_bowl_econ ?? "—"}</span>
-            {/* Death rows */}
             <span className="wr-bp-pg-row">DEATH BAT SR</span>
             <span className="wr-bp-pg-val">{ps.death_bat_sr ?? "—"}</span>
             <span className="wr-bp-pg-val wr-bp-pg-szn-val">{ps.season?.death_bat_sr ?? "—"}</span>
@@ -411,15 +441,15 @@ function FormTab({ briefing }: { briefing: WRBriefing }) {
             <span className="wr-bp-pg-val wr-bp-pg-szn-val">{ps.season?.death_bowl_econ ?? "—"}</span>
           </div>
         )}
-        {f.trend && <div className="wr-bp-form-trend">{f.trend}</div>}
+        {f.trend && <div className="wr-br-card-foot">{f.trend}</div>}
       </div>
     );
   };
 
   return (
-    <div className="wr-bp-form-grid">
-      <TeamForm team={t1} />
-      <TeamForm team={t2} />
+    <div className="wr-br-cards">
+      <TeamCard team={t1} />
+      <TeamCard team={t2} />
     </div>
   );
 }
@@ -430,110 +460,105 @@ function VenueTab({ briefing }: { briefing: WRBriefing }) {
   const vs = briefing.venue_stats;
 
   if (!vs) {
-    return <div className="wr-br"><div className="wr-empty">No venue data available</div></div>;
+    return (
+      <div className="wr-br-cols" style={{ gridTemplateColumns: "1fr" }}>
+        <div className="wr-empty">No venue data available</div>
+      </div>
+    );
   }
 
+  // Compose the venue stats array up-front so the JSX stays clean.
+  const stats: { label: string; value: number | string; detail: string }[] = [];
+  if (vs.avg_1st_inn != null) stats.push({ label: "AVG 1ST INNS", value: vs.avg_1st_inn, detail: "All-time at venue" });
+  if (vs.avg_1st_inn_recent != null) stats.push({ label: "AVG 1ST INNS (3Y)", value: vs.avg_1st_inn_recent, detail: "Since 2023" });
+  if (vs.avg_2nd_inn != null) stats.push({ label: "AVG 2ND INNS", value: vs.avg_2nd_inn, detail: "Chase baseline" });
+  if (vs.avg_2nd_inn_recent != null) stats.push({ label: "AVG 2ND INNS (3Y)", value: vs.avg_2nd_inn_recent, detail: "Since 2023" });
+  if (vs.avg_pp_score != null) stats.push({ label: "AVG POWERPLAY", value: vs.avg_pp_score, detail: "Since 2023" });
+  if (vs.highest != null) stats.push({ label: "HIGHEST", value: vs.highest, detail: "Venue ceiling" });
+  if (vs.lowest != null) stats.push({ label: "LOWEST", value: vs.lowest, detail: "Venue floor" });
+
+  const teamRecords = vs.team_records ?? {};
+  const playerRecords = vs.player_venue_stats ?? [];
+  const hasGroundContext = vs.note || vs.defend_180_pct != null || vs.last_5_1st_inn?.length;
+
   return (
-    <div className="wr-br wr-br-grid">
-      <div className="wr-br-main">
-        <div className="wr-br-section">
-          <div className="wr-br-label">Venue Stats</div>
-          <div className="wr-br-facts wr-br-matchup-summary">
-            {vs.avg_1st_inn != null && (
-              <div className="wr-br-fact">
-                <span className="wr-br-fact-label">AVG 1ST INNS</span>
-                <span className="wr-br-fact-value">{vs.avg_1st_inn}</span>
-                <span className="wr-br-fact-detail">All-time at venue</span>
-              </div>
-            )}
-            {vs.avg_1st_inn_recent != null && (
-              <div className="wr-br-fact">
-                <span className="wr-br-fact-label">AVG 1ST INNS (3Y)</span>
-                <span className="wr-br-fact-value">{vs.avg_1st_inn_recent}</span>
-                <span className="wr-br-fact-detail">Since 2023</span>
-              </div>
-            )}
-            {vs.avg_2nd_inn != null && (
-              <div className="wr-br-fact">
-                <span className="wr-br-fact-label">AVG 2ND INNS</span>
-                <span className="wr-br-fact-value">{vs.avg_2nd_inn}</span>
-                <span className="wr-br-fact-detail">Chase baseline</span>
-              </div>
-            )}
-            {vs.avg_2nd_inn_recent != null && (
-              <div className="wr-br-fact">
-                <span className="wr-br-fact-label">AVG 2ND INNS (3Y)</span>
-                <span className="wr-br-fact-value">{vs.avg_2nd_inn_recent}</span>
-                <span className="wr-br-fact-detail">Since 2023</span>
-              </div>
-            )}
-            {vs.avg_pp_score != null && (
-              <div className="wr-br-fact">
-                <span className="wr-br-fact-label">AVG POWERPLAY</span>
-                <span className="wr-br-fact-value">{vs.avg_pp_score}</span>
-                <span className="wr-br-fact-detail">Since 2023</span>
-              </div>
-            )}
-            {vs.highest != null && (
-              <div className="wr-br-fact">
-                <span className="wr-br-fact-label">HIGHEST</span>
-                <span className="wr-br-fact-value">{vs.highest}</span>
-                <span className="wr-br-fact-detail">Venue ceiling</span>
-              </div>
-            )}
-            {vs.lowest != null && (
-              <div className="wr-br-fact">
-                <span className="wr-br-fact-label">LOWEST</span>
-                <span className="wr-br-fact-value">{vs.lowest}</span>
-                <span className="wr-br-fact-detail">Venue floor</span>
-              </div>
-            )}
-          </div>
+    <div className="wr-br-cols">
+      {/* Main column: venue metric tiles */}
+      <div className="wr-br-section">
+        <div className="wr-br-section-hd">
+          <span className="wr-br-label">Venue Stats</span>
+        </div>
+        <div className="wr-br-metrics-grid">
+          {stats.map((s) => (
+            <div key={s.label} className="wr-br-metric">
+              <span className="wr-br-metric-value">{s.value}</span>
+              <span className="wr-br-metric-label">{s.label}</span>
+              <span className="wr-br-metric-detail">{s.detail}</span>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="wr-br-sidebar">
+      {/* Sidebar column: ground context, team records, player records */}
+      <div className="wr-br-stack">
         <div className="wr-br-section">
-          <div className="wr-br-label">Ground Context</div>
-          {vs.note && <div className="wr-br-ground-note">{vs.note}</div>}
-          <VenueIntel vs={vs} />
-          {!vs.note && !vs.defend_180_pct && !vs.last_5_1st_inn?.length && (
+          <div className="wr-br-section-hd">
+            <span className="wr-br-label">Ground Context</span>
+          </div>
+          {hasGroundContext ? (
+            <div className="wr-br-card">
+              {vs.note && <div className="wr-br-card-body" style={{ marginBottom: 8 }}>{vs.note}</div>}
+              <VenueIntel vs={vs} />
+            </div>
+          ) : (
             <div className="wr-empty">No ground notes</div>
           )}
         </div>
-        {vs.team_records && Object.keys(vs.team_records).length > 0 && (
+
+        {Object.keys(teamRecords).length > 0 && (
           <div className="wr-br-section">
-            <div className="wr-br-label">At This Venue</div>
-            <div className="wr-br-venue-records">
-              {Object.entries(vs.team_records).map(([team, rec]) => (
-                <div key={team} className="wr-br-venue-record" style={{ borderLeftColor: `var(--${team.toLowerCase()})` }}>
-                  <span className="wr-br-venue-record-team" style={{ color: `var(--${team.toLowerCase()})` }}>{team}</span>
-                  <span className="wr-br-venue-record-stat">
-                    <strong>{rec.wins}W</strong>-{rec.losses}L
-                    <span className="wr-br-venue-record-pct">({rec.played > 0 ? Math.round(rec.wins / rec.played * 100) : 0}%)</span>
-                  </span>
-                </div>
-              ))}
+            <div className="wr-br-section-hd">
+              <span className="wr-br-label">At This Venue</span>
+            </div>
+            <div className="wr-br-card" style={{ padding: 0 }}>
+              {Object.entries(teamRecords).map(([team, rec]) => {
+                const pct = rec.played > 0 ? Math.round((rec.wins / rec.played) * 100) : 0;
+                return (
+                  <div key={team} className="wr-br-row">
+                    <span className="wr-br-row-lead" style={{ color: `var(--${team.toLowerCase()})` }}>{team}</span>
+                    <div className="wr-br-row-main">
+                      <strong>{rec.wins}W</strong> &ndash; {rec.losses}L
+                    </div>
+                    <div className="wr-br-row-trail">{pct}%</div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
-        {vs.player_venue_stats && vs.player_venue_stats.length > 0 && (
+
+        {playerRecords.length > 0 && (
           <div className="wr-br-section">
-            <div className="wr-br-label">Player Records at Venue</div>
-            <div className="wr-br-venue-records">
-              {vs.player_venue_stats.map((p) => (
-                <div key={`${p.player}-${p.type}`} className="wr-br-venue-record" style={{ borderLeftColor: `var(--${p.team.toLowerCase()})` }}>
-                  <span className="wr-br-venue-record-team" style={{ color: `var(--${p.team.toLowerCase()})` }}>
-                    {p.player}
-                  </span>
-                  <span className="wr-br-venue-record-stat">
-                    {p.type === "bat"
-                      ? <>{p.runs} runs · avg {p.avg} · SR {p.sr}</>
-                      : <>{p.wickets} wkts · econ {p.econ}</>}
-                    <span className="wr-br-venue-record-pct">{p.matches} inn</span>
-                  </span>
-                </div>
-              ))}
+            <div className="wr-br-section-hd">
+              <span className="wr-br-label">Player Records at Venue</span>
+            </div>
+            <div className="wr-br-card" style={{ padding: 0 }}>
+              {playerRecords.map((p) => {
+                const teamL = p.team.toLowerCase();
+                const statLine = p.type === "bat"
+                  ? `${p.runs} runs · avg ${p.avg} · SR ${p.sr}`
+                  : `${p.wickets} wkts · econ ${p.econ}`;
+                return (
+                  <div key={`${p.player}-${p.type}`} className="wr-br-row">
+                    <span className="wr-br-row-lead" style={{ color: `var(--${teamL})` }}>{p.team}</span>
+                    <div className="wr-br-row-main">
+                      <strong style={{ color: `var(--${teamL})` }}>{p.player}</strong>
+                      <span className="wr-br-row-sub">{statLine}</span>
+                    </div>
+                    <div className="wr-br-row-trail">{p.matches}<span className="muted">inn</span></div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
