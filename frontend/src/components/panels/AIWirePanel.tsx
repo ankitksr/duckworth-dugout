@@ -148,6 +148,9 @@ export function AIWirePanel() {
                   </span>
                 </span>
               </div>
+              {sev === "alarm" && (
+                <div className="wr-wire-deck">Urgent</div>
+              )}
               <div className="wr-wire-hl-row">
                 <div className="wr-wire-headline">{item.headline}</div>
                 <span className={`wr-wire-chevron${isOpen ? " open" : ""}`}>

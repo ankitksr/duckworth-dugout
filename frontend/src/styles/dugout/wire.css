@@ -73,14 +73,14 @@
   border-color: rgba(248, 113, 113, 0.4);
 }
 
-/* Card base — tactile dispatch card with grain + border haze */
+/* Card base — tactile dispatch card with grain; no severity chrome,
+   severity is carried by headline color + deck label (typography-first). */
 .wr-wire-card {
   padding: 8px 12px 7px;
   margin: 5px 5px 0;
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.04);
-  border-left: 2px solid transparent;
   transition: opacity 0.2s, background 0.2s, border-color 0.2s, padding 0.15s;
   position: relative;
 }
@@ -100,16 +100,16 @@
 }
 .wr-wire-card:last-child { margin-bottom: 4px; }
 
-/* Severity via left border accent */
+/* Severity via subtle background tint only — URGENT deck + headline
+   color do the heavy lifting. No border accents (left-border severity
+   stripes have become generic AI-dashboard chrome). */
 .wr-wire-alert {
-  background: rgba(253, 185, 19, 0.04);
+  background: rgba(253, 185, 19, 0.035);
   border-color: rgba(253, 185, 19, 0.08);
-  border-left: 2px solid rgba(253, 185, 19, 0.5);
 }
 .wr-wire-alarm {
   background: rgba(239, 68, 68, 0.05);
   border-color: rgba(239, 68, 68, 0.12);
-  border-left: 3px solid rgba(239, 68, 68, 0.75);
 }
 
 /* Highlighted card (selected team involved) */
@@ -119,24 +119,38 @@
     rgba(253, 185, 19, 0.04);
   border-color: rgba(253, 185, 19, 0.1);
 }
-.wr-wire-card.hl.wr-wire-alert {
-  border-left-color: rgba(253, 185, 19, 0.6);
-}
 .wr-wire-card.hl.wr-wire-alarm {
   background:
     linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, transparent 50%),
     rgba(239, 68, 68, 0.06);
   border-color: rgba(239, 68, 68, 0.14);
-  border-left-color: rgba(239, 68, 68, 0.85);
 }
 
-/* Alarm pulse on first render — draws the eye, fires once */
-.wr-wire-alarm {
-  animation: wire-alarm-pulse 2s ease-in-out 1;
+/* Deck label — alarm items only. Newsroom URGENT tag above the headline
+   with a pulsing LED dot. Replaces the left-border severity accent. */
+.wr-wire-deck {
+  font: 800 7px 'JetBrains Mono', monospace;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: #f87171;
+  line-height: 1;
+  margin-bottom: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
-@keyframes wire-alarm-pulse {
-  0%, 100% { border-left-color: rgba(239, 68, 68, 0.75); }
-  50% { border-left-color: rgba(239, 68, 68, 1); }
+.wr-wire-deck::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 4px rgba(239, 68, 68, 0.55);
+  animation: wire-deck-pulse 2s ease-in-out infinite;
+}
+@keyframes wire-deck-pulse {
+  0%, 100% { opacity: 0.75; box-shadow: 0 0 3px rgba(239, 68, 68, 0.45); }
+  50% { opacity: 1; box-shadow: 0 0 8px rgba(239, 68, 68, 0.8); }
 }
 
 /* ── Top row: single-line metadata strip ── */
@@ -268,6 +282,9 @@
 .wr-wire-chevron.open {
   transform: rotate(90deg);
 }
+/* Only alarm carries a headline color — alert/signal stay default white.
+   The URGENT deck + coral headline together are enough to mark alarm,
+   and dropping the alert amber keeps the panel visually calm. */
 .wr-wire-alarm .wr-wire-headline {
   color: #fca5a5;
 }
@@ -281,11 +298,9 @@
 }
 .wr-wire-card.open.wr-wire-alert {
   border-color: rgba(253, 185, 19, 0.14);
-  border-left-color: rgba(253, 185, 19, 0.6);
 }
 .wr-wire-card.open.wr-wire-alarm {
   border-color: rgba(239, 68, 68, 0.18);
-  border-left-color: rgba(239, 68, 68, 0.85);
 }
 
 /* Body — muted detail paragraph */
