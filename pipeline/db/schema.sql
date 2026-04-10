@@ -64,6 +64,10 @@ CREATE TABLE IF NOT EXISTS war_room_article_extractions (
 -- Player availability events (append-only, derived from extractions).
 -- Current state per player = latest event by article_published, with
 -- clear-on-play override applied at query time.
+-- Each row's article_guid points back to the source article. When that
+-- article is re-extracted (e.g. EXTRACTION_VERSION bump), the old events
+-- are deleted via _persist_extraction's cleanup so the events table
+-- always reflects the current extraction.
 CREATE TABLE IF NOT EXISTS war_room_player_availability_events (
     id INTEGER PRIMARY KEY,
     season VARCHAR NOT NULL,
@@ -79,3 +83,6 @@ CREATE TABLE IF NOT EXISTS war_room_player_availability_events (
     quote VARCHAR,
     extracted_at TIMESTAMP DEFAULT current_timestamp
 );
+
+CREATE INDEX IF NOT EXISTS idx_avail_events_article
+    ON war_room_player_availability_events(article_guid);

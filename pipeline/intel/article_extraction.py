@@ -365,13 +365,18 @@ def _persist_extraction(
     match_claim = payload.get("match_result_claim") or {}
     key_quotes = payload.get("key_quotes") or []
 
-    # Upsert into war_room_article_extractions
+    # Each successful extraction OWNS the article's row + events. Delete
+    # ALL prior versions of the extraction and ALL prior events for this
+    # article so the new extraction is the sole source of truth. Avoids
+    # version coexistence (e.g. v1 over-eager 'available' events lingering
+    # forever after a v2 re-process produces a stricter, smaller event set).
     conn.execute(
-        """
-        DELETE FROM war_room_article_extractions
-        WHERE article_guid = ? AND extraction_version = ?
-        """,
-        [article.guid, EXTRACTION_VERSION],
+        "DELETE FROM war_room_article_extractions WHERE article_guid = ?",
+        [article.guid],
+    )
+    conn.execute(
+        "DELETE FROM war_room_player_availability_events WHERE article_guid = ?",
+        [article.guid],
     )
     conn.execute(
         """
