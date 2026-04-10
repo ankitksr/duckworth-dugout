@@ -1,0 +1,105 @@
+name: Migrate Articles (one-shot)
+
+# Manually-triggered workflow that runs the per-article extraction layer
+# (`pipeline migrate-articles`) over the entire backlog of unprocessed
+# articles in the cached enrichment.duckdb. Used after shipping the
+# article extraction feature, or after bumping EXTRACTION_VERSION.
+#
+# Steady-state article extraction happens inside the warm tier of
+# scheduled-sync.yml (capped at 30 articles per cycle). This workflow
+# bypasses the cap and processes everything in one shot.
+
+on:
+  workflow_dispatch:
+    inputs:
+      season:
+        description: 'IPL season'
+        required: false
+        type: string
+        default: '2026'
+      force:
+        description: 'Re-process articles even if already extracted at the current version'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  actions: write
+  contents: write
+
+# Share the lock with sync-deploy.yml so a scheduled sync and the migration
+# can never race on the enrichment-db cache. cancel-in-progress: false
+# ensures a long migration is never killed mid-flight by an incoming sync.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.13 + uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: '3.13'
+
+      - name: Install pipeline dependencies
+        run: uv sync
+
+      # ── enrichment.duckdb (articles, extractions, events) ───────
+      - name: Restore enrichment.duckdb cache
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/enrichment.duckdb
+          key: enrichment-db
+          restore-keys: enrichment-db
+
+      - name: Restore from release (cache miss)
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: uv run python -m pipeline pull-enrichment
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      # ── Run the migration ──────────────────────────────────────
+      # Rate limit bumped from default 10 RPM → 30 RPM to fit a few
+      # hundred articles inside the 30-min job timeout.
+      - name: Migrate articles
+        env:
+          CT_LLM_API_KEY: ${{ secrets.CT_LLM_API_KEY }}
+          CT_LLM_VERTEX: 'true'
+          CT_LLM_GCP_PROJECT: ${{ vars.CT_LLM_GCP_PROJECT }}
+          CT_LLM_GCP_LOCATION: ${{ vars.CT_LLM_GCP_LOCATION }}
+          CT_LLM_MODEL: ${{ vars.CT_LLM_MODEL }}
+          CT_LLM_MODEL_PRO: ${{ vars.CT_LLM_MODEL_PRO }}
+          CT_LLM_RATE_LIMIT_RPM: '30'
+          GOOGLE_CLOUD_PROJECT: ${{ vars.CT_LLM_GCP_PROJECT }}
+          GOOGLE_CLOUD_LOCATION: ${{ vars.CT_LLM_GCP_LOCATION }}
+        run: |
+          ARGS="--season ${{ inputs.season }}"
+          if [ "${{ inputs.force }}" = "true" ]; then
+            ARGS="$ARGS --force"
+          fi
+          uv run python -m pipeline migrate-articles $ARGS
+
+      # ── Save updated enrichment.duckdb back ────────────────────
+      # GH Actions cache is immutable — delete then re-save to update.
+      - name: Update enrichment.duckdb cache
+        run: gh cache delete enrichment-db || true
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Save enrichment.duckdb cache
+        uses: actions/cache/save@v4
+        with:
+          path: data/enrichment.duckdb
+          key: enrichment-db
+
+      # Persist as a release asset too — survives cache eviction.
+      - name: Upload to data-snapshot release
+        run: gh release upload data-snapshot data/enrichment.duckdb --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}

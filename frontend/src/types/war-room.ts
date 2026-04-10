@@ -407,3 +407,28 @@ export interface WRData {
   briefings: WRBriefing[];
   narratives: WRNarrative[];
 }
+
+// ── availability.json ──
+
+export type WRAvailabilityStatus = "out" | "doubtful" | "available";
+
+export interface WRAvailabilityEntry {
+  player: string;
+  franchise_id: string;
+  status: WRAvailabilityStatus;
+  reason: string;
+  expected_return: string;
+  source: string;
+  quote: string;
+  as_of: string; // ISO 8601
+  confidence: "high" | "medium" | "low" | "";
+}
+
+export interface WRAvailability {
+  generated_at: string;
+  season: string;
+  new_events: number;
+  total_unavailable: number;
+  by_team: Record<string, WRAvailabilityEntry[]>;
+  players: WRAvailabilityEntry[];
+}

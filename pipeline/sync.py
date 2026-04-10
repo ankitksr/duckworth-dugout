@@ -60,6 +60,7 @@ def sync_tiers(
     needs_feeds = active_panels & {
         "standings", "caps", "pulse", "schedule",
         "scenarios", "records", "briefing", "narratives", "dossier",
+        "availability",
     }
     if needs_feeds:
         _fetch_feeds(ctx)

@@ -190,3 +190,56 @@ class WireDispatch(BaseModel):
     category: str
     severity: str
     teams: list[str]
+
+
+# ---------------------------------------------------------------------------
+# article_extraction.py
+# ---------------------------------------------------------------------------
+
+class AvailabilityEvent(BaseModel):
+    player_name: str         # as it appears in article
+    franchise_hint: str      # short name or "" — disambiguation hint
+    status: str              # 'out' | 'doubtful' | 'available'
+    reason: str              # "" if not stated
+    expected_return: str     # "season" | "next match" | "2 weeks" | ""
+    confidence: str          # 'high' | 'medium' | 'low'
+    quote: str               # supporting snippet, <=200 chars
+
+
+class KeyQuote(BaseModel):
+    speaker: str             # e.g. "Rohit Sharma" or "Hardik Pandya (captain)"
+    text: str                # verbatim quote, <=300 chars
+    context: str             # brief framing, <=100 chars
+
+
+class MatchResultClaim(BaseModel):
+    """Partial scorecard claim from one article. Aggregator combines across articles."""
+    team1: str               # team name as in article
+    team1_score: str         # "184/5" or ""
+    team2: str
+    team2_score: str
+    winner: str              # team name or ""
+    margin: str              # "5 wickets" or ""
+    player_of_match: str     # name or ""
+    hero_stat: str           # "70(54)" or ""
+
+
+class ArticleExtraction(BaseModel):
+    """Master extraction schema — one per article LLM call.
+
+    All fields are always present to keep Gemini's structured output happy
+    (Optional/nullable support is spotty). Use empty string / empty list /
+    empty MatchResultClaim as the "absent" sentinel and detect via truthiness.
+
+    story_type allowed values:
+        match_preview, match_report, injury_update, team_news,
+        transfer_auction, interview, opinion, controversy, other.
+    """
+    is_relevant: bool                    # false → noise, drop downstream
+    story_type: str
+    summary: str                          # 2-3 factual sentences
+    headline_takeaway: str                # one-line "so what"
+    mentioned_players: list[str]          # raw names from article
+    availability_events: list[AvailabilityEvent]
+    match_result_claim: MatchResultClaim  # all-empty fields when not a match report
+    key_quotes: list[KeyQuote]

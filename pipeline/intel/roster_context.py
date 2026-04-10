@@ -167,10 +167,24 @@ def _query_appearances(
     return result
 
 
+def _format_availability_tag(info: dict) -> str:
+    """Format an availability annotation, e.g. '[OUT - hamstring - exp: season]'."""
+    status = (info.get("status") or "").lower()
+    if not status or status == "available":
+        return ""
+    bits = [status.upper()]
+    if info.get("reason"):
+        bits.append(info["reason"])
+    if info.get("expected_return"):
+        bits.append(f"exp: {info['expected_return']}")
+    return f"[{' - '.join(bits)}]"
+
+
 def _format_full_squad(
     short: str,
     players: list[tuple],
     appearances: dict[str, int] | None = None,
+    availability: dict[str, dict] | None = None,
 ) -> str:
     """Full squad block for a team."""
     lines = [f"{short} SQUAD ({len(players)} players):"]
@@ -182,9 +196,69 @@ def _format_full_squad(
         if appearances is not None:
             n = appearances.get(name, 0)
             played = f"({n} matches)" if n else "(yet to play)"
-        parts = [f"  {tag}", price_cr, acq_tag, played]
+        avail_tag = ""
+        if availability and name in availability:
+            avail_tag = _format_availability_tag(availability[name])
+        parts = [f"  {tag}", price_cr, acq_tag, played, avail_tag]
         lines.append(" ".join(p for p in parts if p))
     return "\n".join(lines)
+
+
+def availability_map(
+    conn: duckdb.DuckDBPyConnection,
+    season: str,
+) -> dict[str, dict]:
+    """Current availability state per player. Lazy import to avoid cycles.
+
+    Returns {} if the availability module fails for any reason — never lets
+    a broken availability layer break roster context.
+    """
+    try:
+        from pipeline.intel.availability import (
+            current_availability,
+            last_played_dates,
+        )
+        played = last_played_dates(conn, season)
+        return current_availability(conn, season, played)
+    except Exception:
+        return {}
+
+
+def injury_footer(
+    conn: duckdb.DuckDBPyConnection,
+    season: str,
+    max_items: int = 20,
+) -> str:
+    """Compact one-line-ish injury list for summary-level contexts.
+
+    Format: 'INJURY LIST: Bumrah(MI, back stress, season), Rabada(GT, hamstring, doubtful), ...'
+    Returns empty string if there are no unavailable players.
+    """
+    state = availability_map(conn, season)
+    if not state:
+        return ""
+
+    entries: list[str] = []
+    for player, info in sorted(state.items()):
+        status = (info.get("status") or "").lower()
+        if not status or status == "available":
+            continue
+        fid = info.get("franchise_id", "")
+        short = _SHORT.get(fid, (fid or "").upper())
+        bits = [short]
+        if info.get("reason"):
+            bits.append(info["reason"])
+        if status == "doubtful":
+            bits.append("doubtful")
+        elif info.get("expected_return"):
+            bits.append(info["expected_return"])
+        entries.append(f"{player}({', '.join(b for b in bits if b)})")
+        if len(entries) >= max_items:
+            break
+
+    if not entries:
+        return ""
+    return "INJURY LIST: " + ", ".join(entries)
 
 
 def summary(conn: duckdb.DuckDBPyConnection, season: str) -> str:
@@ -204,6 +278,11 @@ def summary(conn: duckdb.DuckDBPyConnection, season: str) -> str:
     for fid in sorted(by_team, key=lambda f: _SHORT.get(f, f)):
         short = _SHORT.get(fid, fid.upper())
         lines.append(_format_squad_line(short, by_team[fid]))
+
+    footer = injury_footer(conn, season)
+    if footer:
+        lines.append("")
+        lines.append(footer)
     return "\n".join(lines)
 
 
@@ -218,12 +297,13 @@ def for_match(
     Use for: briefing, dossier.
     """
     appearances = _query_appearances(conn, season)
+    avail = availability_map(conn, season)
     parts = []
     for fid in (team1, team2):
         players = _query_squad(conn, season, fid)
         short = _SHORT.get(fid, fid.upper())
         if players:
-            parts.append(_format_full_squad(short, players, appearances))
+            parts.append(_format_full_squad(short, players, appearances, avail))
         else:
             parts.append(f"{short}: (no squad data)")
     return "\n\n".join(parts)
@@ -239,6 +319,7 @@ def all_squads(conn: duckdb.DuckDBPyConnection, season: str) -> str:
         return ""
 
     appearances = _query_appearances(conn, season)
+    avail = availability_map(conn, season)
     by_team: dict[str, list[tuple]] = {}
     for r in rows:
         by_team.setdefault(r[0], []).append(r)
@@ -246,7 +327,7 @@ def all_squads(conn: duckdb.DuckDBPyConnection, season: str) -> str:
     parts = [f"CURRENT ROSTERS (IPL {season}):"]
     for fid in sorted(by_team, key=lambda f: _SHORT.get(f, f)):
         short = _SHORT.get(fid, fid.upper())
-        parts.append(_format_full_squad(short, by_team[fid], appearances))
+        parts.append(_format_full_squad(short, by_team[fid], appearances, avail))
     return "\n\n".join(parts)
 
 
@@ -256,10 +337,11 @@ def for_team(conn: duckdb.DuckDBPyConnection, season: str, team: str) -> str:
     Use for: narrative (per-team), dossier (opposition).
     """
     appearances = _query_appearances(conn, season)
+    avail = availability_map(conn, season)
     players = _query_squad(conn, season, team)
     short = _SHORT.get(team, team.upper())
     if players:
-        return _format_full_squad(short, players, appearances)
+        return _format_full_squad(short, players, appearances, avail)
     return f"{short}: (no squad data)"
 
 

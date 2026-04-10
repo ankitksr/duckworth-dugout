@@ -160,6 +160,46 @@ def pull_enrichment(output: str) -> None:
     console.print(f"[green]Downloaded to {output}[/green]")
 
 
+@cli.command("migrate-articles")
+@click.option("--season", default="2026", help="IPL season (default: 2026)")
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Re-process articles already extracted at the current version",
+)
+def migrate_articles(season: str, force: bool) -> None:
+    """One-shot extraction of every unprocessed article in the local DB.
+
+    Normal sync runs cap article extraction at 30 per cycle to fit the CI
+    time budget. This command ignores the cap and processes the entire
+    backlog in one go — typically used once after shipping the article
+    extraction layer (or after bumping EXTRACTION_VERSION).
+
+    Idempotent: re-running skips already-processed articles. Resumable:
+    safe to Ctrl-C and re-run. Use --force to re-process the whole backlog.
+    """
+    import asyncio
+
+    from pipeline.db.connection import get_connection
+    from pipeline.intel.article_extraction import (
+        EXTRACTION_VERSION,
+        run_migration,
+    )
+
+    conn = get_connection()
+    console.print(
+        f"[bold]Migrating articles for season {season}"
+        f" (extraction_version={EXTRACTION_VERSION}"
+        f"{', force=True' if force else ''})…[/bold]"
+    )
+    stats = asyncio.run(run_migration(conn, season, force=force))
+    console.print(
+        f"[green]Done.[/green] processed={stats['processed']} "
+        f"events={stats['events']} summaries={stats['summaries']} "
+        f"skipped={stats['skipped']} errors={stats['errors']}"
+    )
+
+
 @cli.command("seed-sample")
 def seed_sample() -> None:
     """Copy sample JSON files to frontend public directory."""
