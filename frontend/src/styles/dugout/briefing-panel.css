@@ -107,36 +107,55 @@
   }
 }
 
-/* Very narrow widths: full vertical stack — no overlap, no clipping.
-   Order: identity → ground → stats. Venue context comes before the
-   numbers so the reader places the match before parsing the metrics. */
+/* Very narrow widths: 2-row hero — identity stacked, then a context
+   row that pairs venue/time (left) with metric stat boxes (right).
+   Saves ~50px vs the previous 3-row stack. The venue cell shows the
+   compact "city · time · M#" variant; the full stadium name is hidden. */
 @container briefing (max-width: 480px) {
   .wr-bp-hero {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
-      "identity"
-      "details"
-      "metrics";
+      "identity identity"
+      "details  metrics";
   }
   .wr-bp-identity {
     grid-template-columns: 1fr auto 1fr;
     padding: 14px 14px 22px;
     gap: 14px;
   }
-  .wr-bp-metrics {
-    border-left: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    justify-content: center;
-    flex-wrap: wrap;
-    padding: 8px 6px;
-  }
   .wr-bp-details {
     border-top: 1px solid rgba(255, 255, 255, 0.06);
-    align-items: center;
-    text-align: center;
-    padding: 8px 14px 10px;
+    border-left: none;
+    align-items: flex-start;
+    justify-content: center;
+    text-align: left;
+    padding: 8px 12px;
+    min-width: 0;
+  }
+  /* Hide the full stadium name + the standalone time line — */
+  /* the compact one-liner replaces both at this width.        */
+  .wr-bp-detail-venue,
+  .wr-bp-detail-meta { display: none; }
+  .wr-bp-detail-compact {
+    display: block;
+    font: 600 9px 'JetBrains Mono', monospace;
+    color: var(--wr-t2);
+    letter-spacing: 0.6px;
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .wr-bp-metrics {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+    justify-content: flex-end;
+    padding: 6px 6px;
   }
 }
+
+/* Compact venue line is mobile-only; hidden everywhere else. */
+.wr-bp-detail-compact { display: none; }
 
 /* Dividers hidden — sections use border-left instead */
 .wr-bp-divider { display: none; }

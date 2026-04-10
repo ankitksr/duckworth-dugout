@@ -272,13 +272,13 @@
     display: none;
   }
   .wr-bp-metric {
-    padding: 4px 10px;
+    padding: 4px 7px;
   }
   .wr-bp-metric strong {
-    font-size: 15px;
+    font-size: 13px;
   }
   .wr-bp-metric span {
-    font-size: 6px;
+    font-size: 5.5px;
   }
   .wr-bp-detail-venue,
   .wr-bp-detail-meta {

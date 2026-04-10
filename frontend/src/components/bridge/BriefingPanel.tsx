@@ -123,11 +123,20 @@ function HeroStrip({ briefing }: { briefing: WRBriefing }) {
 
       <div className="wr-bp-divider" aria-hidden="true" />
 
-      {/* Section 2: Match details — venue, time, preview */}
+      {/* Section 2: Match details — venue, time, preview.
+          The venue label has two variants: the desktop spans show full
+          stadium name + city + time on separate lines; the mobile span
+          collapses to "city · time · M#" on a single line. CSS toggles
+          which is visible per @container width. */}
       <div className="wr-bp-details">
         <div className="wr-bp-detail-venue">{venueLabel}</div>
         <div className="wr-bp-detail-meta">
           {briefing.time}
+          {briefing.match_number != null && <> &middot; M{briefing.match_number}</>}
+        </div>
+        <div className="wr-bp-detail-compact" aria-hidden="true">
+          {(city || venueName).toUpperCase()}
+          {briefing.time && <> &middot; {briefing.time}</>}
           {briefing.match_number != null && <> &middot; M{briefing.match_number}</>}
         </div>
         {previewLink && (
