@@ -10,6 +10,7 @@ Usage:
     dossier = await generate_dossier(conn, season, match, perspective_team)
 """
 
+import hashlib
 import json
 import re
 from typing import Any
@@ -341,9 +342,31 @@ async def generate_dossier(
         perspective: franchise ID of the team preparing
         venue_city: match venue city for venue-specific data
     """
+    from pipeline.intel.live_context import (
+        build_live_context,
+        format_availability_block,
+        format_scenarios_summary,
+        format_wire_recent_block,
+    )
+
     cache = LLMCache()
-    # Include today's date so dossier refreshes daily with new match data
-    cache_key = f"dossier_{perspective}_{opponent}_{season}_{today_ist_iso()}"
+    # Build the shared ground-truth bundle once; the availability marker
+    # flows into the cache key so an injury update invalidates the dossier
+    # even before the next daily refresh.
+    live_ctx = build_live_context(conn, season)
+    av = live_ctx.get("availability") or {}
+    avail_marker = (
+        f"{av.get('total_unavailable', 0)}:"
+        + hashlib.sha1(
+            "|".join(
+                sorted(p.get("player", "") for p in (av.get("players") or []))
+            ).encode()
+        ).hexdigest()[:6]
+    )
+    cache_key = (
+        f"dossier_v2_{perspective}_{opponent}_{season}_"
+        f"{today_ist_iso()}_{avail_marker}"
+    )
 
     cached = cache.get(_CACHE_TASK, cache_key)
     if cached and cached.get("parsed"):
@@ -381,6 +404,22 @@ async def generate_dossier(
         max_articles=5,
     ) or "(No recent articles)"
 
+    # Shared grounding from live_context — availability constrains threat
+    # ratings, wire surfaces urgent squad news from other desks, scenarios
+    # gives playoff stakes context.
+    availability_context = (
+        format_availability_block(live_ctx)
+        or "(no unavailable players reported)"
+    )
+    wire_context = (
+        format_wire_recent_block(live_ctx, limit=12)
+        or "(no wire dispatches yet today)"
+    )
+    scenarios_context = (
+        format_scenarios_summary(live_ctx)
+        or "(no scenarios data available)"
+    )
+
     # LLM call
     from pipeline.config import GEMINI_MODEL_PRO
     from pipeline.llm.gemini import GeminiProvider
@@ -396,6 +435,9 @@ async def generate_dossier(
         bowling_profile=bowling_profile,
         form_context=form_context,
         articles_context=articles_context,
+        availability_context=availability_context,
+        wire_context=wire_context,
+        scenarios_context=scenarios_context,
     )
 
     result = await provider.generate_with_tools(

@@ -15,6 +15,7 @@ Usage:
     briefing = await generate_briefing(conn, season, match)
 """
 
+import hashlib
 import json
 import re
 from typing import Any
@@ -833,15 +834,34 @@ _SYSTEM_PROMPT = load_prompt("briefing_system.md")
 _USER_PROMPT = load_prompt("briefing_user.md")
 
 
+def _availability_cache_marker(live_ctx: dict) -> str:
+    """Short fingerprint of availability state for cache-key invalidation."""
+    av = (live_ctx.get("availability") or {})
+    total = av.get("total_unavailable", 0)
+    players = sorted(
+        p.get("player", "") for p in (av.get("players") or [])
+    )
+    return f"{total}:{hashlib.sha1('|'.join(players).encode()).hexdigest()[:6]}"
+
+
 async def generate_briefing(
     conn: duckdb.DuckDBPyConnection,
     season: str,
     match: ScheduleMatch,
 ) -> dict | None:
     """Generate a pre-match intel brief for a specific fixture."""
+    from pipeline.intel.live_context import (
+        build_live_context,
+        format_availability_block,
+        format_scenarios_summary,
+        format_wire_recent_block,
+    )
+
     cache = LLMCache()
+    live_ctx = build_live_context(conn, season)
+    avail_marker = _availability_cache_marker(live_ctx)
     cache_key = (
-        f"brief_v2_{match.team1}_{match.team2}_{match.date}"
+        f"brief_v3_{match.team1}_{match.team2}_{match.date}_{avail_marker}"
     )
 
     # Query venue stats upfront (needed for both cache hit + miss)
@@ -883,6 +903,19 @@ async def generate_briefing(
                 squad_lines.append(f"{short}: {', '.join(names)}")
         squad_context = "\n".join(squad_lines) or "(not available)"
 
+    # Shared grounding blocks from live_context
+    availability_context = (
+        format_availability_block(live_ctx) or "(no unavailable players reported)"
+    )
+    wire_context = (
+        format_wire_recent_block(live_ctx, limit=12)
+        or "(no wire dispatches yet today)"
+    )
+    scenarios_context = (
+        format_scenarios_summary(live_ctx)
+        or "(no scenarios data available)"
+    )
+
     # LLM call
     from pipeline.config import GEMINI_MODEL_PRO
     from pipeline.llm.gemini import GeminiProvider
@@ -903,6 +936,9 @@ async def generate_briefing(
         squad_context=squad_context,
         articles_context=articles_context,
         espn_context=espn_context or "(No ESPNcricinfo articles)",
+        availability_context=availability_context,
+        wire_context=wire_context,
+        scenarios_context=scenarios_context,
     )
 
     result = await provider.generate_with_tools(

@@ -9,6 +9,7 @@ Usage:
     records = await generate_records(season)
 """
 
+import hashlib
 import json
 import re
 from typing import Any
@@ -73,6 +74,41 @@ def _get_player_franchises(season: str) -> dict[str, str]:
     except Exception as e:
         console.print(f"  [dim]Records: franchise lookup failed: {e}[/dim]")
         return {}
+
+
+def _unavailable_names() -> set[str]:
+    """Return the lowercase set of players currently out/doubtful.
+
+    Used to drop milestone-chasers from `imminent` who physically aren't
+    going to play in the near-term window the record watch implies.
+    Reads from the already-written availability.json — same source the
+    rest of the frontend uses.
+    """
+    av = _load_json("availability.json") or {}
+    players = av.get("players") or []
+    out: set[str] = set()
+    for p in players:
+        status = (p.get("status") or "").lower()
+        if status in ("out", "doubtful"):
+            name = (p.get("player") or "").strip().lower()
+            if name:
+                out.add(name)
+    return out
+
+
+def _filter_available(
+    entries: list[dict], unavailable: set[str],
+) -> list[dict]:
+    """Drop entries where the milestone-chaser is currently unavailable."""
+    if not unavailable:
+        return entries
+    kept: list[dict] = []
+    for e in entries:
+        name = (e.get("player") or "").strip().lower()
+        if name and name in unavailable:
+            continue
+        kept.append(e)
+    return kept
 
 
 def _filter_active(entries: list[dict], active: set[str]) -> list[dict]:
@@ -278,10 +314,19 @@ _USER_PROMPT = load_prompt("records_user.md")
 
 async def generate_records(season: str) -> dict | None:
     """Generate the record watchlist."""
-    # Cache by date (daily refresh)
+    # Cache by date + availability fingerprint so a new injury invalidates
+    # the cached list (a milestone-chaser being ruled out should drop them
+    # from imminent immediately, not 24h later).
     cache = LLMCache()
     today = today_ist_iso()
-    cache_key = f"records_{today}"
+    unavailable = _unavailable_names()
+    avail_marker = (
+        f"{len(unavailable)}-"
+        + hashlib.sha1(
+            "|".join(sorted(unavailable)).encode()
+        ).hexdigest()[:6]
+    )
+    cache_key = f"records_v2_{today}_{avail_marker}"
 
     # Active player filter + franchise lookup runs on every path
     active = _get_active_players(season)
@@ -296,11 +341,34 @@ async def generate_records(season: str) -> dict | None:
         if active:
             parsed["imminent"] = _filter_active(parsed.get("imminent", []), active)
             parsed["on_track"] = _filter_active(parsed.get("on_track", []), active)
+        parsed["imminent"] = _filter_available(parsed.get("imminent", []), unavailable)
         _patch_teams(parsed, franchises)
         return parsed
 
     mcp_context = _build_mcp_context()
     season_context = _build_season_context()
+
+    # Add availability block so the LLM knows which players to skip at
+    # generation time (not just post-filter)
+    availability_block = ""
+    av = _load_json("availability.json") or {}
+    by_team = av.get("by_team") or {}
+    if by_team:
+        lines = []
+        for entries in by_team.values():
+            for e in entries:
+                player = (e.get("player") or "").strip()
+                status = (e.get("status") or "").strip()
+                reason = (e.get("reason") or "").strip()
+                if player and status:
+                    tail = f" — {reason}" if reason else ""
+                    lines.append(f"  {player} ({status}){tail}")
+        if lines:
+            availability_block = (
+                "CURRENTLY UNAVAILABLE (do not list these players in "
+                "`imminent` — they are not playing):\n"
+                + "\n".join(lines)
+            )
 
     if not mcp_context and not season_context:
         return None
@@ -311,6 +379,7 @@ async def generate_records(season: str) -> dict | None:
     prompt = _USER_PROMPT.format(
         mcp_context=mcp_context,
         season_context=season_context,
+        availability_block=availability_block or "(no players currently unavailable)",
     )
 
     result = await provider.generate(
@@ -350,6 +419,18 @@ async def generate_records(season: str) -> dict | None:
         dropped = (before_i + before_o) - len(parsed["imminent"]) - len(parsed["on_track"])
         if dropped:
             console.print(f"  [dim]Records: filtered {dropped} inactive players[/dim]")
+
+    # Drop imminent milestones whose chaser is currently unavailable —
+    # belt-and-suspenders against the LLM ignoring the availability block
+    if unavailable:
+        before = len(parsed.get("imminent", []))
+        parsed["imminent"] = _filter_available(parsed.get("imminent", []), unavailable)
+        dropped_av = before - len(parsed["imminent"])
+        if dropped_av:
+            console.print(
+                f"  [dim]Records: dropped {dropped_av} milestone(s) for "
+                f"unavailable players[/dim]"
+            )
 
     # Correct team assignments from season XI (LLM uses historical teams)
     _patch_teams(parsed, franchises)

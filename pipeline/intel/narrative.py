@@ -62,6 +62,12 @@ async def generate_narratives(
     season: str,
 ) -> list[dict] | None:
     """Generate season narrative arcs for all active franchises."""
+    from pipeline.intel.live_context import (
+        build_live_context,
+        format_availability_block,
+        format_pulse_block,
+    )
+
     standings = _load_json("standings.json") or []
     schedule = _load_json("schedule.json")
 
@@ -73,10 +79,25 @@ async def generate_narratives(
     if not active:
         return None
 
-    # Check cache
+    # Shared ground-truth bundle — availability + pulse feed the arc
+    live_ctx = build_live_context(conn, season)
+    av = live_ctx.get("availability") or {}
+    avail_marker = (
+        f"{av.get('total_unavailable', 0)}-"
+        + hashlib.sha1(
+            "|".join(
+                sorted(p.get("player", "") for p in (av.get("players") or []))
+            ).encode()
+        ).hexdigest()[:6]
+    )
+
+    # Check cache — include availability marker so a new injury
+    # invalidates the season arc (e.g. "CSK's arc shifted when Dhoni was
+    # ruled out" needs to be written the moment Dhoni lands in the
+    # availability list, not only when results change).
     cache = LLMCache()
     r_hash = _results_hash(schedule)
-    cache_key = f"narratives_{r_hash}"
+    cache_key = f"narratives_v2_{r_hash}_{avail_marker}"
 
     cached = cache.get(_CACHE_TASK, cache_key)
     if cached and cached.get("parsed"):
@@ -214,6 +235,16 @@ async def generate_narratives(
         else "(No RSS coverage available)"
     )
 
+    # Shared grounding — availability block + per-team rank trajectory
+    availability_context = (
+        format_availability_block(live_ctx)
+        or "(no unavailable players reported)"
+    )
+    pulse_context = (
+        format_pulse_block(live_ctx)
+        or "(no pulse data available)"
+    )
+
     # LLM call
     from pipeline.config import GEMINI_MODEL_PRO
     from pipeline.llm.gemini import GeminiProvider
@@ -224,6 +255,8 @@ async def generate_narratives(
         articles_context=articles_context,
         upcoming_context=upcoming_context,
         qualification_context=qualification_context,
+        availability_context=availability_context,
+        pulse_context=pulse_context,
     )
 
     result = await provider.generate(

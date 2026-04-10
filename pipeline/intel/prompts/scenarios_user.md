@@ -8,6 +8,8 @@ REMAINING SCHEDULE (next 10 fixtures):
 
 TODAY'S DATE: {today}
 
+{availability_context}
+
 Generate a JSON object with EXACTLY these fields:
 
 "matches_played": integer — total completed matches.
@@ -25,7 +27,7 @@ Generate a JSON object with EXACTLY these fields:
 
 "qualification_math": array of 3-5 objects, each a single non-redundant mathematical fact. Each object must have:
   - "tag": one of "SAFETY LINE" | "WIN RATE" | "NRR" | "MAGIC NO" | "POINTS"
-  - "fact": one tight sentence with specific numbers. No repetition across entries — if 8W appears in one entry, don't repeat it. Cover different angles: threshold, win-rate for struggling teams, NRR leverage, magic numbers.
+  - "fact": one tight sentence with specific numbers. No repetition across entries — if 8W appears in one entry, don't repeat it. Cover different angles: threshold, win-rate for struggling teams, NRR leverage, magic numbers. **If a team has ≥2 players in the INJURY/AVAILABILITY block with status `out`, their implied win-rate is fragile — you may flag one entry as a "squad-adjusted" note (e.g. "SRH's 60% win-rate assumes Cummins returns — until then, effective win-rate required is higher").** Never invent an injury not in the block.
 
 "if_tonight": array of objects for today's match(es) only:
   {{"match": "TEAM vs TEAM", "scenarios": [{{"result": "TEAM win", "impact": "what changes for standings/NRR"}}]}}

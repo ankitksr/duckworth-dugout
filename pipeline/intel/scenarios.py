@@ -58,18 +58,28 @@ _USER_PROMPT = load_prompt("scenarios_user.md")
 
 async def generate_scenarios(season: str) -> dict | None:
     """Generate playoff scenarios from standings + schedule."""
+    from pipeline.intel.live_context import (
+        build_live_context,
+        format_availability_block,
+    )
+
     standings = _load_json("standings.json") or []
     schedule = _load_json("schedule.json")
 
     if not standings or not schedule:
         return None
 
+    # Shared ground truth — availability lets scenarios note when a team's
+    # win-rate assumption is fragile (e.g. "RR needs 60% but their top 3
+    # bowlers are out" is a meaningful asterisk on the math).
+    live_ctx = build_live_context(None, season)
+
     # Check cache
     cache = LLMCache()
     s_hash = _standings_hash(standings)
     cache_key = f"scenarios_{s_hash}"
 
-    cache_key_v = f"{cache_key}_v4"  # v4: structured qualification_math
+    cache_key_v = f"{cache_key}_v5"  # v5: availability-aware qualification_math
     cached = cache.get(_CACHE_TASK, cache_key_v)
     if cached and cached.get("parsed"):
         console.print(
@@ -139,6 +149,12 @@ async def generate_scenarios(season: str) -> dict | None:
         )
     upcoming_text = "\n".join(upcoming_lines) or "  None remaining"
 
+    # Availability context — lets scenarios flag fragile win-rate assumptions
+    availability_context = (
+        format_availability_block(live_ctx)
+        or "(no unavailable players reported)"
+    )
+
     # LLM call
     from pipeline.llm.gemini import GeminiProvider
 
@@ -148,6 +164,7 @@ async def generate_scenarios(season: str) -> dict | None:
         standings_text=standings_text,
         upcoming_text=upcoming_text,
         today=today_str,
+        availability_context=availability_context,
     )
 
     result = await provider.generate(

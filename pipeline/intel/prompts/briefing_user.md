@@ -22,6 +22,13 @@ NEWS COVERAGE (recent RSS articles):
 ESPNCRICINFO ARTICLES (title + link):
 {espn_context}
 
+{availability_context}
+
+PLAYOFF CONTEXT (how this match fits the season):
+{scenarios_context}
+
+{wire_context}
+
 Generate a JSON object with these fields:
 
 - "match": "{team1_short} vs {team2_short}"
@@ -32,7 +39,7 @@ Generate a JSON object with these fields:
 
 - "form": object with "{team1_short}" and "{team2_short}" sub-objects each having "trend" only (1-2 sentences on current momentum/issues). Do NOT include wins/losses/NRR — those are injected from source data.
 
-- "squad_news": array of 2-4 strings — injuries, playing XI changes, tactical notes from RSS articles. Be specific and cite sources.
+- "squad_news": array of 2-4 strings — injuries, playing XI changes, tactical notes. **Hard rules:** (a) an injury claim is only valid if the exact player name appears in the INJURY/AVAILABILITY block above, OR is the subject of a direct quote from a RECENT RSS article (not a past-tense recap). (b) Your training data is months stale — treat every player not in the availability block as FIT. (c) If nothing meaningful is happening for a team, write "no significant squad news" for that team — do NOT invent a non-event.
 
 - "key_matchups": array of 2-3 objects with structured fields:
   {{
@@ -44,7 +51,7 @@ Generate a JSON object with these fields:
     "player2_role": "pace" | "spin" | "allrounder",
     "insight": "1-2 sentences — why this duel matters tonight"
   }}
-  IMPORTANT: ONLY use players listed in the CURRENT SQUADS section above. These are confirmed from match data. Do NOT use players from memory who may have been traded in the mega auction.
+  IMPORTANT: ONLY use players listed in the CURRENT SQUADS section above. These are confirmed from match data. Do NOT use players from memory who may have been traded in the mega auction. Do NOT feature a player whose name appears in the INJURY/AVAILABILITY block with status `out` or `doubtful` — pick a fit alternative from the same team.
   Pick the most consequential batter-vs-bowler duels.
 
 - "tactical_edge": 1-2 sentences — concise summary of who has the advantage and the single biggest reason why.

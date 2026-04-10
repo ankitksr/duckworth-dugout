@@ -55,6 +55,11 @@ async def generate_match_notes(season: str) -> dict[int, str] | None:
 
     Returns a dict mapping match_number → note string.
     """
+    from pipeline.intel.live_context import (
+        build_live_context,
+        format_cap_race_block,
+    )
+
     schedule = _load_json("schedule.json")
     standings = _load_json("standings.json")
 
@@ -67,10 +72,17 @@ async def generate_match_notes(season: str) -> dict[int, str] | None:
     if not completed:
         return None
 
+    # Shared ground-truth bundle — gives the editorial layer the cap race
+    # movement so notes can reference milestones that crossed during the
+    # match (e.g. "Jaiswal's 92 pushed him past Kohli for the Orange Cap").
+    # Match notes don't need a DB connection for wire_recent — they're
+    # post-hoc editorial, not live grounding.
+    live_ctx = build_live_context(None, season)
+
     # Check cache
     cache = LLMCache()
     r_hash = _results_hash(schedule)
-    cache_key = f"match_notes_{r_hash}"
+    cache_key = f"match_notes_v2_{r_hash}"
 
     cached = cache.get(_CACHE_TASK, cache_key)
     if cached and cached.get("parsed"):
@@ -131,6 +143,12 @@ async def generate_match_notes(season: str) -> dict[int, str] | None:
         matches_lines.append(line)
     matches_context = "\n".join(matches_lines)
 
+    # Cap race context — lets notes reference cap rank movement
+    cap_context = (
+        format_cap_race_block(live_ctx, per_cap=5)
+        or "(no cap race data)"
+    )
+
     # LLM call
     from pipeline.llm.gemini import GeminiProvider
 
@@ -138,6 +156,7 @@ async def generate_match_notes(season: str) -> dict[int, str] | None:
     prompt = _USER_PROMPT.format(
         standings_context=standings_context,
         matches_context=matches_context,
+        cap_context=cap_context,
     )
 
     result = await provider.generate(
