@@ -1,65 +1,115 @@
 name: Sync Pipeline & Deploy
 
-on:
-  workflow_call:
-    inputs:
-      tiers:
-        description: 'Comma-separated tiers: hot, warm, cool, all'
-        required: true
-        type: string
-      panel:
-        description: 'Single panel to sync (overrides tiers for pipeline)'
-        required: false
-        type: string
-        default: ''
-      update_cricket_db:
-        description: 'Run duckworth-mcp update+enrich before sync'
-        required: false
-        type: boolean
-        default: false
-      force:
-        description: 'Force regeneration (bypass pipeline caches)'
-        required: false
-        type: boolean
-        default: false
-    secrets:
-      CT_LLM_API_KEY:
-        required: true
-  workflow_dispatch:
-    inputs:
-      tiers:
-        description: 'Comma-separated tiers: hot, warm, cool, all'
-        required: true
-        default: 'all'
-        type: string
-      panel:
-        description: 'Single panel to sync (overrides tiers for pipeline)'
-        required: false
-        type: string
-        default: ''
-      update_cricket_db:
-        description: 'Run duckworth-mcp update+enrich before sync'
-        required: false
-        type: boolean
-        default: false
-      force:
-        description: 'Force regeneration (bypass pipeline caches)'
-        required: false
-        type: boolean
-        default: false
-
 permissions:
   actions: write
   contents: write
   pages: write
   id-token: write
 
+on:
+  workflow_dispatch:
+    inputs:
+      tiers:
+        description: 'Tier override (hot, warm, cool, all). Leave empty for auto.'
+        required: false
+        type: string
+        default: ''
+      panel:
+        description: 'Single panel to sync (e.g. briefing, standings). Overrides tiers.'
+        required: false
+        type: string
+        default: ''
+      update_cricket_db:
+        description: 'Run duckworth-mcp update+enrich before sync'
+        required: false
+        type: boolean
+        default: false
+      force:
+        description: 'Bypass pipeline caches'
+        required: false
+        type: boolean
+        default: false
+  schedule:
+    # Hot tier: every 30 min during match window (UTC 12-18 ~ IST 17:30-23:30)
+    - cron: '*/30 12-18 * 3-5 *'
+
+    # Hot tier: hourly off-peak (articles + wire stay fresh)
+    - cron: '0 0-11,19-23 * 3-5 *'
+
+    # Warm + cool tier: 6x daily (every 4h)
+    - cron: '10 1,5,9,13,17,21 * 3-5 *'
+
+    # DB update: daily at UTC 04:00 (IST 09:30)
+    - cron: '0 4 * 3-5 *'
+
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      tiers: ${{ steps.tier.outputs.tiers }}
+      panel: ${{ steps.tier.outputs.panel }}
+      update_db: ${{ steps.tier.outputs.update_db }}
+      force: ${{ steps.tier.outputs.force }}
+    steps:
+      - name: Resolve tier from inputs or schedule time
+        id: tier
+        run: |
+          # Manual override: single panel
+          if [ -n "${{ inputs.panel }}" ]; then
+            echo "tiers=all" >> "$GITHUB_OUTPUT"
+            echo "panel=${{ inputs.panel }}" >> "$GITHUB_OUTPUT"
+            echo "update_db=${{ inputs.update_cricket_db }}" >> "$GITHUB_OUTPUT"
+            echo "force=${{ inputs.force }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Manual override: tier selection
+          if [ -n "${{ inputs.tiers }}" ]; then
+            echo "tiers=${{ inputs.tiers }}" >> "$GITHUB_OUTPUT"
+            echo "panel=" >> "$GITHUB_OUTPUT"
+            echo "update_db=${{ inputs.update_cricket_db }}" >> "$GITHUB_OUTPUT"
+            echo "force=${{ inputs.force }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "panel=" >> "$GITHUB_OUTPUT"
+          echo "force=false" >> "$GITHUB_OUTPUT"
+
+          HOUR=$(date -u +%-H)
+          MINUTE=$(date -u +%-M)
+
+          # DB update: 04:00 UTC (IST 09:30)
+          if [ "$HOUR" -eq 4 ] && [ "$MINUTE" -lt 10 ]; then
+            echo "tiers=all" >> "$GITHUB_OUTPUT"
+            echo "update_db=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Warm + cool: cron is :10 past at hours 1, 5, 9, 13, 17, 21.
+          # Window widened to MINUTE 5..40 to absorb GitHub Actions cron
+          # jitter (deliveries can lag 10–20 min). Without this, jittered
+          # warm+cool runs would fall through to the hot-tier default and
+          # the wire/standings/caps panels would skip their refresh.
+          if [ "$MINUTE" -ge 5 ] && [ "$MINUTE" -lt 40 ]; then
+            case "$HOUR" in
+              1|5|9|13|17|21)
+                echo "tiers=hot,warm,cool" >> "$GITHUB_OUTPUT"
+                echo "update_db=false" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+            esac
+          fi
+
+          # Default: hot tier (match window every 30 min, off-peak hourly)
+          echo "tiers=hot" >> "$GITHUB_OUTPUT"
+          echo "update_db=false" >> "$GITHUB_OUTPUT"
+
   sync-and-deploy:
+    needs: resolve
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -110,7 +160,7 @@ jobs:
         timeout-minutes: 5
 
       - name: Update cricket.duckdb
-        if: inputs.update_cricket_db
+        if: needs.resolve.outputs.update_db == 'true'
         run: |
           uv pip install "duckworth-mcp @ git+https://github.com/ankitksr/duckworth-mcp.git"
           uv run duckworth-mcp update --db data/cricket.duckdb
@@ -139,7 +189,7 @@ jobs:
           cp -a frontend/public/api/ipl/war-room/*.json data/war-room/ 2>/dev/null || true
 
       # ── Pipeline sync ────────────────────────────────────────────
-      - name: Sync pipeline (${{ inputs.panel || inputs.tiers }})
+      - name: Sync pipeline (${{ needs.resolve.outputs.panel || needs.resolve.outputs.tiers }})
         env:
           CT_LLM_API_KEY: ${{ secrets.CT_LLM_API_KEY }}
           CT_LLM_VERTEX: 'true'
@@ -151,12 +201,12 @@ jobs:
           GOOGLE_CLOUD_LOCATION: ${{ vars.CT_LLM_GCP_LOCATION }}
           CRICKET_DB_PATH: data/cricket.duckdb
         run: |
-          if [ -n "${{ inputs.panel }}" ]; then
-            ARGS="--panel ${{ inputs.panel }}"
+          if [ -n "${{ needs.resolve.outputs.panel }}" ]; then
+            ARGS="--panel ${{ needs.resolve.outputs.panel }}"
           else
-            ARGS="--tiers ${{ inputs.tiers }}"
+            ARGS="--tiers ${{ needs.resolve.outputs.tiers }}"
           fi
-          if [ "${{ inputs.force }}" = "true" ]; then
+          if [ "${{ needs.resolve.outputs.force }}" = "true" ]; then
             ARGS="$ARGS --force"
           fi
           uv run python -m pipeline sync $ARGS
@@ -205,14 +255,14 @@ jobs:
           key: api-data
 
       - name: Update cricket.duckdb cache
-        if: inputs.update_cricket_db
+        if: needs.resolve.outputs.update_db == 'true'
         run: |
           gh cache delete cricket-db || true
         env:
           GH_TOKEN: ${{ github.token }}
 
       - name: Save cricket.duckdb cache
-        if: inputs.update_cricket_db
+        if: needs.resolve.outputs.update_db == 'true'
         uses: actions/cache/save@v4
         with:
           path: data/cricket.duckdb
