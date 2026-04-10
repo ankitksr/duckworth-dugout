@@ -43,14 +43,17 @@
     display: contents;
   }
 
-  /* --- Panel ordering: AI-first, data interleaved --- */
-  .wr-briefing-pnl   { order: 1; }
+  /* --- Panel ordering: AI block first, then league state, then feeds.
+     Briefing + Wire are the two AI surfaces and lead the page so the
+     editorial work is the first thing the user sees. Standings + Pulse
+     pair right after as a "where things stand" block. --- */
+  .wr-briefing-pnl    { order: 1; }
   .wr-team-intel-pnl  { order: 1; }  /* replaces briefing when team selected */
-  .wr-standings-pnl   { order: 2; }
-  .wr-wire-pnl        { order: 3; }
-  .wr-matches-pnl     { order: 4; }
-  .wr-caps-pnl        { order: 5; }
-  .wr-pulse-pnl       { order: 6; }
+  .wr-wire-pnl        { order: 2; }
+  .wr-standings-pnl   { order: 3; }
+  .wr-pulse-pnl       { order: 4; }
+  .wr-matches-pnl     { order: 5; }
+  .wr-caps-pnl        { order: 6; }
   .wr-log-pnl         { order: 7; }
 
   /* --- Collapsible panels: tap header to collapse/expand --- */
@@ -137,7 +140,11 @@
     height: 100%;
   }
   .wr-matches-pnl {
-    max-height: 50vh;
+    /* Show ~3 cards at a glance: anchored last-completed match,
+       UPCOMING divider, and the next two fixtures. The wrap auto-
+       scrolls to the anchor on mount, so this window aligns with
+       "what just happened, what's next" without manual scrolling. */
+    max-height: 280px;
     flex: none;
   }
   .wr-scenarios-pnl {
