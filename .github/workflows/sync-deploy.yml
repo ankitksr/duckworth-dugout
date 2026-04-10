@@ -283,6 +283,8 @@ jobs:
 
       - name: Build frontend
         working-directory: frontend
+        env:
+          ASTRO_BASE: /duckworth-dugout
         run: npm run build
 
       - uses: actions/upload-pages-artifact@v3
@@ -292,3 +294,15 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deploy
         uses: actions/deploy-pages@v4
+
+      # ── Cloudflare Pages (parallel deploy — same commit, root base path) ──
+      - name: Rebuild frontend for Cloudflare (root base)
+        working-directory: frontend
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy frontend/dist --project-name=duckworth-dugout --branch=main

@@ -107,6 +107,8 @@ jobs:
       - name: Build
         if: steps.live.outputs.has_updates == 'true'
         working-directory: frontend
+        env:
+          ASTRO_BASE: /duckworth-dugout
         run: npm run build
 
       - uses: actions/upload-pages-artifact@v3
@@ -118,6 +120,20 @@ jobs:
         if: steps.live.outputs.has_updates == 'true'
         id: deploy
         uses: actions/deploy-pages@v4
+
+      # ── Cloudflare Pages (parallel deploy — same JSON, root base path) ──
+      - name: Rebuild frontend for Cloudflare (root base)
+        if: steps.live.outputs.has_updates == 'true'
+        working-directory: frontend
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        if: steps.live.outputs.has_updates == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy frontend/dist --project-name=duckworth-dugout --branch=main
 
       # Self-chain: keep polling during match windows.
       # Chains on two cadences:

@@ -1,0 +1,15 @@
+# Cloudflare Pages cache rules.
+# Astro fingerprints hashed assets under /_astro/, so those are safe to
+# cache forever. JSON data + HTML must stay fresh for live match updates.
+
+/api/*
+  Cache-Control: public, max-age=60, must-revalidate
+
+/*.html
+  Cache-Control: public, max-age=60, must-revalidate
+
+/
+  Cache-Control: public, max-age=60, must-revalidate
+
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
