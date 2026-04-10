@@ -12,9 +12,13 @@ export function CollapsiblePanel({ children, defaultCollapsed = false }: Props) 
     <div
       className={`wr-collapse-wrap${collapsed ? " wr-collapsed" : ""}`}
       onClick={(e) => {
-        if ((e.target as HTMLElement).closest(".wr-ph")) {
-          setCollapsed((c) => !c);
-        }
+        const t = e.target as HTMLElement;
+        if (!t.closest(".wr-ph")) return;
+        // Don't swallow clicks that hit an interactive child of the header
+        // (e.g. double-header match pills, future tab buttons). They have
+        // their own onClick and the user isn't asking to collapse.
+        if (t.closest("button, a, [role='button']")) return;
+        setCollapsed((c) => !c);
       }}
     >
       {children}
