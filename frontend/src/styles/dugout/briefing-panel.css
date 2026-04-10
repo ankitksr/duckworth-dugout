@@ -107,14 +107,16 @@
   }
 }
 
-/* Very narrow widths: full vertical stack — no overlap, no clipping. */
+/* Very narrow widths: full vertical stack — no overlap, no clipping.
+   Order: identity → ground → stats. Venue context comes before the
+   numbers so the reader places the match before parsing the metrics. */
 @container briefing (max-width: 480px) {
   .wr-bp-hero {
     grid-template-columns: 1fr;
     grid-template-areas:
       "identity"
-      "metrics"
-      "details";
+      "details"
+      "metrics";
   }
   .wr-bp-identity {
     grid-template-columns: 1fr auto 1fr;
