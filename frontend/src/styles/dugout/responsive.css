@@ -43,15 +43,16 @@
     display: contents;
   }
 
-  /* --- Panel ordering: AI block first, then league state, then feeds.
-     Briefing + Wire are the two AI surfaces and lead the page so the
-     editorial work is the first thing the user sees. Standings + Pulse
-     pair right after as a "where things stand" block. --- */
+  /* --- Panel ordering: tactical brief, league state, AI signals, fixtures.
+     Briefing/Team Intel leads (primary AI surface). Standings + Pulse
+     follow as a paired "where things stand" block right under the brief.
+     AI Wire comes next to keep editorial signals high in the flow.
+     Time-sensitive feeds (matches, caps, intel) close out. --- */
   .wr-briefing-pnl    { order: 1; }
   .wr-team-intel-pnl  { order: 1; }  /* replaces briefing when team selected */
-  .wr-wire-pnl        { order: 2; }
-  .wr-standings-pnl   { order: 3; }
-  .wr-pulse-pnl       { order: 4; }
+  .wr-standings-pnl   { order: 2; }
+  .wr-pulse-pnl       { order: 3; }
+  .wr-wire-pnl        { order: 4; }
   .wr-matches-pnl     { order: 5; }
   .wr-caps-pnl        { order: 6; }
   .wr-log-pnl         { order: 7; }
