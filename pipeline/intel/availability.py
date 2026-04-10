@@ -4,11 +4,20 @@ Pure read-side module — no LLM calls. Reads from
 war_room_player_availability_events (populated by article_extraction.py)
 and derives the current state per player.
 
-Rules:
-  1. Latest event per player wins (ordered by article_published DESC,
-     extracted_at DESC, id DESC).
-  2. Clear-on-play override: if the player has a match appearance more
-     recent than their latest event's article_published, status is
+Rules (applied in order, within a 72-hour recency window per player):
+  1. **Past-tense backstop:** events whose quote is obviously a historical
+     recap ("X missed the match", "sat out", "with X unwell", "in X's
+     absence") are demoted — an availability claim should be current or
+     forward-looking. This catches extraction failures where a retrospective
+     aside in an unrelated article (e.g. a ticket-scam story mentioning
+     "Pandya missed the match because of illness") produced a fresh out
+     event.
+  2. **Source weighting:** within the recency window, higher-quality
+     sources (ESPNcricinfo, Wisden) outweigh aggregators (CricketAddictor)
+     even if the aggregator event is a day fresher. Outside the window,
+     strict recency still wins.
+  3. **Clear-on-play override:** if the player has a match appearance
+     more recent than the winning event's article_published, status is
      forced to 'available' with reason 'returned to play'.
 
 Usage:
@@ -18,9 +27,63 @@ Usage:
     # → {"Jasprit Bumrah": {"status": "out", "reason": "back stress", ...}}
 """
 
-from datetime import date, datetime
+import re
+from datetime import date, datetime, timedelta
 
 import duckdb
+
+# Higher = more authoritative. ESPNcricinfo has live scorecards + team
+# news, Wisden runs direct playing XI reports, CricTracker is polished
+# feature journalism, CricketAddictor is aggregator-heavy and prone to
+# mixing past recap with current reporting.
+_SOURCE_WEIGHT: dict[str, int] = {
+    "espncricinfo": 10,
+    "wisden": 9,
+    "crictracker": 6,
+    "cricketaddictor": 4,
+}
+_DEFAULT_WEIGHT = 3
+
+# Events within this window compete by source weight; older events are
+# strictly dominated by newer ones.
+_RECENCY_WINDOW = timedelta(hours=72)
+
+# Past-tense recap markers — quotes matching these describe a prior
+# absence rather than a current status claim and should be demoted when
+# a contradictory current-window event exists.
+_PAST_TENSE_MARKERS = (
+    r"\bmissed the\b",
+    r"\bmissed a game\b",
+    r"\bsat out\b",
+    r"\bwas unavailable\b",
+    r"\bhad missed\b",
+    r"\bhad been unavailable\b",
+    r"\bin .+'s absence\b",
+    r"\bwith .+ unwell\b",
+    r"\bleading in .+'s absence\b",
+    r"\bwho had missed\b",
+    r"\bafter having missed\b",
+    r"\bafter missing\b",
+)
+_PAST_TENSE_RE = re.compile("|".join(_PAST_TENSE_MARKERS), re.IGNORECASE)
+
+
+def _is_past_tense_recap(quote: str | None) -> bool:
+    """Detect whether an event's quote is a historical recap.
+
+    Intentionally conservative — only matches explicit past-tense phrases
+    that describe a prior absence. A forward-looking claim like "will
+    miss the next match" does NOT trigger this.
+    """
+    if not quote:
+        return False
+    return bool(_PAST_TENSE_RE.search(quote))
+
+
+def _source_weight(source: str | None) -> int:
+    if not source:
+        return _DEFAULT_WEIGHT
+    return _SOURCE_WEIGHT.get(source.strip().lower(), _DEFAULT_WEIGHT)
 
 
 def _to_date(value: object) -> date | None:
@@ -39,6 +102,70 @@ def _to_date(value: object) -> date | None:
     return None
 
 
+def _pick_winning_event(events: list[tuple]) -> tuple | None:
+    """Choose the canonical availability event for a player.
+
+    Input: all events for a single player, pre-sorted most-recent first.
+    Each tuple is (fid, status, reason, expected_return, guid,
+    article_published, source, confidence, quote).
+
+    Selection logic:
+      1. Find the anchor = most recent non-past-tense event. If every
+         event is a past-tense recap, fall back to the literal most
+         recent (shouldn't happen in practice for legitimate extractions).
+      2. Build the "decision window" = all events within _RECENCY_WINDOW
+         hours of the anchor (anchor included).
+      3. Within the window, pick the highest-source-weight event.
+      4. Ties broken by most-recent article_published, then by event id
+         (via the caller's pre-sort).
+
+    The window-then-weight order matters: old high-quality events must
+    not dominate new ones. Within a recent cluster of competing claims,
+    source quality decides.
+    """
+    if not events:
+        return None
+
+    # Step 1: find a non-past-tense anchor
+    anchor: tuple | None = None
+    for e in events:
+        quote = e[8]
+        if not _is_past_tense_recap(quote):
+            anchor = e
+            break
+    if anchor is None:
+        anchor = events[0]  # fall back to most recent
+
+    anchor_date = _to_date(anchor[5])
+    if anchor_date is None:
+        return anchor
+
+    # Step 2: window around the anchor
+    window_cutoff = anchor_date - _RECENCY_WINDOW.days * timedelta(days=1)
+    window_candidates: list[tuple] = []
+    for e in events:
+        ed = _to_date(e[5])
+        if ed is None:
+            continue
+        if ed >= window_cutoff:
+            # Events inside or equal to the window — include but still
+            # reject past-tense recaps from winning the pick.
+            if _is_past_tense_recap(e[8]):
+                continue
+            window_candidates.append(e)
+
+    if not window_candidates:
+        return anchor
+
+    # Step 3: highest source weight wins. Ties → pre-sorted order
+    # (most-recent article_published already at the front).
+    window_candidates.sort(
+        key=lambda e: _source_weight(e[6]),
+        reverse=True,
+    )
+    return window_candidates[0]
+
+
 def current_availability(
     conn: duckdb.DuckDBPyConnection,
     season: str,
@@ -54,31 +181,23 @@ def current_availability(
     override (only meaningful for status='out' or 'doubtful').
     """
     sql = """
-        WITH ranked AS (
-            SELECT
-                player_name,
-                franchise_id,
-                status,
-                reason,
-                expected_return,
-                article_guid,
-                article_published,
-                source,
-                confidence,
-                quote,
-                ROW_NUMBER() OVER (
-                    PARTITION BY player_name
-                    ORDER BY article_published DESC NULLS LAST,
-                             extracted_at DESC,
-                             id DESC
-                ) AS rn
-            FROM war_room_player_availability_events
-            WHERE season = ?
-        )
-        SELECT player_name, franchise_id, status, reason, expected_return,
-               article_guid, article_published, source, confidence, quote
-        FROM ranked
-        WHERE rn = 1
+        SELECT
+            player_name,
+            franchise_id,
+            status,
+            reason,
+            expected_return,
+            article_guid,
+            article_published,
+            source,
+            confidence,
+            quote
+        FROM war_room_player_availability_events
+        WHERE season = ?
+        ORDER BY player_name,
+                 article_published DESC NULLS LAST,
+                 extracted_at DESC,
+                 id DESC
     """
     try:
         rows = conn.execute(sql, [season]).fetchall()
@@ -88,8 +207,18 @@ def current_availability(
     last_played = last_played or {}
     result: dict[str, dict] = {}
 
-    for (player, fid, status, reason, expected_return, guid,
-         article_published, source, confidence, quote) in rows:
+    # Group by player (rows are already sorted player_name ASC, then
+    # most-recent-first within each player)
+    by_player: dict[str, list[tuple]] = {}
+    for r in rows:
+        by_player.setdefault(r[0], []).append(r[1:])
+
+    for player, events in by_player.items():
+        chosen = _pick_winning_event(events)
+        if chosen is None:
+            continue
+        (fid, status, reason, expected_return, guid,
+         article_published, source, confidence, quote) = chosen
 
         # Clear-on-play override
         article_date = _to_date(article_published)

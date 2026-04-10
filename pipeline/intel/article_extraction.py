@@ -32,7 +32,7 @@ from pipeline.llm.cache import LLMCache
 
 console = Console()
 
-EXTRACTION_VERSION = 2  # v2: stricter prompt + exact-match resolver for article names
+EXTRACTION_VERSION = 2  # v2: stricter prompt + exact-match resolver for article names. The v2 prompt was further tightened in-place to reject past-tense recaps — that change applies to articles processed going forward, without mass re-extraction.
 _CACHE_TASK = "war_room_article_extraction"
 
 # Articles older than this are skipped (covers full season + run-up)
@@ -89,12 +89,36 @@ availability events, not for renaming.
 - availability_events: explicit factual statements that a SPECIFIC player is \
 injured, ruled out, rested, dropped, doubtful, or returning from injury. ONLY \
 for players in the squad whitelist. The article must make a direct claim about \
-that individual's fitness or selection status — DO NOT infer availability from \
-a player simply being listed in a lineup, mentioned in passing, performing \
-well/poorly, or being part of a team description. If in doubt, OMIT.
+that individual's CURRENT or FUTURE fitness or selection status — DO NOT infer \
+availability from a player simply being listed in a lineup, mentioned in \
+passing, performing well/poorly, or being part of a team description. If in \
+doubt, OMIT.
+
+  **CRITICAL — REJECT PAST-TENSE RECAPS.** Do NOT create an availability event \
+from past-tense recap of a prior absence. Phrases like "missed the last match", \
+"sat out the [date] game", "was unavailable for match X", "had missed", \
+"leading in [player]'s absence", or "with [player] unwell" — all describe a \
+HISTORICAL state, not the player's CURRENT status. If the article only \
+mentions a past absence without also stating the player's current fitness \
+("he has now recovered", "he will miss the next game too", "remains sidelined"), \
+you must OMIT the event. An availability event requires a forward-looking or \
+currently-active claim.
+
+  Examples of things to REJECT:
+    - "Pandya missed the match because of illness" in a ticket-scam article \
+(past tense, recap, article is not about his fitness)
+    - "In captain X's absence, Y led the team" (past tense, one-off recap)
+    - "Z returned for the Apr 7 game after missing Apr 4" → create ONE 'available' \
+event (the return), not a separate 'out' event for the prior miss
+  Examples of things to KEEP:
+    - "Pandya will miss the next two games with a hamstring strain" (forward-looking)
+    - "Dhoni remains sidelined and is expected to return next week" (current state + outlook)
+    - "X has been ruled out for the season" (forward-looking)
+
   - status 'out': ruled out, injured, suspended, withdrawn from the tournament \
-or upcoming match
-  - status 'doubtful': fitness test pending, race against time, may miss
+or upcoming match — CURRENT or FORWARD claim only
+  - status 'doubtful': fitness test pending, race against time, may miss — \
+CURRENT or FORWARD claim only
   - status 'available': RETURNED to training/squad after a previously reported \
 absence or injury (NOT just "is in the squad" or "is playing")
 - match_result_claim: if the article is a match report, populate scores, \
