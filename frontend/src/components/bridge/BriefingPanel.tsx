@@ -75,7 +75,6 @@ function HeroStrip({ briefing }: { briefing: WRBriefing }) {
   const avgScore = vs?.avg_1st_inn_recent ?? vs?.avg_1st_inn ?? briefing.venue_profile?.avg_score ?? null;
   const chaseWin = vs?.chase_win_pct ?? null;
   const tossField = vs?.toss_field_pct ?? null;
-  const highest = vs?.highest ?? null;
   const h2h = briefing.h2h as { total?: number; [k: string]: unknown } | null;
   const t1Wins = h2h ? (h2h[`${t1}_wins`] as number ?? 0) : 0;
   const t2Wins = h2h ? (h2h[`${t2}_wins`] as number ?? 0) : 0;
@@ -165,13 +164,7 @@ function HeroStrip({ briefing }: { briefing: WRBriefing }) {
         {h2hTotal > 0 && (
           <div className="wr-bp-metric">
             <strong>{t1Wins}&ndash;{t2Wins}</strong>
-            <span>H2H</span>
-          </div>
-        )}
-        {highest != null && (
-          <div className="wr-bp-metric">
-            <strong>{highest}</strong>
-            <span>HIGHEST</span>
+            <span>H2H ALL-TIME</span>
           </div>
         )}
       </div>
