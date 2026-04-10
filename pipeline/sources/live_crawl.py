@@ -20,12 +20,14 @@ import asyncio
 import json
 import re
 import time
+import urllib.request
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
 from rich.console import Console
 
+from pipeline.config import LIVE_SOURCE, LIVESCORES_RSS_URL
 from pipeline.ipl.franchise_metadata import IPL_FRANCHISES
 
 console = Console()
@@ -135,33 +137,23 @@ def _resolve_fid(abbreviation: str) -> str:
     return _ABBREV_TO_FID.get(abbreviation.upper(), abbreviation.lower())
 
 
-def _overs_to_float(val: float | int | str) -> float:
-    """Convert cricket overs notation to actual overs as a float.
-
-    ESPNcricinfo uses 19.3 to mean 19 overs + 3 balls = 19.5 actual overs.
-    Also handles 2-digit ball encoding: 19.06 = 19 overs + 6 balls.
-    """
-    val = float(val)
-    if val == 0:
-        return 0.0
-    completed = int(val)
-    frac = round((val - completed) * 100)  # e.g. 19.06 → 6, 19.3 → 30
-    # If fraction > 6, it's 2-digit encoding (e.g. .06 = 6 balls)
-    # If fraction <= 6, it's 1-digit (e.g. .3 = 3 balls)
-    if frac > 6:
-        balls = frac
-    else:
-        balls = round((val - completed) * 10)
-    return completed + balls / 6
-
-
 def _parse_from_json(
     data: dict,
     match_number: int,
     team1: str,
     team2: str,
 ) -> LiveMatchData:
-    """Parse __NEXT_DATA__ JSON into LiveMatchData."""
+    """Parse __NEXT_DATA__ JSON into LiveMatchData.
+
+    All numeric live fields come from internally-consistent ESPN subsystems:
+      - content.innings[isCurrent]      — runs/wickets/overs/target
+      - content.supportInfo.liveInfo    — pre-computed CRR/RRR
+      - match.liveInningPredictions     — current win probability
+      - match.statusText                — "X need Y runs in Z balls"
+
+    Match-level live* fields (liveOvers, liveBalls) are deliberately ignored
+    — they lag the per-innings data and caused stale CRR/RRR in production.
+    """
     match = data["match"]
     content = data.get("content", {})
 
@@ -173,100 +165,70 @@ def _parse_from_json(
         crawled_at=datetime.now(timezone.utc).isoformat(),
     )
 
-    # ── Match status ───────────────────────────────────────────
-    stage = match.get("stage", "")
-    if stage != "RUNNING":
+    # ── Match status + status text (ESPN-authored) ─────────────
+    if match.get("stage", "") != "RUNNING":
         result.status = "completed"
-
     result.status_text = match.get("statusText")
 
-    # ── Build ESPN team ID → franchise_id mapping ──────────────
-    espn_teams = match.get("teams", [])
+    # ── ESPN team id → franchise id mapping (used for toss) ────
     espn_id_to_fid: dict[int, str] = {}
-    abbrev_to_espn_id: dict[str, int] = {}
-    for t in espn_teams:
+    for t in match.get("teams", []):
         team_obj = t.get("team", {})
         espn_id = team_obj.get("id")
-        abbr = team_obj.get("abbreviation", "")
-        fid = _resolve_fid(abbr)
         if espn_id:
-            espn_id_to_fid[espn_id] = fid
-            abbrev_to_espn_id[abbr.upper()] = espn_id
+            espn_id_to_fid[espn_id] = _resolve_fid(team_obj.get("abbreviation", ""))
 
-    # ── Scores from match.teams[] ──────────────────────────────
-    for t in espn_teams:
-        team_obj = t.get("team", {})
-        fid = _resolve_fid(team_obj.get("abbreviation", ""))
-        score = t.get("score")
-        if score and fid == team1:
-            result.score1 = score
-        elif score and fid == team2:
-            result.score2 = score
-
-    # ── Innings data (overs, batting, batters/bowlers) ─────────
+    # ── Innings: source of truth for scores, overs, batting ────
     innings = content.get("innings", [])
     current_inn = None
     for inn in innings:
-        inn_team = inn.get("team", {})
-        fid = _resolve_fid(inn_team.get("abbreviation", ""))
+        fid = _resolve_fid(inn.get("team", {}).get("abbreviation", ""))
+        runs = inn.get("runs")
+        wickets = inn.get("wickets")
         overs = inn.get("overs")
+        score = f"{runs}/{wickets}" if runs is not None and wickets is not None else None
         overs_str = str(overs) if overs is not None else None
 
-        if fid == team1 and overs_str:
-            result.overs1 = overs_str
-        elif fid == team2 and overs_str:
-            result.overs2 = overs_str
+        if fid == team1:
+            if score:
+                result.score1 = score
+            if overs_str:
+                result.overs1 = overs_str
+        elif fid == team2:
+            if score:
+                result.score2 = score
+            if overs_str:
+                result.overs2 = overs_str
 
         if inn.get("isCurrent"):
             result.batting = fid
             current_inn = inn
 
-    # ── Current run rate (calculated) ──────────────────────────
-    if current_inn:
-        live_overs_raw = match.get("liveOvers")
-        inn_runs = current_inn.get("runs", 0)
-        if live_overs_raw is not None:
-            live_overs = _overs_to_float(live_overs_raw)
-            if live_overs > 0:
-                result.current_rr = round(inn_runs / live_overs, 2)
+    # ── Pre-computed CRR/RRR from supportInfo.liveInfo ─────────
+    # ESPN ships these directly. Note the typo: "requiredRunrate"
+    # (lowercase 'rate'), not "requiredRunRate".
+    live_info = content.get("supportInfo", {}).get("liveInfo", {})
+    crr = live_info.get("currentRunRate")
+    if isinstance(crr, (int, float)):
+        result.current_rr = round(float(crr), 2)
+    rrr = live_info.get("requiredRunrate")
+    if isinstance(rrr, (int, float)):
+        result.required_rr = round(float(rrr), 2)
 
-    # ── Required run rate (2nd innings only) ───────────────────
-    if current_inn and current_inn.get("inningNumber", 0) == 2:
-        # Find 1st innings runs for target
-        for inn in innings:
-            if inn.get("inningNumber") == 1:
-                target = inn.get("runs", 0) + 1
-                remaining_runs = target - current_inn.get("runs", 0)
-                live_overs_raw = match.get("liveOvers")
-                if live_overs_raw is not None:
-                    current_ov = _overs_to_float(live_overs_raw)
-                    total_overs = float(
-                        current_inn.get("totalOvers", 20)
-                    )
-                    remaining_ov = total_overs - current_ov
-                    if remaining_ov > 0 and remaining_runs > 0:
-                        result.required_rr = round(
-                            remaining_runs / remaining_ov, 2,
-                        )
-                break
-
-    # ── Win probability ────────────────────────────────────────
-    ball_comments = (
-        content.get("recentBallCommentary", {})
-        .get("ballComments", [])
-    )
-    if ball_comments and result.batting:
-        latest = ball_comments[0]
-        preds = latest.get("predictions", {})
-        win_prob = preds.get("winProbability")
-        if win_prob is not None and isinstance(win_prob, (int, float)):
-            # winProbability is the batting team's probability
+    # ── Win probability from match.liveInningPredictions ───────
+    # winProbability is the *batting* team's probability for the
+    # innings identified by inningNumber.
+    preds = match.get("liveInningPredictions") or {}
+    win_prob = preds.get("winProbability")
+    pred_inning = preds.get("inningNumber")
+    if isinstance(win_prob, (int, float)) and current_inn:
+        if pred_inning == current_inn.get("inningNumber") and result.batting:
+            wp = round(float(win_prob), 1)
+            other = round(100 - wp, 1)
             if result.batting == team1:
-                result.win_prob_team1 = round(float(win_prob), 1)
-                result.win_prob_team2 = round(100 - float(win_prob), 1)
+                result.win_prob_team1, result.win_prob_team2 = wp, other
             else:
-                result.win_prob_team2 = round(float(win_prob), 1)
-                result.win_prob_team1 = round(100 - float(win_prob), 1)
+                result.win_prob_team2, result.win_prob_team1 = wp, other
 
     # ── Toss ───────────────────────────────────────────────────
     toss_winner_id = match.get("tossWinnerTeamId")
@@ -337,8 +299,109 @@ async def crawl_live_match(
         return None
 
 
+# ── RSS fallback ────────────────────────────────────────────────────
+
+_RSS_MATCH_ID_RE = re.compile(r"/match/(\d+)\.html")
+_RSS_ITEM_RE = re.compile(
+    r"<item>\s*<title>(?P<title>.*?)</title>.*?<link>(?P<link>.*?)</link>",
+    re.DOTALL,
+)
+
+
+def _fetch_livescores_rss() -> str | None:
+    """Fetch the cricinfo livescores RSS feed. Returns raw XML or None."""
+    try:
+        req = urllib.request.Request(
+            LIVESCORES_RSS_URL,
+            headers={"User-Agent": "duckworth-dugout/1.0"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return resp.read().decode("utf-8", errors="replace")
+    except Exception as e:
+        console.print(f"  [yellow]Livescores RSS fetch error: {e}[/yellow]")
+        return None
+
+
+def _parse_rss_title(
+    title: str, team1: str, team2: str,
+) -> tuple[str | None, str | None, str | None]:
+    """Parse an RSS livescores title into (score1, score2, batting_fid).
+
+    Title format: "<Team1 Name> <score> [*] v <Team2 Name> <score> [*]"
+    Asterisk marks the batting team. Team order in title may not match the
+    schedule's team1/team2 order, so we look up by franchise long name.
+
+    Returns (None, None, None) if the title can't be cleanly parsed.
+    """
+    if " v " not in title:
+        return None, None, None
+    left, right = title.split(" v ", 1)
+    name1 = IPL_FRANCHISES.get(team1, {}).get("name", "")
+    name2 = IPL_FRANCHISES.get(team2, {}).get("name", "")
+
+    def extract(side: str) -> tuple[str | None, bool]:
+        m = re.search(r"(\d+/\d+)\s*(\*?)", side)
+        if not m:
+            return None, False
+        return m.group(1), bool(m.group(2))
+
+    if name1 and name1 in left and name2 and name2 in right:
+        s1, bat1 = extract(left)
+        s2, bat2 = extract(right)
+    elif name2 and name2 in left and name1 and name1 in right:
+        s2, bat2 = extract(left)
+        s1, bat1 = extract(right)
+    else:
+        return None, None, None
+
+    batting = team1 if bat1 else team2 if bat2 else None
+    return s1, s2, batting
+
+
+def parse_rss_for_match(
+    match_id: str, match_number: int, team1: str, team2: str,
+) -> LiveMatchData | None:
+    """Parse the livescores RSS feed for a specific match.
+
+    Returns a LiveMatchData with only score1/score2/batting populated;
+    every other field stays None so the frontend hides those widgets.
+    """
+    xml = _fetch_livescores_rss()
+    if not xml:
+        return None
+    for m in _RSS_ITEM_RE.finditer(xml):
+        link = m.group("link").strip()
+        id_match = _RSS_MATCH_ID_RE.search(link)
+        if not id_match or id_match.group(1) != match_id:
+            continue
+        title = re.sub(r"&amp;", "&", m.group("title")).strip()
+        score1, score2, batting = _parse_rss_title(title, team1, team2)
+        if not score1 and not score2:
+            return None
+        return LiveMatchData(
+            match_number=match_number,
+            team1=team1,
+            team2=team2,
+            status="live",
+            score1=score1,
+            score2=score2,
+            batting=batting,
+            crawled_at=datetime.now(timezone.utc).isoformat(),
+        )
+    return None
+
+
+def _match_id_from_url(url: str) -> str | None:
+    m = _RSS_MATCH_ID_RE.search(url or "")
+    return m.group(1) if m else None
+
+
+# ── Orchestration ────────────────────────────────────────────────────
+
+
 def crawl_live_matches_sync(schedule_path: Path | None = None) -> list[LiveMatchData]:
-    """Find live matches in schedule.json, crawl them, return rich data."""
+    """Find live matches in schedule.json, fetch them via the configured
+    source (LIVE_SOURCE), return enriched data."""
     path = schedule_path or PUBLIC_API_DIR / "schedule.json"
     if not path.exists():
         return []
@@ -352,15 +415,32 @@ def crawl_live_matches_sync(schedule_path: Path | None = None) -> list[LiveMatch
     if not live:
         return []
 
-    console.print(f"\n[bold]Live Match Crawl[/bold] — {len(live)} live match(es)")
+    mode = LIVE_SOURCE if LIVE_SOURCE in ("auto", "crawl", "rss") else "auto"
+    console.print(
+        f"\n[bold]Live Match Fetch[/bold] — {len(live)} live match(es) "
+        f"[dim](source={mode})[/dim]"
+    )
 
     results: list[LiveMatchData] = []
     for m in live:
         label = f"M{m['match_number']}: {m['team1'].upper()} vs {m['team2'].upper()}"
-        console.print(f"  Crawling {label}...")
-        data = asyncio.run(
-            crawl_live_match(m["match_url"], m["match_number"], m["team1"], m["team2"])
-        )
+        match_id = _match_id_from_url(m["match_url"])
+        data: LiveMatchData | None = None
+
+        if mode in ("auto", "crawl"):
+            console.print(f"  Crawling {label}...")
+            data = asyncio.run(
+                crawl_live_match(
+                    m["match_url"], m["match_number"], m["team1"], m["team2"],
+                )
+            )
+
+        if data is None and mode in ("auto", "rss") and match_id:
+            console.print(f"  RSS fallback for {label}...")
+            data = parse_rss_for_match(
+                match_id, m["match_number"], m["team1"], m["team2"],
+            )
+
         if data:
             results.append(data)
             batters = ", ".join(
