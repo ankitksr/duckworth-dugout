@@ -100,6 +100,12 @@ body {
   background: var(--wr-bg);
 }
 
+@media (min-width: 1600px) {
+  .wr-main {
+    grid-template-columns: 360px 1fr 360px;
+  }
+}
+
 /* Center column lower half: single panel (Briefing or Team Intel) */
 .wr-center-lower {
   flex: 50 1 0;        /* same flex weight as SeasonPulse — equal vertical split */
