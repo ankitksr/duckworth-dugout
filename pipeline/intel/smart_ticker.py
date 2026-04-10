@@ -204,10 +204,44 @@ def _build_mcp_context(
     return "\n\n".join(parts)
 
 
+def _build_availability_block(availability: dict | None) -> str:
+    """Format availability.json as a verified-facts block.
+
+    The LLM is instructed (in the system prompt) to ONLY make
+    injury/availability claims that appear in this block. Without it,
+    the model invents plausible-sounding injuries from prior knowledge.
+    """
+    if not availability:
+        return ""
+    by_team = availability.get("by_team") or {}
+    if not by_team:
+        return ""
+
+    lines: list[str] = []
+    for fid, entries in by_team.items():
+        for e in entries:
+            player = e.get("player", "").strip()
+            status = e.get("status", "").strip()
+            reason = e.get("reason", "").strip()
+            if not player or not status:
+                continue
+            short = _short(fid)
+            tail = f" — {reason}" if reason else ""
+            lines.append(f"  {player} ({short}, {status}){tail}")
+    if not lines:
+        return ""
+    return (
+        "INJURY/AVAILABILITY (the ONLY verified facts — do not invent any "
+        "other player as injured, doubtful, missing, or unavailable):\n"
+        + "\n".join(lines)
+    )
+
+
 def _build_season_context(
     standings: list[dict],
     caps: dict | None,
     schedule: list[dict] | None,
+    availability: dict | None = None,
 ) -> str:
     """Build current-season context from synced JSON data."""
     parts: list[str] = []
@@ -269,6 +303,10 @@ def _build_season_context(
             ]
             parts.append("UPCOMING:\n" + "\n".join(lines))
 
+    avail_block = _build_availability_block(availability)
+    if avail_block:
+        parts.append(avail_block)
+
     return "\n\n".join(parts)
 
 
@@ -289,6 +327,7 @@ async def generate_smart_ticker(
     standings = _load_json("standings.json") or []
     caps = _load_json("caps.json")
     schedule = _load_json("schedule.json")
+    availability = _load_json("availability.json")
 
     if not standings:
         console.print(
@@ -296,10 +335,15 @@ async def generate_smart_ticker(
         )
         return []
 
-    # Check staleness
+    # Check staleness — cache key includes the availability event count so
+    # the ticker regenerates whenever a new injury/availability fact lands,
+    # even when the points table hasn't moved. The "v2" prefix invalidates
+    # legacy cached entries that were generated without availability grounding
+    # (and were therefore prone to fabricated injury claims).
     cache = LLMCache()
     s_hash = _standings_hash(standings)
-    cache_key = f"ticker_{s_hash}"
+    avail_marker = (availability or {}).get("total_unavailable", 0)
+    cache_key = f"ticker_v2_{s_hash}_a{avail_marker}"
 
     cached = cache.get(_CACHE_TASK, cache_key)
     if cached and cached.get("items"):
@@ -314,7 +358,7 @@ async def generate_smart_ticker(
     # Build context
     mcp_context = _build_mcp_context(today_matches, active_lasts)
     season_context = _build_season_context(
-        standings, caps, schedule,
+        standings, caps, schedule, availability,
     )
 
     # Add roster summary so LLM has a positive reference of active players
