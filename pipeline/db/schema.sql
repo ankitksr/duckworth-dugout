@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS war_room_wire (
     teams VARCHAR[],
     source VARCHAR DEFAULT 'wire',
     context_hash VARCHAR,
+    hash_version VARCHAR DEFAULT 'v1',
     season VARCHAR NOT NULL,
     match_day VARCHAR,
     expired BOOLEAN DEFAULT FALSE,

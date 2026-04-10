@@ -31,7 +31,7 @@ import duckdb
 from rich.console import Console
 
 from pipeline.intel.roster_context import summary as roster_summary
-from pipeline.intel.wire_generators import GeneratorContext, _load_json
+from pipeline.intel.wire_generators import HASH_VERSION, GeneratorContext, _load_json
 from pipeline.intel.wire_generators.newsdesk import NewsDeskGenerator
 from pipeline.intel.wire_generators.preview import MatchdayPreviewGenerator
 from pipeline.intel.wire_generators.scout import ScoutReportGenerator
@@ -108,6 +108,31 @@ def _expire_previous_day(
     return len(result)
 
 
+def _expire_legacy_hash_version(
+    conn: duckdb.DuckDBPyConnection,
+    season: str,
+    today: str,
+) -> int:
+    """Expire same-day rows produced by an older hash version.
+
+    When HASH_VERSION is bumped, the new generators emit hashes that can
+    never collide with old rows — so old same-day rows would otherwise
+    persist in the wire alongside the new ones. Idempotent: once a row is
+    expired it no longer matches the WHERE clause.
+    """
+    result = conn.execute(
+        """
+        UPDATE war_room_wire
+        SET expired = TRUE
+        WHERE season = ? AND expired = FALSE AND match_day = ?
+          AND coalesce(hash_version, 'v1') != ?
+        RETURNING id
+        """,
+        [season, today, HASH_VERSION],
+    ).fetchall()
+    return len(result)
+
+
 def _insert_items(
     conn: duckdb.DuckDBPyConnection,
     items: list[dict],
@@ -128,8 +153,8 @@ def _insert_items(
             """
             INSERT INTO war_room_wire
                 (id, headline, text, emoji, category, severity, teams,
-                 source, context_hash, season, match_day)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 source, context_hash, hash_version, season, match_day)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             [
                 next_id + i,
@@ -141,6 +166,7 @@ def _insert_items(
                 item["teams"],
                 item.get("source", "wire"),
                 item.get("_context_hash", ""),
+                HASH_VERSION,
                 season,
                 today,
             ],
@@ -169,6 +195,15 @@ async def generate_wire(
     expired = _expire_previous_day(conn, season, today_str)
     if expired:
         console.print(f"  [dim]Wire: expired {expired} previous-day entries[/dim]")
+
+    # Migration: expire same-day rows from older hash versions on first
+    # post-deploy run after a HASH_VERSION bump.
+    legacy = _expire_legacy_hash_version(conn, season, today_str)
+    if legacy:
+        console.print(
+            f"  [dim]Wire: expired {legacy} legacy same-day entries "
+            f"(hash_version != {HASH_VERSION})[/dim]"
+        )
 
     # Force mode: expire today's entries too so stale same-day items don't persist
     if force:
@@ -200,10 +235,20 @@ async def generate_wire(
     # Build shared base context
     base_context = _build_base_context(conn, season, standings, schedule)
 
+    # Drop already-completed matches so generators (esp. Preview) only see
+    # fixtures that still need editorial coverage. Without this, the LLM
+    # can hallucinate previews for matches that already finished today.
+    live_today = [m for m in today_matches if m.status != "completed"]
+    if len(live_today) != len(today_matches):
+        dropped = len(today_matches) - len(live_today)
+        console.print(
+            f"  [dim]Wire: filtered {dropped} completed match(es) from today's fixtures[/dim]"
+        )
+
     ctx = GeneratorContext(
         conn=conn,
         season=season,
-        today_matches=today_matches,
+        today_matches=live_today,
         standings=standings,
         caps=caps,
         schedule=schedule,

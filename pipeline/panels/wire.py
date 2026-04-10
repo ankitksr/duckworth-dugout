@@ -39,6 +39,15 @@ def sync(ctx: SyncContext, *, force: bool = False) -> None:
     except Exception:
         pass
 
+    # Ensure hash_version column exists (migration for existing DBs).
+    # Used by intel/wire.py to expire legacy same-day rows after a hash bump.
+    try:
+        db_conn.execute(
+            "ALTER TABLE war_room_wire ADD COLUMN IF NOT EXISTS hash_version VARCHAR DEFAULT 'v1'"
+        )
+    except Exception:
+        pass
+
     # One-time migration: expire legacy entries from the monolithic generator
     try:
         expired = db_conn.execute(
@@ -63,12 +72,7 @@ def sync(ctx: SyncContext, *, force: bool = False) -> None:
             today_str = date.today().isoformat()
             for m in json.loads(sched_path.read_text(encoding="utf-8")):
                 if m.get("date") == today_str:
-                    today_matches.append(ScheduleMatch(**{
-                        k: m[k] for k in (
-                            "match_number", "date", "time",
-                            "venue", "city", "team1", "team2",
-                        )
-                    }))
+                    today_matches.append(ScheduleMatch.from_schedule_dict(m))
 
     try:
         from pipeline.intel.wire import export_wire_json, generate_wire

@@ -2,15 +2,25 @@
 
 Trigger: morning time-window on match days.
 Voice: tactical prediction — takes a side, specific matchups.
-Model: Pro @ 0.8 — needs tool use for H2H/matchup verification.
+Model: Pro @ 0.4 — tool use for H2H/matchup verification, low temp to
+keep the model anchored to the fixtures it was given.
 """
 
 import hashlib
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
+
+from rich.console import Console
 
 from pipeline.intel.prompts import load_prompt
-from pipeline.intel.wire_generators import GeneratorContext, WireGenerator
+from pipeline.intel.wire_generators import (
+    HASH_VERSION,
+    GeneratorContext,
+    WireGenerator,
+    hash_time_bucket,
+)
 from pipeline.ipl.franchise_metadata import IPL_FRANCHISES
+
+console = Console()
 
 _SHORT = {fid: d["short_name"] for fid, d in IPL_FRANCHISES.items() if not d.get("defunct")}
 
@@ -29,12 +39,10 @@ class MatchdayPreviewGenerator(WireGenerator):
         "get_phase_stats", "get_venue_stats", "get_squad_detail",
     ]
     MODEL = "pro"
-    TEMPERATURE = 0.8
+    TEMPERATURE = 0.4
 
     def context_hash(self, ctx: GeneratorContext) -> str:
-        parts = [self.SOURCE]
-        today = date.today().isoformat()
-        parts.append(f"date:{today}")
+        parts = [HASH_VERSION, self.SOURCE, hash_time_bucket()]
         for m in ctx.today_matches:
             parts.append(f"match:{m.team1}v{m.team2}")
         return hashlib.sha256("|".join(parts).encode()).hexdigest()[:16]
@@ -57,6 +65,39 @@ class MatchdayPreviewGenerator(WireGenerator):
             parts.append(line)
 
         return "TODAY'S FIXTURES:\n" + "\n".join(parts)
+
+    def filter_items(
+        self, ctx: GeneratorContext, items: list[dict]
+    ) -> list[dict]:
+        """Drop dispatches whose team-pair doesn't match a fixture today.
+
+        The Pro model occasionally hallucinates previews for matches that
+        already happened or for arbitrary fixtures. We anchor every dispatch
+        to a real today's-fixture pair.
+        """
+        valid_pairs = {frozenset((m.team1, m.team2)) for m in ctx.today_matches}
+        if not valid_pairs:
+            if items:
+                console.print(
+                    f"  [yellow]Wire/{self.SOURCE}: dropped {len(items)} "
+                    f"dispatch(es) — no fixtures today[/yellow]"
+                )
+            return []
+
+        kept: list[dict] = []
+        dropped = 0
+        for item in items:
+            teams = item.get("teams") or []
+            if len(teams) != 2 or frozenset(teams) not in valid_pairs:
+                dropped += 1
+                continue
+            kept.append(item)
+        if dropped:
+            console.print(
+                f"  [yellow]Wire/{self.SOURCE}: dropped {dropped} "
+                f"dispatch(es) not matching today's fixtures[/yellow]"
+            )
+        return kept
 
     def system_prompt(self) -> str:
         return load_prompt("wire_preview_system.md")

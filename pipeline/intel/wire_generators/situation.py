@@ -9,7 +9,12 @@ import hashlib
 import json
 
 from pipeline.intel.prompts import load_prompt
-from pipeline.intel.wire_generators import GeneratorContext, WireGenerator
+from pipeline.intel.wire_generators import (
+    HASH_VERSION,
+    GeneratorContext,
+    WireGenerator,
+    hash_time_bucket,
+)
 
 
 class SituationRoomGenerator(WireGenerator):
@@ -19,7 +24,7 @@ class SituationRoomGenerator(WireGenerator):
     TEMPERATURE = 0.4
 
     def context_hash(self, ctx: GeneratorContext) -> str:
-        parts = [self.SOURCE]
+        parts = [HASH_VERSION, self.SOURCE, hash_time_bucket()]
         if ctx.standings:
             parts.append(json.dumps(
                 [(s["short_name"], s["played"], s["wins"], s["nrr"])

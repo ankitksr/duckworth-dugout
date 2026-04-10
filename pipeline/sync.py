@@ -91,12 +91,9 @@ def sync_tiers(
                 today_str = date.today().isoformat()
                 for m in json.loads(sched_path.read_text(encoding="utf-8")):
                     if m.get("date") == today_str:
-                        ctx.today_matches.append(ScheduleMatch(**{
-                            k: m[k] for k in (
-                                "match_number", "date", "time",
-                                "venue", "city", "team1", "team2",
-                            )
-                        }))
+                        ctx.today_matches.append(
+                            ScheduleMatch.from_schedule_dict(m)
+                        )
 
     # Execute panels in order
     for panel_name in ordered:

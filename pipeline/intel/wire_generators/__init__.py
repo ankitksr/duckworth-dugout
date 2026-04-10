@@ -20,6 +20,7 @@ import json
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any
 
 import duckdb
@@ -33,6 +34,23 @@ console = Console()
 _FRANCHISE_IDS = "rcb, mi, csk, dc, pbks, srh, kkr, rr, lsg, gt"
 _VALID_FIDS = {fid.strip() for fid in _FRANCHISE_IDS.split(",")}
 _VALID_SEVERITIES = {"signal", "alert", "alarm"}
+
+# Bumped when context_hash semantics change. Prefixed onto every hash so
+# legacy DB rows can never collide with hashes from a newer generator
+# version — on deploy, generators run fresh exactly once.
+HASH_VERSION = "v2"
+
+# Time-bucket window — every generator rotates at least this often even
+# when its upstream signals (standings, schedule) are unchanged. Without
+# this, quiet periods between match completions would freeze the wire.
+HASH_BUCKET_HOURS = 2
+
+
+def hash_time_bucket() -> str:
+    """Current 2-hour bucket as a stable string. Used in all context_hash overrides."""
+    now = datetime.now(timezone.utc)
+    bucket = (now.hour // HASH_BUCKET_HOURS) * HASH_BUCKET_HOURS
+    return f"{now.date().isoformat()}T{bucket:02d}"
 
 
 def _load_json(filename: str) -> Any:
@@ -90,10 +108,11 @@ class WireGenerator(ABC):
     def context_hash(self, ctx: GeneratorContext) -> str:
         """Compute a hash of inputs relevant to this generator.
 
-        Override in subclasses for generator-specific sensitivity.
-        Default: hash of source name + standings + schedule status.
+        Override in subclasses for generator-specific sensitivity. Always
+        prefix with HASH_VERSION and include hash_time_bucket() so the wire
+        rotates even during quiet periods.
         """
-        parts = [self.SOURCE]
+        parts = [HASH_VERSION, self.SOURCE, hash_time_bucket()]
         if ctx.standings:
             parts.append(json.dumps(
                 [(s["short_name"], s["played"], s["wins"]) for s in ctx.standings],
@@ -136,7 +155,7 @@ class WireGenerator(ABC):
         *,
         force: bool = False,
     ) -> list[dict]:
-        """Run this generator: check should_run + hash, build context, call LLM, parse, return items."""
+        """Run: check should_run + hash, build context, call LLM, parse, return items."""
         if not force and not self.should_run(ctx):
             console.print(f"  [dim]Wire/{self.SOURCE}: skipped (should_run=False)[/dim]")
             return []
@@ -171,6 +190,7 @@ class WireGenerator(ABC):
         )
 
         items = self._parse_response(result)
+        items = self.filter_items(ctx, items)
         if items:
             console.print(
                 f"  [green]Wire/{self.SOURCE}: {len(items)} dispatches[/green]"
@@ -185,6 +205,16 @@ class WireGenerator(ABC):
             item["source"] = self.SOURCE
             item["_context_hash"] = ctx_hash
 
+        return items
+
+    def filter_items(
+        self, ctx: GeneratorContext, items: list[dict]
+    ) -> list[dict]:
+        """Hook for subclasses to drop hallucinated/invalid items post-parse.
+
+        Default: identity. Override to enforce per-generator constraints
+        (e.g. preview previews must reference today's fixtures).
+        """
         return items
 
     def _parse_response(self, result: dict) -> list[dict]:

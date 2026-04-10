@@ -46,13 +46,7 @@ def sync(ctx: SyncContext) -> None:
     next_date = upcoming[0]["date"]
     next_matches = [m for m in upcoming if m["date"] == next_date]
 
-    targets = [
-        ScheduleMatch(**{
-            k: m[k]
-            for k in ("match_number", "date", "time", "venue", "city", "team1", "team2")
-        })
-        for m in next_matches
-    ]
+    targets = [ScheduleMatch.from_schedule_dict(m) for m in next_matches]
 
     try:
         from pipeline.intel.briefing import generate_briefing

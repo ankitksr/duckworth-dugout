@@ -16,7 +16,12 @@ import duckdb
 
 from pipeline.intel.article_extraction import EXTRACTION_VERSION
 from pipeline.intel.prompts import load_prompt
-from pipeline.intel.wire_generators import GeneratorContext, WireGenerator
+from pipeline.intel.wire_generators import (
+    HASH_VERSION,
+    GeneratorContext,
+    WireGenerator,
+    hash_time_bucket,
+)
 
 
 class NewsDeskGenerator(WireGenerator):
@@ -64,7 +69,7 @@ class NewsDeskGenerator(WireGenerator):
             return []
 
     def context_hash(self, ctx: GeneratorContext) -> str:
-        parts = [self.SOURCE]
+        parts = [HASH_VERSION, self.SOURCE, hash_time_bucket()]
         ids = self._recent_article_ids(ctx.conn)
         parts.append(f"articles:{','.join(ids)}")
         return hashlib.sha256("|".join(parts).encode()).hexdigest()[:16]

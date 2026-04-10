@@ -99,6 +99,17 @@ class ScheduleMatch:
     required_rr: float | None = None  # required run rate
     live_forecast: str | None = None  # "RR 135"
 
+    @classmethod
+    def from_schedule_dict(cls, m: dict) -> "ScheduleMatch":
+        """Build from a schedule.json entry, preserving status when present."""
+        return cls(**{k: m[k] for k in _SCHEDULE_MATCH_LOAD_FIELDS if k in m})
+
+
+_SCHEDULE_MATCH_LOAD_FIELDS = (
+    "match_number", "date", "time", "venue", "city",
+    "team1", "team2", "status",
+)
+
 
 @dataclass
 class TickerItem:

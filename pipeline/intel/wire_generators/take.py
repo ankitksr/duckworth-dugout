@@ -10,7 +10,12 @@ import json
 from datetime import datetime, timezone
 
 from pipeline.intel.prompts import load_prompt
-from pipeline.intel.wire_generators import GeneratorContext, WireGenerator
+from pipeline.intel.wire_generators import (
+    HASH_VERSION,
+    GeneratorContext,
+    WireGenerator,
+    hash_time_bucket,
+)
 
 
 def _time_window() -> str:
@@ -33,7 +38,7 @@ class TheTakeGenerator(WireGenerator):
     TEMPERATURE = 0.95
 
     def context_hash(self, ctx: GeneratorContext) -> str:
-        parts = [self.SOURCE]
+        parts = [HASH_VERSION, self.SOURCE, hash_time_bucket()]
         parts.append(f"window:{_time_window()}")
         if ctx.standings:
             parts.append(json.dumps(

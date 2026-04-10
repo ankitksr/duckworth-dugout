@@ -8,7 +8,13 @@ Model: Pro @ 0.7 — analytical, connects dots across performances.
 import hashlib
 
 from pipeline.intel.prompts import load_prompt
-from pipeline.intel.wire_generators import GeneratorContext, WireGenerator, _load_json
+from pipeline.intel.wire_generators import (
+    HASH_VERSION,
+    GeneratorContext,
+    WireGenerator,
+    _load_json,
+    hash_time_bucket,
+)
 from pipeline.ipl.franchise_metadata import IPL_FRANCHISES
 
 _SHORT = {fid: d["short_name"] for fid, d in IPL_FRANCHISES.items() if not d.get("defunct")}
@@ -25,7 +31,7 @@ class ScoutReportGenerator(WireGenerator):
     TEMPERATURE = 0.7
 
     def context_hash(self, ctx: GeneratorContext) -> str:
-        parts = [self.SOURCE]
+        parts = [HASH_VERSION, self.SOURCE, hash_time_bucket()]
         # Sensitive to match completions and cap race changes
         if ctx.schedule:
             completed = sum(1 for m in ctx.schedule if m.get("status") == "completed")

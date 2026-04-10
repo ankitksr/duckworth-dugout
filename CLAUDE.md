@@ -56,7 +56,7 @@ duckworth-dugout/
 │   ├── war-room/                # Pipeline JSON output + enrichment.duckdb
 │   └── sample/                  # Sample JSON for dev seeding (seed-sample command)
 ├── cache/                       # Runtime caches (LLM responses, Wikipedia, manifests)
-└── .github/workflows/deploy.yml # GitHub Pages: push to main → build → deploy
+└── .github/workflows/         # GitHub Pages: push → deploy.yml; cron → sync-deploy.yml; match-window → live-update.yml
 ```
 
 ## Quick Start
@@ -193,7 +193,14 @@ ticker/wire/briefing/dossier/scenarios/records/narratives.
 Each LLM panel owns its own cache key:
 - **Scenarios, Ticker** — standings hash (regenerate when table changes)
 - **Narratives** — schedule results hash (regenerate when match results change)
-- **Wire** — composite: standings + match count + caps + article freshness
+- **Wire** — per-generator hash, all prefixed with `HASH_VERSION` + a 2-hour
+  `hash_time_bucket()` so the wire rotates even during quiet periods. Each
+  generator layers its own signal on top: **situation** = standings + completions,
+  **scout** = completions + cap leaders, **newsdesk** = recent article IDs,
+  **preview** = today's fixture pairs, **take** = standings + IST time-window.
+  Bumping `HASH_VERSION` (in `wire_generators/__init__.py`) makes legacy
+  same-day rows expire automatically on the next sync via the `hash_version`
+  column on `war_room_wire`.
 - **Briefing** — match day + team matchup pair
 - **Dossier** — team matchup pair, reset on new match day
 - **Records** — daily threshold
