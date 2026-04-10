@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useWarRoomState } from "../../hooks/useWarRoom";
-import { timeAgo } from "../helpers";
+import { asOfIST, isFresh } from "../helpers";
 import type { WRWireSource } from "../../types/war-room";
 
 const SOURCE_LABELS: Record<WRWireSource, string> = {
@@ -12,9 +12,21 @@ const SOURCE_LABELS: Record<WRWireSource, string> = {
   wire: "WIRE",
 };
 
+// Desks shown in the filter bar (wire/legacy items stay in ALL only)
+const FILTER_SOURCES: WRWireSource[] = [
+  "situation",
+  "newsdesk",
+  "preview",
+  "scout",
+  "take",
+];
+
+type Filter = WRWireSource | "all";
+
 export function AIWirePanel() {
   const { wire, selectedTeam, standings } = useWarRoomState();
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [sourceFilter, setSourceFilter] = useState<Filter>("all");
 
   // Resolve short names for team chips
   const teamShort = useMemo(() => {
@@ -26,18 +38,24 @@ export function AIWirePanel() {
     return map;
   }, [standings]);
 
-  // Float team-relevant entries to top when a team is selected
+  // Apply source filter, then float team-relevant entries to the top
   const sorted = useMemo(() => {
-    if (!selectedTeam) return wire;
-    return [...wire].sort((a, b) => {
+    let items = wire ?? [];
+    if (sourceFilter !== "all") {
+      items = items.filter((i) => (i.source ?? "wire") === sourceFilter);
+    }
+    if (!selectedTeam) return items;
+    return [...items].sort((a, b) => {
       const aInv = a.teams?.includes(selectedTeam) ? 0 : 1;
       const bInv = b.teams?.includes(selectedTeam) ? 0 : 1;
       return aInv - bInv;
     });
-  }, [wire, selectedTeam]);
+  }, [wire, selectedTeam, sourceFilter]);
 
-  // Reset expanded card when team selection changes
-  useEffect(() => { setExpanded(null); }, [selectedTeam]);
+  // Reset expanded card when filters change
+  useEffect(() => {
+    setExpanded(null);
+  }, [selectedTeam, sourceFilter]);
 
   if (!wire || wire.length === 0) {
     return (
@@ -53,7 +71,27 @@ export function AIWirePanel() {
   return (
     <div className="wr-pnl wr-wire-pnl">
       <div className="wr-ph">AI Wire <sub>LLM INSIGHTS</sub></div>
+      <div className="wr-wire-filters">
+        <button
+          className={`wr-wire-filter${sourceFilter === "all" ? " active" : ""}`}
+          onClick={() => setSourceFilter("all")}
+        >
+          ALL
+        </button>
+        {FILTER_SOURCES.map((src) => (
+          <button
+            key={src}
+            className={`wr-wire-filter wr-wire-filter-${src}${sourceFilter === src ? " active" : ""}`}
+            onClick={() => setSourceFilter(src)}
+          >
+            {SOURCE_LABELS[src]}
+          </button>
+        ))}
+      </div>
       <div className="wr-wire-scroll">
+        {sorted.length === 0 && (
+          <div className="wr-empty">No dispatches match this filter</div>
+        )}
         {sorted.map((item, i) => {
           const involves = selectedTeam
             ? item.teams?.includes(selectedTeam)
@@ -64,20 +102,25 @@ export function AIWirePanel() {
           const isOpen = expanded === i;
           const source = (item.source ?? "wire") as WRWireSource;
           const sourceLabel = SOURCE_LABELS[source] || source.toUpperCase();
+          const fresh = isFresh(item.generated_at);
+          const teams = item.teams ?? [];
+          const visibleTeams = teams.slice(0, 2);
+          const overflow = teams.length - visibleTeams.length;
 
           return (
             <div
               key={i}
-              className={`wr-wire-card wr-wire-${sev} wr-wire-src-${source}${involves ? " hl" : ""}${isOpen ? " open" : ""}`}
+              className={`wr-wire-card wr-wire-${sev} wr-wire-src-${source}${involves ? " hl" : ""}${isOpen ? " open" : ""}${fresh ? " fresh" : ""}`}
               style={{ opacity: dim ? 0.35 : 1, cursor: "pointer" }}
               onClick={() => setExpanded(isOpen ? null : i)}
             >
               <div className="wr-wire-top">
                 <span className="wr-wire-emoji">{item.emoji}</span>
-                <span className={`wr-wire-source wr-wire-source-${source}`}>{sourceLabel}</span>
-                <span className="wr-wire-cat">{catLabel}</span>
+                <span className={`wr-wire-source wr-wire-source-${source}`}>
+                  {sourceLabel}
+                </span>
                 <span className="wr-wire-teams">
-                  {(item.teams?.length ?? 0) <= 3 && item.teams?.map((tid) => {
+                  {visibleTeams.map((tid) => {
                     const info = teamShort[tid];
                     if (!info) return null;
                     return (
@@ -90,16 +133,31 @@ export function AIWirePanel() {
                       </span>
                     );
                   })}
+                  {overflow > 0 && (
+                    <span className="wr-wire-team wr-wire-team-overflow">
+                      +{overflow}
+                    </span>
+                  )}
                 </span>
-                <span className="wr-wire-time">{timeAgo(item.generated_at)}</span>
+                <span className="wr-wire-meta-right">
+                  {fresh && (
+                    <span className="wr-wire-fresh-dot" title="New (< 2h)" />
+                  )}
+                  <span className="wr-wire-time">
+                    as of {asOfIST(item.generated_at)}
+                  </span>
+                </span>
               </div>
               <div className="wr-wire-hl-row">
                 <div className="wr-wire-headline">{item.headline}</div>
-                <span className={`wr-wire-chevron${isOpen ? " open" : ""}`}>&#x25B8;</span>
+                <span className={`wr-wire-chevron${isOpen ? " open" : ""}`}>
+                  &#x25B8;
+                </span>
               </div>
               {isOpen && (
                 <div className="wr-wire-expand" style={{ display: "block" }}>
                   <div className="wr-wire-body">{item.text}</div>
+                  {catLabel && <div className="wr-wire-cat">{catLabel}</div>}
                 </div>
               )}
             </div>

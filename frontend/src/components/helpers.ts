@@ -13,6 +13,21 @@ export function timeAgo(iso: string): string {
   return `${days}d ago`;
 }
 
+export function asOfIST(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const ist = new Date(d.getTime() + 5.5 * 3600000);
+  const hh = String(ist.getUTCHours()).padStart(2, "0");
+  const mm = String(ist.getUTCMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+export function isFresh(iso: string, hours = 2): boolean {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return false;
+  return Date.now() - d.getTime() < hours * 3600_000;
+}
+
 export function istClock(): string {
   const now = new Date();
   const ist = new Date(now.getTime() + 5.5 * 3600000);
