@@ -107,6 +107,13 @@
   }
 }
 
+/* Compact one-line venue label is mobile-only; hidden by default so
+   it doesn't show on desktop or tablet. The @container query below
+   reveals it at narrow widths. Order matters: this default rule MUST
+   come BEFORE the @container query, otherwise same-specificity source
+   order makes the default win and the line stays hidden everywhere. */
+.wr-bp-detail-compact { display: none; }
+
 /* Very narrow widths: 2-row hero — identity stacked, then a context
    row that pairs venue/time (left) with metric stat boxes (right).
    Saves ~50px vs the previous 3-row stack. The venue cell shows the
@@ -153,9 +160,6 @@
     padding: 6px 6px;
   }
 }
-
-/* Compact venue line is mobile-only; hidden everywhere else. */
-.wr-bp-detail-compact { display: none; }
 
 /* Dividers hidden — sections use border-left instead */
 .wr-bp-divider { display: none; }
