@@ -69,3 +69,10 @@ GOOGLE_CLOUD_PROJECT = os.environ.get("CT_LLM_GCP_PROJECT", "")
 GOOGLE_CLOUD_LOCATION = os.environ.get("CT_LLM_GCP_LOCATION", "us-central1")
 LLM_RATE_LIMIT_RPM = int(os.environ.get("CT_LLM_RATE_LIMIT_RPM", "10"))
 LLM_MAX_RETRIES = 2
+
+# ── Live score source ────────────────────────────────────────────────────────
+# auto  → ESPN scorecard crawl, fall back to RSS livescores on failure
+# crawl → ESPN crawl only (rich data; null fields if extraction fails)
+# rss   → RSS livescores only (score string only, no CRR/RRR/win prob)
+LIVE_SOURCE = os.environ.get("CT_LIVE_SOURCE", "auto").lower()
+LIVESCORES_RSS_URL = "https://static.cricinfo.com/rss/livescores.xml"
