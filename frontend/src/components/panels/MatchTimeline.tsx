@@ -8,12 +8,17 @@ export function MatchTimeline() {
   const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!wrapRef.current) return;
-    // Scroll to: first live match, else last completed match
-    const anchor =
-      wrapRef.current.querySelector<HTMLElement>("[data-anchor]");
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    // Scroll to: first live match, else last completed match.
+    // Use direct scrollTop instead of Element.scrollIntoView — the latter
+    // walks up every scrollable ancestor and would yank the mobile page
+    // scroller (.wr) down to the matches panel on every mount.
+    const anchor = wrap.querySelector<HTMLElement>("[data-anchor]");
     if (anchor) {
-      anchor.scrollIntoView({ block: "start" });
+      const offset =
+        anchor.getBoundingClientRect().top - wrap.getBoundingClientRect().top;
+      wrap.scrollTop += offset;
     }
   }, [schedule, selectedTeam]);
 
