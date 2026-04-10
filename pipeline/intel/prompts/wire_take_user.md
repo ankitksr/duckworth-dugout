@@ -10,14 +10,9 @@ Produce 2-3 dispatches from The Take for the IPL AI Wire.
 
 ## WHAT OTHER DESKS HAVE FILED THIS CYCLE
 
-These dispatches were produced by the Situation Room, Scout Report, News Desk, and Matchday Preview. Your job is to extend, connect, or synthesize across them — find the through-line they couldn't see from inside their own lane:
+These dispatches were produced by the Situation Room, Scout Report, News Desk, and Matchday Preview *just now, in the same cycle*. Your job is to extend, connect, or synthesize across them — find the through-line they couldn't see from inside their own lane:
 
 {other_wire_output}
-
----
-
-## ALREADY ON THE WIRE (older entries) — do NOT repeat:
-{previous_entries}
 
 ---
 
@@ -37,5 +32,11 @@ These dispatches were produced by the Situation Room, Scout Report, News Desk, a
 - Be bold. Be specific. Be entertaining. But never argue with another desk — you are the voice that ties the wire together, not the voice that splits it apart.
 
 Valid franchise IDs: {franchise_ids}
+
+## DISPATCHES ALREADY ON TODAY'S WIRE
+
+{previous_entries}
+
+Any new dispatch that restates a thread above — your own prior takes OR a synthesis another desk has effectively already made — will be discarded. If you want to advance a thread, name what changed since it was last filed. Otherwise, find a connection nobody has drawn yet.
 
 Return ONLY a JSON array.

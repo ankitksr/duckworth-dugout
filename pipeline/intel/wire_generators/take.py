@@ -94,6 +94,49 @@ class TheTakeGenerator(WireGenerator):
         """Called by orchestrator with dispatches from other generators."""
         self._other_outputs = outputs
 
+    def get_previous_entries(self, ctx: GeneratorContext, limit: int = 30) -> str:
+        """Take's view of prior dispatches: own takes + cross-desk all-day history.
+
+        The base implementation source-scopes to a single generator. Take is
+        the synthesis desk, so it needs visibility into both (a) its own
+        prior takes (to avoid restating them) and (b) what the other desks
+        have already filed earlier today (so it doesn't synthesize the same
+        thread twice).
+        """
+        own = ctx.conn.execute(
+            """
+            SELECT category, headline, text FROM war_room_wire
+            WHERE season = ? AND expired = FALSE AND source = 'take'
+            ORDER BY generated_at DESC
+            LIMIT ?
+            """,
+            [ctx.season, limit],
+        ).fetchall()
+        cross = ctx.conn.execute(
+            """
+            SELECT source, category, headline, text FROM war_room_wire
+            WHERE season = ? AND expired = FALSE AND source != 'take'
+            ORDER BY generated_at DESC
+            LIMIT 40
+            """,
+            [ctx.season],
+        ).fetchall()
+        own_text = (
+            "\n".join(f"- [{r[0]}] {r[1]}: {r[2]}" for r in own)
+            or "(none yet)"
+        )
+        cross_text = (
+            "\n".join(f"- [{r[0]}:{r[1]}] {r[2]}: {r[3]}" for r in cross)
+            or "(none yet)"
+        )
+        return (
+            "YOUR PRIOR TAKES (do not restate any of these):\n"
+            + own_text
+            + "\n\nWHAT OTHER DESKS HAVE ALREADY FILED TODAY "
+            "(synthesize across these — do not just rephrase one):\n"
+            + cross_text
+        )
+
     def system_prompt(self) -> str:
         return load_prompt("wire_take_system.md")
 

@@ -13,9 +13,6 @@ Produce 1-3 News Desk dispatches for the IPL AI Wire.
 - **search_articles(query)** — search for more articles on a topic if you need to verify or find related reports
 - **get_squad_detail(team)** — check if a reported player is actually in the squad, their price, overseas status
 
-## ALREADY ON THE WIRE — do NOT repeat:
-{previous_entries}
-
 ## INSTRUCTIONS
 
 - Produce **1-3 dispatches** ONLY. Less is more — only react to genuinely significant news.
@@ -27,5 +24,11 @@ Produce 1-3 News Desk dispatches for the IPL AI Wire.
 - Be skeptical: skip generic previews, opinion columns, and recycled stats.
 
 Valid franchise IDs: {franchise_ids}
+
+## ALREADY ON THE WIRE — these are dispatches you have already filed today
+
+{previous_entries}
+
+Any new dispatch that restates a story above — even with different wording, a different angle, or a different quote from the same article — will be discarded. If a story you already covered has *new* information (a fresh quote, an updated injury status, a contradicting report), you may advance the thread by stating what changed. Otherwise, pick a different story.
 
 Return ONLY a JSON array (or empty array [] if nothing warrants a dispatch).

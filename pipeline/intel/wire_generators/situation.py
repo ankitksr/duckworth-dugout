@@ -23,10 +23,14 @@ class SituationRoomGenerator(WireGenerator):
     TEMPERATURE = 0.4
 
     def context_hash(self, ctx: GeneratorContext) -> str:
+        # NRR is intentionally excluded — it ticks on every match and would
+        # cause a full LLM regeneration mid-day even when no result has
+        # actually changed. Wins/losses + completed count are the right
+        # signal: situation only re-runs when a match result lands.
         parts = [HASH_VERSION, self.SOURCE]
         if ctx.standings:
             parts.append(json.dumps(
-                [(s["short_name"], s["played"], s["wins"], s["nrr"])
+                [(s["short_name"], s["played"], s["wins"])
                  for s in ctx.standings],
                 sort_keys=True,
             ))

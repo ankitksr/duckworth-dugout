@@ -16,9 +16,6 @@ You have access to tools. Use them to verify specific claims:
 
 Use tools when you spot a hypothesis worth verifying: "Is CSK's remaining schedule actually harder than KKR's?" — pull both and compare. Don't pull tools for data already in your context.
 
-## ALREADY ON THE WIRE — do NOT repeat these:
-{previous_entries}
-
 ## INSTRUCTIONS
 
 - Produce **2-4 dispatches**. Quality over volume.
@@ -28,5 +25,11 @@ Use tools when you spot a hypothesis worth verifying: "Is CSK's remaining schedu
 - Find what the table is hiding — the non-obvious positional truth.
 
 Valid franchise IDs: {franchise_ids}
+
+## ALREADY ON THE WIRE — these are dispatches you have already filed today
+
+{previous_entries}
+
+Any new dispatch that restates a claim above — even with different wording, different framing, or a different supporting number — will be discarded. Find a different angle, a different team, a different mathematical lens, or advance an existing thread by showing what changed since you last filed.
 
 Return ONLY a JSON array.

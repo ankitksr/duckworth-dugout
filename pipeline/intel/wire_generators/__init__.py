@@ -37,7 +37,18 @@ _VALID_SEVERITIES = {"signal", "alert", "alarm"}
 # Bumped when context_hash semantics change. Prefixed onto every hash so
 # legacy DB rows can never collide with hashes from a newer generator
 # version — on deploy, generators run fresh exactly once.
-HASH_VERSION = "v3"
+HASH_VERSION = "v4"
+
+# Hard ceiling on non-expired entries per source per day. Backstop against
+# unbounded accumulation if hashes keep changing despite the previous-entries
+# guard. Tuned generously — most days should land well under the cap.
+DAILY_CAP: dict[str, int] = {
+    "situation": 8,
+    "scout": 8,
+    "newsdesk": 6,
+    "preview": 8,
+    "take": 6,
+}
 
 
 def _load_json(filename: str) -> Any:
@@ -120,22 +131,25 @@ class WireGenerator(ABC):
         ).fetchone()
         return row is not None
 
-    def get_previous_entries(self, ctx: GeneratorContext, limit: int = 20) -> str:
-        """Get recent non-expired entries for repetition avoidance."""
+    def get_previous_entries(self, ctx: GeneratorContext, limit: int = 30) -> str:
+        """Get recent non-expired entries from THIS generator for repetition avoidance.
+
+        Source-scoped: a generator only sees its own prior dispatches, so the
+        anti-repetition signal isn't diluted by unrelated entries from other
+        desks. Subclasses may override (e.g. The Take pulls cross-desk history).
+        """
         rows = ctx.conn.execute(
             """
-            SELECT source, category, headline, text FROM war_room_wire
-            WHERE season = ? AND expired = FALSE
+            SELECT category, headline, text FROM war_room_wire
+            WHERE season = ? AND expired = FALSE AND source = ?
             ORDER BY generated_at DESC
             LIMIT ?
             """,
-            [ctx.season, limit],
+            [ctx.season, self.SOURCE, limit],
         ).fetchall()
         if not rows:
             return "(none yet — this is the first wire generation)"
-        return "\n".join(
-            f"- [{r[0]}:{r[1]}] {r[2]}: {r[3]}" for r in rows
-        )
+        return "\n".join(f"- [{r[0]}] {r[1]}: {r[2]}" for r in rows)
 
     async def generate(
         self,
@@ -153,6 +167,27 @@ class WireGenerator(ABC):
         if not force and self.already_ran(ctx, ctx_hash):
             console.print(f"  [dim]Wire/{self.SOURCE}: unchanged ({ctx_hash[:8]})[/dim]")
             return []
+
+        # Daily cap backstop — prevents unbounded accumulation if hashes keep
+        # changing through the day. Force mode bypasses (it has already
+        # expired today's rows in the orchestrator).
+        if not force:
+            from pipeline.clock import today_ist_iso
+            cap = DAILY_CAP.get(self.SOURCE, 8)
+            existing = ctx.conn.execute(
+                """
+                SELECT COUNT(*) FROM war_room_wire
+                WHERE season = ? AND source = ?
+                  AND match_day = ? AND expired = FALSE
+                """,
+                [ctx.season, self.SOURCE, today_ist_iso()],
+            ).fetchone()[0]
+            if existing >= cap:
+                console.print(
+                    f"  [dim]Wire/{self.SOURCE}: at daily cap "
+                    f"({existing}/{cap}) — skipping[/dim]"
+                )
+                return []
 
         focused = self.build_context(ctx)
         previous = self.get_previous_entries(ctx)
