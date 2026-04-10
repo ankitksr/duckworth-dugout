@@ -47,10 +47,12 @@ def _get_active_players(season: str) -> set[str]:
 
 
 def _get_player_franchises(season: str) -> dict[str, str]:
-    """Map player last-name → current franchise_id for team correction.
+    """Map player full-name → current franchise short name for team correction.
 
     The LLM often assigns players to their historical franchise rather
     than their current 2026 team (e.g. Samson → RR instead of CSK).
+    Keyed by lowercased full name; surname-only would collide for common
+    surnames (Yadav, Kumar, Sharma) and pick a wrong team.
     """
     try:
         from pipeline.db.connection import get_connection
@@ -63,9 +65,8 @@ def _get_player_franchises(season: str) -> dict[str, str]:
             FROM ipl_season_squad
             WHERE season = ?
         """, [year]).fetchall()
-        # Key by last name (same convention as _filter_active)
         return {
-            name.split()[-1].lower(): IPL_FRANCHISES[fid]["short_name"]
+            name.lower(): IPL_FRANCHISES[fid]["short_name"]
             for name, fid in rows
             if fid in IPL_FRANCHISES
         }
@@ -77,22 +78,38 @@ def _get_player_franchises(season: str) -> dict[str, str]:
 def _filter_active(entries: list[dict], active: set[str]) -> list[dict]:
     """Drop entries whose player name doesn't match any active squad member.
 
-    Cricsheet uses abbreviated names (e.g. "V Kohli", "B Kumar") while
-    LLM output uses full names ("Virat Kohli", "Bhuvneshwar Kumar").
-    Match by last name (last token) which is reliable for cricket names.
+    Strict full-name match by default (case-insensitive). Falls back to
+    initial-style matching ("V Kohli" → "Virat Kohli") only when the LLM
+    output starts with a single-letter token. Surname-only matching is
+    deliberately avoided — it lets hallucinated names like "Umesh Yadav"
+    slip through whenever any other Yadav exists in the squad.
     """
     if not active:
         return entries  # no filter available, keep all
-    # Build a set of last names for fast matching
-    active_lasts = {a.split()[-1].lower() for a in active if a.strip()}
-    filtered = []
+
+    active_lower = {a.lower() for a in active if a.strip()}
+    # Pre-build (initial, surname) → set of full names for the fallback
+    by_initial_surname: dict[tuple[str, str], set[str]] = {}
+    for full in active_lower:
+        toks = full.split()
+        if len(toks) >= 2:
+            by_initial_surname.setdefault((toks[0][0], toks[-1]), set()).add(full)
+
+    filtered: list[dict] = []
     for e in entries:
-        name = e.get("player", "").strip()
+        name = e.get("player", "").strip().lower()
         if not name:
             continue
-        last = name.split()[-1].lower()
-        if last in active_lasts:
+        if name in active_lower:
             filtered.append(e)
+            continue
+        # Initial-style fallback: "V Kohli" → match if exactly one squad
+        # player has surname "kohli" with first name starting with "v".
+        toks = name.split()
+        if len(toks) >= 2 and len(toks[0]) == 1:
+            candidates = by_initial_surname.get((toks[0], toks[-1]), set())
+            if len(candidates) == 1:
+                filtered.append(e)
     return filtered
 
 
@@ -102,17 +119,19 @@ def _patch_teams(
     """Correct team assignments using current season XI data.
 
     The LLM assigns teams based on career history, which is often wrong
-    for traded players (e.g. Samson → RR instead of CSK in 2026).
+    for traded players (e.g. Samson → RR instead of CSK in 2026). Lookup
+    is by full lowercased name; entries that don't match any squad player
+    are left untouched (they should already have been dropped by
+    _filter_active, but be defensive).
     """
     if not franchises:
         return
     for section in ("imminent", "on_track"):
         for entry in parsed.get(section, []):
-            name = entry.get("player", "").strip()
+            name = entry.get("player", "").strip().lower()
             if not name:
                 continue
-            last = name.split()[-1].lower()
-            correct = franchises.get(last)
+            correct = franchises.get(name)
             if correct and entry.get("team") != correct:
                 entry["team"] = correct
 
