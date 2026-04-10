@@ -308,6 +308,9 @@ _MAX_PER_TEAM = 4
 _MAX_CONSECUTIVE_SAME_SOURCE = 2
 
 
+_SEVERITY_ORDER = ("alarm", "alert", "signal")
+
+
 def export_wire_json(
     conn: duckdb.DuckDBPyConnection,
     season: str,
@@ -315,10 +318,16 @@ def export_wire_json(
     """Export non-expired wire entries with structural aggregation.
 
     Rules:
-    1. Per-team cap: max _MAX_PER_TEAM entries per team
-    2. Severity ordering: alarm > alert > signal
-    3. No more than _MAX_CONSECUTIVE_SAME_SOURCE from same source in a row
-    4. Source diversity in top entries
+    1. Severity ordering: alarm > alert > signal.
+    2. Within each severity tier, non-take desks come first in a
+       newsroom-front-page order (situation → newsdesk → preview → scout),
+       then take dispatches last — take now synthesizes the other desks,
+       so it only makes sense after the reader has seen them.
+    3. Per-team cap: max _MAX_PER_TEAM entries per team, applied across
+       the full sorted list so top-ranked items win the slot.
+    4. Source diversity within each severity tier: no more than
+       _MAX_CONSECUTIVE_SAME_SOURCE in a row. Overflow is deferred to
+       the end of the current tier, not the end of the whole list.
     """
     rows = conn.execute(
         """
@@ -332,6 +341,14 @@ def export_wire_json(
                 WHEN 'alarm' THEN 0
                 WHEN 'alert' THEN 1
                 ELSE 2
+            END,
+            CASE coalesce(source, 'wire') WHEN 'take' THEN 1 ELSE 0 END,
+            CASE coalesce(source, 'wire')
+                WHEN 'situation' THEN 0
+                WHEN 'newsdesk'  THEN 1
+                WHEN 'preview'   THEN 2
+                WHEN 'scout'     THEN 3
+                ELSE 4
             END,
             generated_at DESC
         """,
@@ -354,31 +371,49 @@ def export_wire_json(
         for r in rows
     ]
 
-    # Apply per-team cap
+    # Per-team cap — iterates the full sorted list so alarm/alert items
+    # win the team slots over signal items.
     team_counts: dict[str, int] = {}
     capped: list[dict] = []
     for entry in raw:
         teams = entry.get("teams", [])
         if teams:
-            # Check if any team exceeds cap
-            over_cap = False
-            for t in teams:
-                if team_counts.get(t, 0) >= _MAX_PER_TEAM:
-                    over_cap = True
-                    break
-            if over_cap:
+            if any(team_counts.get(t, 0) >= _MAX_PER_TEAM for t in teams):
                 continue
             for t in teams:
                 team_counts[t] = team_counts.get(t, 0) + 1
         capped.append(entry)
 
-    # Apply source diversity — no 3+ consecutive from same source
+    # Group by severity so source-diversity deferrals stay inside the
+    # tier they came from instead of dropping to the bottom of the wire.
+    by_severity: dict[str, list[dict]] = {s: [] for s in _SEVERITY_ORDER}
+    other: list[dict] = []
+    for entry in capped:
+        sev = entry.get("severity", "")
+        (by_severity[sev] if sev in by_severity else other).append(entry)
+
     final: list[dict] = []
+    for sev in _SEVERITY_ORDER:
+        final.extend(_apply_source_diversity(by_severity[sev]))
+    final.extend(_apply_source_diversity(other))
+
+    return final
+
+
+def _apply_source_diversity(items: list[dict]) -> list[dict]:
+    """Break long same-source runs by deferring overflow to the end.
+
+    Linear pass: if the current item's source matches the previous
+    emitted source and we've already emitted _MAX_CONSECUTIVE_SAME_SOURCE
+    in a row, push the item onto a deferred queue. The deferred queue is
+    appended to the end of the returned list (caller decides whether
+    that's "end of tier" or "end of wire" by how it invokes us).
+    """
+    out: list[dict] = []
+    deferred: list[dict] = []
     consecutive_source = ""
     consecutive_count = 0
-    deferred: list[dict] = []
-
-    for entry in capped:
+    for entry in items:
         src = entry.get("source", "wire")
         if src == consecutive_source:
             consecutive_count += 1
@@ -388,9 +423,6 @@ def export_wire_json(
         else:
             consecutive_source = src
             consecutive_count = 1
-        final.append(entry)
-
-    # Append deferred items at the end
-    final.extend(deferred)
-
-    return final
+        out.append(entry)
+    out.extend(deferred)
+    return out
