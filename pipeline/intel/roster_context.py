@@ -95,7 +95,12 @@ def _resolve_to_squad_name(
     raw_name: str,
     by_surname: dict[str, list[str]],
 ) -> str:
-    """Map an external player name to its squad table equivalent."""
+    """Map an external player name to its squad table equivalent.
+
+    Surname-based fuzzy matching. Used for Cricsheet → squad resolution
+    where source names use initials ("AR Patel" → "Axar Patel"). NOT safe
+    for freeform article text — use _strict_resolve_squad_name instead.
+    """
     # Exact match first
     for candidates in by_surname.values():
         if raw_name in candidates:
@@ -114,6 +119,46 @@ def _resolve_to_squad_name(
         return matches[0]
     # Still ambiguous — return raw name to avoid wrong attribution
     return raw_name
+
+
+def _build_flat_squad_names(
+    conn: duckdb.DuckDBPyConnection,
+    season: str,
+) -> set[str]:
+    """Flat set of all canonical squad player names for the season."""
+    try:
+        rows = conn.execute(
+            "SELECT player_name FROM ipl_season_squad WHERE season = ?",
+            [int(season)],
+        ).fetchall()
+    except Exception:
+        return set()
+    return {r[0] for r in rows}
+
+
+def _strict_resolve_squad_name(
+    raw_name: str,
+    flat_squad_names: set[str],
+) -> str | None:
+    """Exact (case-insensitive) match against the squad. Returns canonical
+    name on hit, None on miss.
+
+    For article-derived names where false positives matter more than recall:
+    a non-squad mention like "Mukul Choudhary" should NOT collapse to a
+    squad player like "Mukesh Choudhary" via surname fallback.
+    """
+    if not raw_name:
+        return None
+    raw = raw_name.strip()
+    if not raw:
+        return None
+    if raw in flat_squad_names:
+        return raw
+    raw_lower = raw.lower()
+    for squad_name in flat_squad_names:
+        if squad_name.lower() == raw_lower:
+            return squad_name
+    return None
 
 
 def _query_appearances(

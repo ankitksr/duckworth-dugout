@@ -32,7 +32,7 @@ from pipeline.llm.cache import LLMCache
 
 console = Console()
 
-EXTRACTION_VERSION = 1
+EXTRACTION_VERSION = 2  # v2: stricter prompt + exact-match resolver for article names
 _CACHE_TASK = "war_room_article_extraction"
 
 # Articles older than this are skipped (covers full season + run-up)
@@ -79,19 +79,32 @@ transfer_auction, interview, opinion, controversy, other.
 facts a downstream reader would need.
 - headline_takeaway: one-line "so what" — the single most important point \
 in <=15 words.
-- mentioned_players: list of player names mentioned. Match the spelling in \
-the squad whitelist when possible.
-- availability_events: explicit statements about a player being injured, \
-ruled out, rested, dropped, doubtful, or returning. ONLY for players in the \
-squad whitelist. Do NOT infer from poor performance or speculation.
-  - status 'out': ruled out, injured, suspended, withdrawn
+- mentioned_players: list of player names ACTUALLY mentioned in the article body. \
+CRITICAL CONSISTENCY RULE: every player you name in `summary`, \
+`headline_takeaway`, `key_quotes`, `availability_events`, or \
+`match_result_claim` MUST also appear in this list. Use the EXACT spelling \
+from the article body — do NOT substitute a different similarly-named player \
+from the squad whitelist or from elsewhere. The whitelist is for grounding \
+availability events, not for renaming.
+- availability_events: explicit factual statements that a SPECIFIC player is \
+injured, ruled out, rested, dropped, doubtful, or returning from injury. ONLY \
+for players in the squad whitelist. The article must make a direct claim about \
+that individual's fitness or selection status — DO NOT infer availability from \
+a player simply being listed in a lineup, mentioned in passing, performing \
+well/poorly, or being part of a team description. If in doubt, OMIT.
+  - status 'out': ruled out, injured, suspended, withdrawn from the tournament \
+or upcoming match
   - status 'doubtful': fitness test pending, race against time, may miss
-  - status 'available': returned to training, cleared, fit again
+  - status 'available': RETURNED to training/squad after a previously reported \
+absence or injury (NOT just "is in the squad" or "is playing")
 - match_result_claim: if the article is a match report, populate scores, \
 winner, margin, POTM. Use empty strings for missing fields. If not a match \
 report, return all empty strings.
-- key_quotes: short verbatim quotes from players or coaches with attribution. \
-Skip generic platitudes — only extract substantive quotes.
+- key_quotes: VERBATIM quotes from players or coaches with attribution. The \
+`text` field MUST be an exact substring of the article body. Do NOT paraphrase, \
+do NOT stitch fragments from different sentences, do NOT wrap narration around \
+words. If you cannot find a clean verbatim quote, OMIT it. Skip generic \
+platitudes — only extract substantive quotes.
 
 Return empty lists / empty strings / false where appropriate. Do not invent."""
 
@@ -284,19 +297,17 @@ def _normalize_story_type(raw: str) -> str:
 
 def _resolve_event_name(
     raw_name: str,
-    by_surname: dict[str, list[str]],
+    flat_squad_names: set[str],
 ) -> str | None:
-    """Resolve a raw player name to a squad name. Returns None if unresolvable."""
-    from pipeline.intel.roster_context import _resolve_to_squad_name
-    if not raw_name or not raw_name.strip():
-        return None
-    resolved = _resolve_to_squad_name(raw_name.strip(), by_surname)
-    # _resolve_to_squad_name returns the raw name on failure — we treat
-    # any name not present in the squad index as unresolvable.
-    flat_squad_names = {n for names in by_surname.values() for n in names}
-    if resolved in flat_squad_names:
-        return resolved
-    return None
+    """Resolve a raw player name from article text to a squad name.
+
+    Uses strict (case-insensitive) exact match — surname-only fallback
+    causes false positives like "Mukul Choudhary" → "Mukesh Choudhary"
+    when only one Choudhary is in the squad. Better to drop a name than
+    misattribute it.
+    """
+    from pipeline.intel.roster_context import _strict_resolve_squad_name
+    return _strict_resolve_squad_name(raw_name, flat_squad_names)
 
 
 def _resolve_franchise(
@@ -319,7 +330,7 @@ def _persist_extraction(
     season: str,
     article: _ArticleRow,
     payload: dict[str, Any],
-    by_surname: dict[str, list[str]],
+    flat_squad_names: set[str],
 ) -> tuple[int, bool]:
     """Write extraction row + zero-or-more availability event rows.
 
@@ -330,13 +341,26 @@ def _persist_extraction(
     summary = (payload.get("summary") or "").strip()
     takeaway = (payload.get("headline_takeaway") or "").strip()
 
-    # Resolve mentioned players to squad names
+    # Keep BOTH the raw spelling from the article (preserves true subjects
+    # like "Mukul Choudhary") AND the resolved squad name when there's an
+    # exact match. Resolved set is used for downstream squad joins; raw set
+    # is what mentioned_players records as canonical reference.
     raw_players = payload.get("mentioned_players") or []
-    resolved_players = []
+    resolved_players: list[str] = []
+    seen_lower: set[str] = set()
     for raw in raw_players:
-        n = _resolve_event_name(str(raw), by_surname)
-        if n and n not in resolved_players:
-            resolved_players.append(n)
+        if not raw:
+            continue
+        s = str(raw).strip()
+        if not s:
+            continue
+        # Prefer the canonical squad spelling when it matches; otherwise
+        # preserve the raw name as written.
+        canonical = _resolve_event_name(s, flat_squad_names) or s
+        key = canonical.lower()
+        if key not in seen_lower:
+            seen_lower.add(key)
+            resolved_players.append(canonical)
 
     match_claim = payload.get("match_result_claim") or {}
     key_quotes = payload.get("key_quotes") or []
@@ -374,12 +398,13 @@ def _persist_extraction(
     if not is_relevant:
         return 0, False
 
-    # Write availability events
+    # Write availability events. Strict resolution: drop events for
+    # non-squad players rather than misattribute them.
     events = payload.get("availability_events") or []
     written = 0
     for ev in events:
         raw_name = (ev.get("player_name") or "").strip()
-        player = _resolve_event_name(raw_name, by_surname)
+        player = _resolve_event_name(raw_name, flat_squad_names)
         if not player:
             continue
 
@@ -481,9 +506,9 @@ async def run_extraction(
     cache = LLMCache()
     squad_whitelist = _build_squad_whitelist(conn, season)
 
-    # Build name index once
-    from pipeline.intel.roster_context import _build_squad_name_index
-    by_surname = _build_squad_name_index(conn, season)
+    # Build flat squad name set once for strict article-side resolution
+    from pipeline.intel.roster_context import _build_flat_squad_names
+    flat_squad_names = _build_flat_squad_names(conn, season)
 
     stats = {"processed": 0, "events": 0, "summaries": 0, "errors": 0, "skipped": 0}
 
@@ -505,7 +530,7 @@ async def run_extraction(
 
         try:
             events_written, was_relevant = _persist_extraction(
-                conn, season, article, payload, by_surname,
+                conn, season, article, payload, flat_squad_names,
             )
         except Exception as e:
             console.print(
