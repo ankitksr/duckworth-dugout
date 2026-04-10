@@ -255,6 +255,19 @@ async def _extract_one(
     if not parsed:
         return None
 
+    # Run Pydantic field validators (normalize scores, drop garbage margins,
+    # enforce enums). Gemini's structured output already gets us most of the
+    # way there via Literal types in the schema; this is the client-side
+    # safety net for fields that can't be enum-constrained.
+    try:
+        parsed = ArticleExtraction.model_validate(parsed).model_dump()
+    except Exception as e:
+        console.print(
+            f"    [yellow]Validation failed for {article.guid[:30]}: {e}[/yellow]"
+        )
+        # Fall through with the raw parsed dict — better to keep some data
+        # than drop the whole extraction.
+
     cache.put(_CACHE_TASK, cache_key, {
         "parsed": parsed,
         "usage": result.get("usage", {}),

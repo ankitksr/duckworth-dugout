@@ -18,7 +18,7 @@ import duckdb
 from rich.console import Console
 
 from pipeline.config import DATA_DIR
-from pipeline.intel.articles import retrieve_for_team
+from pipeline.intel.articles import retrieve_summaries_for_team
 from pipeline.intel.prompts import load_prompt
 from pipeline.intel.schemas import NarrativeEntry
 from pipeline.ipl.franchise_metadata import IPL_FRANCHISES
@@ -195,14 +195,14 @@ async def generate_narratives(
         else "(No qualification data available)"
     )
 
-    # Retrieve RSS articles for each active team (from articles store)
+    # Retrieve extracted summaries for each active team
     articles_parts: list[str] = []
     season_start = f"{season}-03-01"
     for s in active:
         fid = s["franchise_id"]
-        team_articles = retrieve_for_team(
+        team_articles = retrieve_summaries_for_team(
             conn, fid, since_date=season_start,
-            max_articles=3, max_chars_per_article=300,
+            max_articles=3,
         )
         if team_articles:
             articles_parts.append(

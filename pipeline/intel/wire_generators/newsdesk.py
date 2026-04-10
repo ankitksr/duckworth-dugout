@@ -3,12 +3,18 @@
 Trigger: new articles arriving in the article store.
 Voice: news editor — "here's what this actually means."
 Model: Flash @ 0.6 — quick, reactive, grounded in articles.
+
+Reads from war_room_article_extractions (populated by article_extraction.py)
+so the LLM gets pre-distilled summaries + key quotes instead of raw bodies —
+sharper context, fewer tokens, no re-parsing.
 """
 
 import hashlib
+import json
 
 import duckdb
 
+from pipeline.intel.article_extraction import EXTRACTION_VERSION
 from pipeline.intel.prompts import load_prompt
 from pipeline.intel.wire_generators import GeneratorContext, WireGenerator
 
@@ -19,14 +25,19 @@ class NewsDeskGenerator(WireGenerator):
     MODEL = "flash"
     TEMPERATURE = 0.6
 
-    def _count_recent_articles(self, conn: duckdb.DuckDBPyConnection) -> int:
+    def _count_recent_extractions(self, conn: duckdb.DuckDBPyConnection) -> int:
         try:
             row = conn.execute(
                 """
-                SELECT COUNT(*) FROM war_room_articles
-                WHERE is_ipl = TRUE
-                  AND published >= (now() - INTERVAL '6 hours')
+                SELECT COUNT(*)
+                FROM war_room_articles a
+                JOIN war_room_article_extractions e
+                  ON e.article_guid = a.guid AND e.extraction_version = ?
+                WHERE a.is_ipl = TRUE
+                  AND e.is_relevant = TRUE
+                  AND a.published >= (now() - INTERVAL '6 hours')
                 """,
+                [EXTRACTION_VERSION],
             ).fetchone()
             return row[0] if row else 0
         except Exception:
@@ -36,13 +47,17 @@ class NewsDeskGenerator(WireGenerator):
         try:
             rows = conn.execute(
                 """
-                SELECT coalesce(content_hash, url)
-                FROM war_room_articles
-                WHERE is_ipl = TRUE
-                  AND published >= (now() - INTERVAL '6 hours')
-                ORDER BY published DESC
+                SELECT coalesce(a.content_hash, a.guid)
+                FROM war_room_articles a
+                JOIN war_room_article_extractions e
+                  ON e.article_guid = a.guid AND e.extraction_version = ?
+                WHERE a.is_ipl = TRUE
+                  AND e.is_relevant = TRUE
+                  AND a.published >= (now() - INTERVAL '6 hours')
+                ORDER BY a.published DESC
                 LIMIT 10
                 """,
+                [EXTRACTION_VERSION],
             ).fetchall()
             return [r[0] for r in rows if r[0]]
         except Exception:
@@ -55,20 +70,24 @@ class NewsDeskGenerator(WireGenerator):
         return hashlib.sha256("|".join(parts).encode()).hexdigest()[:16]
 
     def should_run(self, ctx: GeneratorContext) -> bool:
-        return self._count_recent_articles(ctx.conn) > 0
+        return self._count_recent_extractions(ctx.conn) > 0
 
     def build_context(self, ctx: GeneratorContext) -> str:
         try:
             rows = ctx.conn.execute(
                 """
-                SELECT source, title, coalesce(snippet, left(body, 300)) as excerpt,
-                       teams
-                FROM war_room_articles
-                WHERE is_ipl = TRUE
-                  AND published >= (now() - INTERVAL '8 hours')
-                ORDER BY published DESC
+                SELECT a.source, a.title, e.story_type, e.summary,
+                       e.headline_takeaway, e.key_quotes, a.teams
+                FROM war_room_articles a
+                JOIN war_room_article_extractions e
+                  ON e.article_guid = a.guid AND e.extraction_version = ?
+                WHERE a.is_ipl = TRUE
+                  AND e.is_relevant = TRUE
+                  AND a.published >= (now() - INTERVAL '8 hours')
+                ORDER BY a.published DESC
                 LIMIT 6
                 """,
+                [EXTRACTION_VERSION],
             ).fetchall()
         except Exception:
             rows = []
@@ -77,10 +96,27 @@ class NewsDeskGenerator(WireGenerator):
             return "(No recent articles)"
 
         parts = []
-        for source, title, excerpt, teams in rows:
+        for source, title, story_type, summary, takeaway, quotes_json, teams in rows:
             team_tags = f" [{', '.join(teams)}]" if teams else ""
-            text = (excerpt or title)[:400]
-            parts.append(f"[{source}]{team_tags} {title}\n{text}")
+            type_tag = f" ({story_type})" if story_type else ""
+            block_lines = [f"[{source}]{team_tags}{type_tag} {title}"]
+            if takeaway:
+                block_lines.append(f"  → {takeaway}")
+            if summary:
+                block_lines.append(f"  {summary}")
+
+            # Inline up to 2 substantive quotes
+            try:
+                quotes = json.loads(quotes_json) if quotes_json else []
+            except (TypeError, ValueError):
+                quotes = []
+            for q in quotes[:2]:
+                speaker = q.get("speaker", "").strip()
+                text = q.get("text", "").strip()
+                if speaker and text:
+                    block_lines.append(f'  "{text}" — {speaker}')
+
+            parts.append("\n".join(block_lines))
 
         # Minimal standings for framing
         standings_line = ""

@@ -23,7 +23,7 @@ import duckdb
 from rich.console import Console
 
 from pipeline.config import CRICKET_DB_PATH, DATA_DIR, MEGA_AUCTION_SEASON
-from pipeline.intel.articles import retrieve_for_match
+from pipeline.intel.articles import retrieve_summaries_for_match
 from pipeline.intel.prompts import load_prompt
 from pipeline.intel.tools import execute_tool, get_tool_declarations
 from pipeline.ipl.franchise_metadata import IPL_FRANCHISES
@@ -860,9 +860,9 @@ async def generate_briefing(
     venue_context = _build_venue_context(venue_stats)
     h2h_context = _build_h2h_context(match)
     form_context = _build_form_context(match)
-    articles_context = retrieve_for_match(
+    articles_context = retrieve_summaries_for_match(
         conn, match.team1, match.team2, match.date,
-        max_articles=5, max_chars_per_article=500,
+        max_articles=5,
     ) or "(No recent articles)"
 
     # Supplement with ESPNcricinfo articles from intel-log (title + URL only)

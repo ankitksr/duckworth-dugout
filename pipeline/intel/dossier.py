@@ -19,7 +19,7 @@ import duckdb
 from rich.console import Console
 
 from pipeline.config import CRICKET_DB_PATH, DATA_DIR
-from pipeline.intel.articles import retrieve_for_team
+from pipeline.intel.articles import retrieve_summaries_for_team
 from pipeline.intel.prompts import load_prompt
 from pipeline.intel.tools import execute_tool, get_tool_declarations
 from pipeline.ipl.franchise_metadata import IPL_FRANCHISES
@@ -375,9 +375,9 @@ async def generate_dossier(
 
     # Articles about the opponent
     season_start = f"{season}-03-01"
-    articles_context = retrieve_for_team(
+    articles_context = retrieve_summaries_for_team(
         conn, opponent, since_date=season_start,
-        max_articles=5, max_chars_per_article=400,
+        max_articles=5,
     ) or "(No recent articles)"
 
     # LLM call

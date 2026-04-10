@@ -396,6 +396,162 @@ def retrieve_for_team(
     return "\n\n---\n\n".join(parts)
 
 
+def retrieve_summaries_for_match(
+    conn: duckdb.DuckDBPyConnection,
+    team1: str,
+    team2: str,
+    match_date: str,
+    *,
+    max_articles: int = 6,
+    include_quotes: bool = True,
+) -> str:
+    """Return extracted article summaries for a match (LLM-friendly).
+
+    Reads from war_room_article_extractions populated by article_extraction.py.
+    Each block is ~10x denser than a raw body extract — uses summary,
+    headline takeaway, and optional key quotes instead of truncated body text.
+
+    Falls back to retrieve_for_match (raw bodies) if no extractions are
+    available yet, so callers always get *something* even during the gap
+    between article ingestion and extraction.
+    """
+    from pipeline.intel.article_extraction import EXTRACTION_VERSION
+
+    # Primary: articles mentioning BOTH teams
+    rows = conn.execute(
+        """
+        SELECT a.source, a.title, a.published,
+               e.story_type, e.summary, e.headline_takeaway, e.key_quotes
+        FROM war_room_articles a
+        JOIN war_room_article_extractions e
+          ON e.article_guid = a.guid AND e.extraction_version = ?
+        WHERE a.is_ipl = TRUE
+          AND e.is_relevant = TRUE
+          AND list_contains(a.teams, ?)
+          AND list_contains(a.teams, ?)
+          AND a.published >= (CAST(? AS DATE) - INTERVAL '2 days')
+          AND a.published <= (CAST(? AS DATE) + INTERVAL '2 days')
+        ORDER BY a.published DESC
+        LIMIT ?
+        """,
+        [EXTRACTION_VERSION, team1, team2, match_date, match_date, max_articles * 2],
+    ).fetchall()
+
+    # Fallback: either team
+    if len(rows) < 2:
+        extra = conn.execute(
+            """
+            SELECT a.source, a.title, a.published,
+                   e.story_type, e.summary, e.headline_takeaway, e.key_quotes
+            FROM war_room_articles a
+            JOIN war_room_article_extractions e
+              ON e.article_guid = a.guid AND e.extraction_version = ?
+            WHERE a.is_ipl = TRUE
+              AND e.is_relevant = TRUE
+              AND (list_contains(a.teams, ?) OR list_contains(a.teams, ?))
+              AND a.published >= (CAST(? AS DATE) - INTERVAL '2 days')
+              AND a.published <= (CAST(? AS DATE) + INTERVAL '2 days')
+            ORDER BY a.published DESC
+            LIMIT ?
+            """,
+            [EXTRACTION_VERSION, team1, team2, match_date, match_date, max_articles * 2],
+        ).fetchall()
+        rows = list(rows) + list(extra)
+
+    # If still nothing, fall back to raw body retrieval
+    if not rows:
+        return retrieve_for_match(conn, team1, team2, match_date)
+
+    return _format_summary_blocks(rows[:max_articles], include_quotes)
+
+
+def retrieve_summaries_for_team(
+    conn: duckdb.DuckDBPyConnection,
+    team: str,
+    *,
+    since_date: str | None = None,
+    max_articles: int = 10,
+    include_quotes: bool = True,
+) -> str:
+    """Return extracted article summaries for a team (LLM-friendly).
+
+    Falls back to retrieve_for_team (raw bodies) if no extractions are
+    available yet.
+    """
+    from pipeline.intel.article_extraction import EXTRACTION_VERSION
+
+    where = [
+        "a.is_ipl = TRUE",
+        "e.is_relevant = TRUE",
+        "list_contains(a.teams, ?)",
+    ]
+    params: list = [EXTRACTION_VERSION, team]
+
+    if since_date:
+        where.append("a.published >= CAST(? AS DATE)")
+        params.append(since_date)
+
+    params.append(max_articles * 2)
+    sql = f"""
+        SELECT a.source, a.title, a.published,
+               e.story_type, e.summary, e.headline_takeaway, e.key_quotes
+        FROM war_room_articles a
+        JOIN war_room_article_extractions e
+          ON e.article_guid = a.guid AND e.extraction_version = ?
+        WHERE {' AND '.join(where)}
+        ORDER BY a.published DESC
+        LIMIT ?
+    """
+    rows = conn.execute(sql, params).fetchall()
+
+    if not rows:
+        return retrieve_for_team(
+            conn, team,
+            since_date=since_date,
+            max_articles=max_articles,
+        )
+
+    return _format_summary_blocks(rows[:max_articles], include_quotes)
+
+
+def _format_summary_blocks(
+    rows: list[tuple],
+    include_quotes: bool,
+) -> str:
+    """Render extraction rows as compact LLM-friendly text."""
+    import json as _json
+
+    parts: list[str] = []
+    for source, title, published, story_type, summary, takeaway, quotes_json in rows:
+        date_tag = ""
+        if published is not None:
+            try:
+                date_tag = f" {published.strftime('%Y-%m-%d')}"
+            except Exception:
+                pass
+        type_tag = f" ({story_type})" if story_type else ""
+        block_lines = [f"[{source}{date_tag}{type_tag}] {title}"]
+        if takeaway:
+            block_lines.append(f"  → {takeaway}")
+        if summary:
+            block_lines.append(f"  {summary}")
+
+        if include_quotes:
+            try:
+                quotes = _json.loads(quotes_json) if quotes_json else []
+            except (TypeError, ValueError):
+                quotes = []
+            for q in quotes[:2]:
+                speaker = (q.get("speaker") or "").strip()
+                text = (q.get("text") or "").strip()
+                if speaker and text:
+                    block_lines.append(f'  "{text}" — {speaker}')
+
+        parts.append("\n".join(block_lines))
+
+    return "\n\n---\n\n".join(parts)
+
+
 def article_count(conn: duckdb.DuckDBPyConnection) -> int:
     """Total articles in the store."""
     row = conn.execute(
