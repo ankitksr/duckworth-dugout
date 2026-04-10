@@ -13,7 +13,6 @@ from pipeline.intel.wire_generators import (
     GeneratorContext,
     WireGenerator,
     _load_json,
-    hash_time_bucket,
 )
 from pipeline.ipl.franchise_metadata import IPL_FRANCHISES
 
@@ -31,7 +30,7 @@ class ScoutReportGenerator(WireGenerator):
     TEMPERATURE = 0.7
 
     def context_hash(self, ctx: GeneratorContext) -> str:
-        parts = [HASH_VERSION, self.SOURCE, hash_time_bucket()]
+        parts = [HASH_VERSION, self.SOURCE]
         # Sensitive to match completions and cap race changes
         if ctx.schedule:
             completed = sum(1 for m in ctx.schedule if m.get("status") == "completed")

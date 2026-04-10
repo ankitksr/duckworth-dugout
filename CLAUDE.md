@@ -193,14 +193,16 @@ ticker/wire/briefing/dossier/scenarios/records/narratives.
 Each LLM panel owns its own cache key:
 - **Scenarios, Ticker** — standings hash (regenerate when table changes)
 - **Narratives** — schedule results hash (regenerate when match results change)
-- **Wire** — per-generator hash, all prefixed with `HASH_VERSION` + a 2-hour
-  `hash_time_bucket()` so the wire rotates even during quiet periods. Each
-  generator layers its own signal on top: **situation** = standings + completions,
-  **scout** = completions + cap leaders, **newsdesk** = recent article IDs,
-  **preview** = today's fixture pairs, **take** = standings + IST time-window.
-  Bumping `HASH_VERSION` (in `wire_generators/__init__.py`) makes legacy
-  same-day rows expire automatically on the next sync via the `hash_version`
-  column on `war_room_wire`.
+- **Wire** — per-generator content-driven hash, prefixed with `HASH_VERSION`.
+  Each generator anchors its hash to the signal it actually responds to:
+  **situation** = standings + completions, **scout** = completions + cap
+  leaders, **newsdesk** = recent article IDs, **preview** = today's fixture
+  pairs, **take** = `_time_window()` (morning/afternoon/evening/night) +
+  standings. A generator only re-runs when its content slice changes, so
+  near-duplicates can't accumulate within a day. Bumping `HASH_VERSION`
+  (in `wire_generators/__init__.py`) makes legacy same-day rows expire
+  automatically on the next sync via the `hash_version` column on
+  `war_room_wire`.
 - **Briefing** — match day + team matchup pair
 - **Dossier** — team matchup pair, reset on new match day
 - **Records** — daily threshold
@@ -283,6 +285,7 @@ All pipeline config via environment variables (see `.env.example`):
 | `CT_LLM_MODEL_PRO` | No | Pro model override (default: `gemini-3-pro-preview`) |
 | `CT_LLM_RATE_LIMIT_RPM` | No | Rate limit (default: `10` req/min) |
 | `CRICKET_DB_PATH` | No | Cricsheet DuckDB path (default: `data/cricket.duckdb`) |
+| `CT_LIVE_SOURCE` | No | Live score source: `auto` (crawl + RSS fallback, default), `crawl` (ESPN only), `rss` (RSS only — score string only, no CRR/RRR) |
 
 ## Lint
 

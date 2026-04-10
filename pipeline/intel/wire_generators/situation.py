@@ -13,7 +13,6 @@ from pipeline.intel.wire_generators import (
     HASH_VERSION,
     GeneratorContext,
     WireGenerator,
-    hash_time_bucket,
 )
 
 
@@ -24,7 +23,7 @@ class SituationRoomGenerator(WireGenerator):
     TEMPERATURE = 0.4
 
     def context_hash(self, ctx: GeneratorContext) -> str:
-        parts = [HASH_VERSION, self.SOURCE, hash_time_bucket()]
+        parts = [HASH_VERSION, self.SOURCE]
         if ctx.standings:
             parts.append(json.dumps(
                 [(s["short_name"], s["played"], s["wins"], s["nrr"])

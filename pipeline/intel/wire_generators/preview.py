@@ -16,7 +16,6 @@ from pipeline.intel.wire_generators import (
     HASH_VERSION,
     GeneratorContext,
     WireGenerator,
-    hash_time_bucket,
 )
 from pipeline.ipl.franchise_metadata import IPL_FRANCHISES
 
@@ -42,7 +41,7 @@ class MatchdayPreviewGenerator(WireGenerator):
     TEMPERATURE = 0.4
 
     def context_hash(self, ctx: GeneratorContext) -> str:
-        parts = [HASH_VERSION, self.SOURCE, hash_time_bucket()]
+        parts = [HASH_VERSION, self.SOURCE]
         for m in ctx.today_matches:
             parts.append(f"match:{m.team1}v{m.team2}")
         return hashlib.sha256("|".join(parts).encode()).hexdigest()[:16]

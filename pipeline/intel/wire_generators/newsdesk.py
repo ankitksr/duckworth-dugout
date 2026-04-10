@@ -21,7 +21,6 @@ from pipeline.intel.wire_generators import (
     HASH_VERSION,
     GeneratorContext,
     WireGenerator,
-    hash_time_bucket,
 )
 
 
@@ -70,7 +69,7 @@ class NewsDeskGenerator(WireGenerator):
             return []
 
     def context_hash(self, ctx: GeneratorContext) -> str:
-        parts = [HASH_VERSION, self.SOURCE, hash_time_bucket()]
+        parts = [HASH_VERSION, self.SOURCE]
         ids = self._recent_article_ids(ctx.conn)
         parts.append(f"articles:{','.join(ids)}")
         return hashlib.sha256("|".join(parts).encode()).hexdigest()[:16]

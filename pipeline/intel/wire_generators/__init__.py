@@ -20,7 +20,6 @@ import json
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from typing import Any
 
 import duckdb
@@ -38,19 +37,7 @@ _VALID_SEVERITIES = {"signal", "alert", "alarm"}
 # Bumped when context_hash semantics change. Prefixed onto every hash so
 # legacy DB rows can never collide with hashes from a newer generator
 # version — on deploy, generators run fresh exactly once.
-HASH_VERSION = "v2"
-
-# Time-bucket window — every generator rotates at least this often even
-# when its upstream signals (standings, schedule) are unchanged. Without
-# this, quiet periods between match completions would freeze the wire.
-HASH_BUCKET_HOURS = 2
-
-
-def hash_time_bucket() -> str:
-    """Current 2-hour bucket as a stable string. Used in all context_hash overrides."""
-    now = datetime.now(timezone.utc)
-    bucket = (now.hour // HASH_BUCKET_HOURS) * HASH_BUCKET_HOURS
-    return f"{now.date().isoformat()}T{bucket:02d}"
+HASH_VERSION = "v3"
 
 
 def _load_json(filename: str) -> Any:
@@ -108,11 +95,12 @@ class WireGenerator(ABC):
     def context_hash(self, ctx: GeneratorContext) -> str:
         """Compute a hash of inputs relevant to this generator.
 
-        Override in subclasses for generator-specific sensitivity. Always
-        prefix with HASH_VERSION and include hash_time_bucket() so the wire
-        rotates even during quiet periods.
+        Override in subclasses for generator-specific sensitivity. Subclasses
+        should anchor the hash to *content* signals (standings, completions,
+        article IDs, etc.) so a generator only re-runs when its underlying
+        data has actually changed.
         """
-        parts = [HASH_VERSION, self.SOURCE, hash_time_bucket()]
+        parts = [HASH_VERSION, self.SOURCE]
         if ctx.standings:
             parts.append(json.dumps(
                 [(s["short_name"], s["played"], s["wins"]) for s in ctx.standings],
