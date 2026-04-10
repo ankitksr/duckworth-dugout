@@ -107,6 +107,35 @@
   }
 }
 
+/* Very narrow widths: full vertical stack — no overlap, no clipping. */
+@container briefing (max-width: 480px) {
+  .wr-bp-hero {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "identity"
+      "metrics"
+      "details";
+  }
+  .wr-bp-identity {
+    grid-template-columns: 1fr auto 1fr;
+    padding: 14px 14px 22px;
+    gap: 14px;
+  }
+  .wr-bp-metrics {
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 8px 6px;
+  }
+  .wr-bp-details {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    align-items: center;
+    text-align: center;
+    padding: 8px 14px 10px;
+  }
+}
+
 /* Dividers hidden — sections use border-left instead */
 .wr-bp-divider { display: none; }
 
@@ -262,31 +291,6 @@
   letter-spacing: 0.6px;
   text-transform: uppercase;
   white-space: nowrap;
-}
-
-/* Responsive: stack hero on tablet/narrow */
-@media (max-width: 900px) {
-  .wr-bp-hero {
-    flex-direction: column;
-    padding: 12px 14px;
-    gap: 10px;
-  }
-  .wr-bp-identity {
-    background: none;
-    padding: 4px 0;
-  }
-  .wr-bp-details {
-    border-left: none;
-    align-items: center;
-    text-align: center;
-    padding: 0;
-  }
-  .wr-bp-metrics {
-    margin-left: 0;
-    border-left: none;
-    justify-content: center;
-    padding: 0;
-  }
 }
 
 /* Tab content internals — stretch to fill panel height */

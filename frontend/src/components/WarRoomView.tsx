@@ -42,7 +42,7 @@ function WarRoomInner() {
           </CollapsiblePanel>
         </div>
         <div className="wr-col wr-col-center">
-          <CollapsiblePanel defaultCollapsed>
+          <CollapsiblePanel>
             <SeasonPulse />
           </CollapsiblePanel>
           <div className="wr-center-lower">

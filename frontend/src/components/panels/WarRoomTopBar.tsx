@@ -16,6 +16,25 @@ export function WarRoomTopBar() {
 
   const hasLive = schedule?.some((m) => m.status === "live") ?? false;
 
+  // On mobile, the briefing/team-intel panel sits above the fold. When the
+  // user taps a pill from a scrolled position, the swap happens off-screen
+  // and there's no visual feedback. After dispatch, scroll the now-mounted
+  // panel into view so the user actually lands on the team they selected.
+  function handleSelectTeam(franchiseId: string) {
+    dispatch({ type: "SELECT_TEAM", payload: franchiseId });
+    if (typeof window === "undefined") return;
+    if (!window.matchMedia("(max-width: 768px)").matches) return;
+
+    requestAnimationFrame(() => {
+      // Selecting the same pill toggles back to BriefingPanel — scroll to
+      // whichever panel is now mounted in the center slot.
+      const target = document.querySelector(
+        ".wr-team-intel-pnl, .wr-briefing-pnl",
+      ) as HTMLElement | null;
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
   return (
     <header className="wr-top">
       <div className="wr-logo">
@@ -37,9 +56,7 @@ export function WarRoomTopBar() {
                   }
                 : undefined
             }
-            onClick={() =>
-              dispatch({ type: "SELECT_TEAM", payload: t.franchise_id })
-            }
+            onClick={() => handleSelectTeam(t.franchise_id)}
           >
             {t.short_name}
           </button>

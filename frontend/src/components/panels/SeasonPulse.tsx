@@ -18,10 +18,20 @@ export function SeasonPulse() {
     }
   }, []);
 
+  // ResizeObserver instead of window.resize: the canvas needs to
+  // re-measure whenever its container changes size, not just when the
+  // viewport does. On mobile the panel starts inside a collapsed wrapper,
+  // so the canvas mounts at 0×0 and stays empty until the user expands —
+  // window.resize never fires for that, but ResizeObserver does.
   useEffect(() => {
     measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    if (typeof ResizeObserver === "undefined" || !containerRef.current) {
+      window.addEventListener("resize", measure);
+      return () => window.removeEventListener("resize", measure);
+    }
+    const ro = new ResizeObserver(() => measure());
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
   }, [measure]);
 
   const { w: W, h: H } = dims;

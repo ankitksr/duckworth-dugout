@@ -74,18 +74,39 @@
     transform: rotate(-90deg);
   }
 
-  /* Collapsed state: clip to header height */
+  /* Collapsed state: hide every child except the header.
+     max-height alone wasn't enough — flex children with their own
+     intrinsic sizes could leak past the cap (cap race tabs row was
+     bleeding through under the header). Hiding children outright is
+     bulletproof and lets the panel size to the header naturally. */
   .wr-collapse-wrap.wr-collapsed > .wr-pnl {
     max-height: 40px !important;
     height: auto !important;
     min-height: 0 !important;
     overflow: hidden !important;
   }
+  .wr-collapse-wrap.wr-collapsed > .wr-pnl > *:not(.wr-ph) {
+    display: none !important;
+  }
 
   /* --- Panel sizing: natural height instead of flex-fill --- */
   .wr-pnl {
     flex-shrink: 0;
     min-height: 0;
+    /* When scrollIntoView lands on a panel, leave room for the
+       sticky topbar (~95px after wrap) so the header isn't hidden. */
+    scroll-margin-top: 100px;
+  }
+  /* Nested panel scrollers shouldn't chain to the page on touch.
+     Without this, dragging inside the wire/log/matches feed pulls the
+     whole page along whenever you hit the panel's edge. */
+  .wr-log-scroll,
+  .wr-wire-scroll,
+  .wr-matches-wrap,
+  .wr-scenarios-scroll,
+  .wr-team-intel-scroll {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
   .wr-briefing-pnl,
   .wr-team-intel-pnl {
@@ -104,10 +125,16 @@
     max-height: 50vh;
     flex: none !important;
   }
+  /* Season Pulse: fixed height on mobile so the SVG canvas has real
+     dimensions to render into. ResizeObserver in SeasonPulse.tsx
+     handles the re-measure when the panel expands from collapsed. */
   .wr-pulse-pnl {
-    min-height: 220px;
-    height: 260px;
+    min-height: 240px;
+    height: 280px;
     flex: none !important;
+  }
+  .wr-pulse-svg {
+    height: 100%;
   }
   .wr-matches-pnl {
     max-height: 50vh;
@@ -121,20 +148,36 @@
     flex-shrink: 0;
   }
 
-  /* --- Top bar: compact, pills scroll horizontally --- */
+  /* --- Top bar: 3 stacked rows ---
+     Row 1: logo + clock (justified ends)
+     Row 2: pills (horizontal scroll)
+     Row 3: ticker (own row, scrolls)
+     Achieved with flex-wrap + explicit order on each child. */
   .wr-top {
     height: auto;
     min-height: 38px;
     flex-wrap: wrap;
-    padding: 5px 10px;
-    gap: 5px;
+    padding: 6px 12px 4px;
+    gap: 6px 8px;
     position: sticky;
     top: 0;
     z-index: 200;
+    align-items: center;
   }
 
+  /* Row 1: logo (left) + clock/live badge (right) */
+  .wr-logo {
+    order: 1;
+  }
+  .wr-top-r {
+    order: 2;
+    margin-left: auto;
+  }
+
+  /* Row 2: pills — full width, horizontal scroll */
   .wr-pills {
-    flex-shrink: 1;
+    order: 3;
+    flex: 0 0 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
@@ -146,70 +189,84 @@
   }
   .wr-pills::-webkit-scrollbar { display: none; }
   .wr-pill {
-    height: 32px;
-    line-height: 32px;
+    height: 30px;
+    line-height: 30px;
     padding: 0 10px;
     font-size: 10px;
   }
 
-  /* Ticker: own row below logo + pills */
+  /* Row 3: ticker — own row */
   .wr-tkr {
-    flex-basis: 100%;
-    order: 10;
-    height: 24px;
-    min-height: 24px;
+    order: 4;
+    flex: 0 0 100%;
+    height: 22px;
+    min-height: 22px;
   }
 
-  /* Clock stays compact */
-  .wr-top-r {
-    margin-left: auto;
-  }
-
-  /* --- Standings: horizontal scroll for dense grid --- */
-  .wr-standings-pnl {
-    overflow-x: auto;
+  /* --- Standings: top-4 visible + scroll for the rest.
+     Inner .wr-standings is the scroll container so .wr-ph stays
+     fixed at the top of the panel. Sticky column header keeps the
+     P/W/L/Pts/NRR labels visible while scrolling. Mask fade at the
+     bottom hints that more rows are below. Horizontal scroll moves
+     to the inner container too, since the row grid is min-width 340px. */
+  .wr-standings {
+    max-height: 168px;
+    overflow: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    mask-image: linear-gradient(
+      to bottom,
+      black 0,
+      black calc(100% - 26px),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      black 0,
+      black calc(100% - 26px),
+      transparent 100%
+    );
+  }
+  .wr-standings .wr-st-hdr {
+    position: sticky;
+    top: 0;
+    background: var(--wr-s2);
+    z-index: 1;
   }
   .wr-st-hdr, .wr-st-row {
     min-width: 340px;
   }
 
-  /* --- Season Pulse: reduce wasteful padding --- */
-  .wr-pulse-canvas {
-    position: relative;
-  }
-  .wr-pulse-svg {
-    position: relative;
-    height: 200px;
-  }
-
-  /* --- Briefing hero strip: compact on mobile --- */
+  /* --- Briefing hero strip: compact on mobile.
+     Layout (3-row stack) is handled by the @container query in
+     briefing-panel.css; this block only tweaks dimensions/typography. --- */
   .wr-bp-hero {
     margin: 4px 6px 0;
-    padding: 8px 12px;
-    gap: 6px;
+    padding: 0;
+    gap: 0;
   }
   .wr-bp-name {
     font-size: 22px;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
   }
   .wr-bp-vs {
-    font-size: 10px;
+    font-size: 11px;
   }
   .wr-bp-preview {
     display: none;
   }
-  .wr-bp-details {
-    gap: 2px;
-  }
   .wr-bp-metric {
-    padding: 4px 8px;
+    padding: 4px 10px;
   }
   .wr-bp-metric strong {
-    font-size: 14px;
+    font-size: 15px;
   }
   .wr-bp-metric span {
-    font-size: 5.5px;
+    font-size: 6px;
+  }
+  .wr-bp-detail-venue,
+  .wr-bp-detail-meta {
+    font-size: 9px;
   }
 
   /* --- Briefing/TeamIntel grids: single column --- */
