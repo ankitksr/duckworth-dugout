@@ -42,8 +42,17 @@
   color: var(--wr-t);
   padding: 0 14px;
   height: 36px;
-  background: var(--wr-s2);
+  /* Lift the header band off the body: a slightly lighter base, an
+     inner top highlight for a glass edge, and a 2-tone bottom rule
+     (one bright separator + one dark recess) so the eye reads the
+     header as a clearly distinct section without loud chrome. */
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)) ,
+    var(--wr-s3);
   border-bottom: 1px solid var(--wr-b2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 1px 0 rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
 }
