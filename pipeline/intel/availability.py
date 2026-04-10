@@ -129,10 +129,16 @@ def last_played_dates(
 ) -> dict[str, str]:
     """Most recent match date per player this season (ISO 8601).
 
-    Sourced from Cricsheet only. The scorecard crawl path returns
-    appearance counts (not dates) so we accept the 1-6 day Cricsheet lag
-    for clear-on-play override — a player who returns to play will be
-    flagged as 'available' once Cricsheet catches up.
+    Sources, merged max-wins:
+      1. Cricsheet (canonical, lags 1-6 days)
+      2. ESPNcricinfo scorecard cache (fresh, only matches Cricsheet hasn't
+         ingested yet)
+
+    The scorecard layer was historically counts-only; we now derive dates
+    by intersecting cached scorecard players against schedule.json's match
+    dates by match_number. This closes the lag window for clear-on-play
+    overrides — a player who returned to play in the last 1-6 days will be
+    correctly marked available before Cricsheet catches up.
     """
     from pipeline.intel.roster_context import (
         _build_squad_name_index,
@@ -142,6 +148,7 @@ def last_played_dates(
     by_surname = _build_squad_name_index(conn, season)
     result: dict[str, str] = {}
 
+    # 1. Cricsheet (canonical)
     cricket_sql = """
         SELECT p.name, MAX(m.date) AS last_date
         FROM (
@@ -158,7 +165,7 @@ def last_played_dates(
     try:
         rows = conn.execute(cricket_sql, [season]).fetchall()
     except Exception:
-        return result
+        rows = []
 
     for name, last_date in rows:
         squad_name = _resolve_to_squad_name(name, by_surname)
@@ -170,5 +177,82 @@ def last_played_dates(
                 iso = str(last_date)[:10]
         if iso and (squad_name not in result or iso > result[squad_name]):
             result[squad_name] = iso
+
+    # 2. ESPNcricinfo scorecard cache (fills the 1-6 day lag window)
+    try:
+        sc_dates = _last_played_dates_from_scorecards()
+        for raw_name, iso in sc_dates.items():
+            squad_name = _resolve_to_squad_name(raw_name, by_surname)
+            if squad_name not in result or iso > result[squad_name]:
+                result[squad_name] = iso
+    except Exception:
+        pass
+
+    return result
+
+
+def _last_played_dates_from_scorecards() -> dict[str, str]:
+    """Per-player most-recent match date from cached ESPNcricinfo scorecards.
+
+    Loads schedule.json to map match_number → date, then walks the
+    crawl/scorecard cache directory. Returns {raw_player_name: ISO date};
+    name normalization to squad names is done by the caller.
+
+    Pure file-system read — no network, no DB. Returns {} on any failure.
+    """
+    import json
+    from pathlib import Path
+
+    from pipeline.config import DATA_DIR, ROOT_DIR
+
+    # Find schedule.json (try both locations)
+    sched_path = None
+    for candidate in (
+        DATA_DIR / "war-room" / "schedule.json",
+        ROOT_DIR / "frontend" / "public" / "api" / "ipl" / "war-room" / "schedule.json",
+    ):
+        if candidate.exists():
+            sched_path = candidate
+            break
+    if sched_path is None:
+        return {}
+
+    try:
+        schedule = json.loads(sched_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+    by_match_num: dict[int, str] = {}
+    for m in schedule:
+        if m.get("status") != "completed":
+            continue
+        mn = m.get("match_number")
+        d = m.get("date")
+        if isinstance(mn, int) and isinstance(d, str) and d:
+            by_match_num[mn] = d
+
+    cache_dir = ROOT_DIR / "cache" / "crawl" / "scorecard"
+    if not cache_dir.exists():
+        return {}
+
+    result: dict[str, str] = {}
+    for cache_file in cache_dir.glob("m*.json"):
+        try:
+            mn = int(cache_file.stem.lstrip("m"))
+        except ValueError:
+            continue
+        match_date = by_match_num.get(mn)
+        if not match_date:
+            continue
+        try:
+            data = json.loads(Path(cache_file).read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        for player in data.get("players", []):
+            if not isinstance(player, str) or not player.strip():
+                continue
+            current = result.get(player)
+            if current is None or match_date > current:
+                result[player] = match_date
 
     return result
