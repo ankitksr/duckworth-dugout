@@ -19,6 +19,8 @@ import type {
   WRNarrative,
   WRDossier,
   WRWireItem,
+  WRRoster,
+  WRAvailability,
 } from "../types/war-room";
 
 // ── State ──
@@ -42,6 +44,8 @@ export interface WarRoomState {
   narratives: WRNarrative[];
   dossiers: WRDossier[];
   wire: WRWireItem[];
+  roster: WRRoster | null;
+  availability: WRAvailability | null;
   loading: boolean;
 }
 
@@ -62,6 +66,8 @@ const initialState: WarRoomState = {
   narratives: [],
   dossiers: [],
   wire: [],
+  roster: null,
+  availability: null,
   loading: true,
 };
 
@@ -87,6 +93,8 @@ export type WarRoomAction =
         narratives: WRNarrative[];
         dossiers: WRDossier[];
         wire?: WRWireItem[];
+        roster?: WRRoster | null;
+        availability?: WRAvailability | null;
       };
     }
 ;
@@ -124,6 +132,8 @@ function warRoomReducer(
         narratives: action.payload.narratives,
         dossiers: action.payload.dossiers,
         wire: action.payload.wire ?? state.wire,
+        roster: action.payload.roster ?? state.roster,
+        availability: action.payload.availability ?? state.availability,
         loading: false,
       };
     default:

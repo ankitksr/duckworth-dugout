@@ -13,6 +13,8 @@ import type {
   WRNarrative,
   WRDossier,
   WRWireItem,
+  WRRoster,
+  WRAvailability,
 } from "../types/war-room";
 import { useWarRoomDispatch } from "./useWarRoom";
 
@@ -46,6 +48,7 @@ export function useWarRoomData() {
       const [
         standings, schedule, caps, ticker, intelLog, pulse, metaData,
         scenarios, records, briefings, narratives, dossiers, wire,
+        roster, availability,
       ] = await Promise.all([
         fetchJson<WRStanding[]>(`${BASE}/standings.json`, bustCache),
         fetchJson<WRFixture[]>(`${BASE}/schedule.json`, bustCache),
@@ -60,6 +63,8 @@ export function useWarRoomData() {
         fetchJson<WRNarrative[]>(`${BASE}/narratives.json`, bustCache),
         fetchJson<WRDossier[]>(`${BASE}/dossier.json`, bustCache),
         fetchJson<WRWireItem[]>(`${BASE}/wire.json`, bustCache),
+        fetchJson<WRRoster>(`${BASE}/roster.json`, bustCache),
+        fetchJson<WRAvailability>(`${BASE}/availability.json`, bustCache),
       ]);
 
       if (!active) return;
@@ -90,6 +95,8 @@ export function useWarRoomData() {
           narratives: narratives ?? [],
           dossiers: dossiers ?? [],
           wire: wire ?? [],
+          roster: roster ?? null,
+          availability: availability ?? null,
         },
       });
     }

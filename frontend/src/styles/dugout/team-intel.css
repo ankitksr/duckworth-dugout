@@ -2,60 +2,214 @@
 
 .wr-team-intel-pnl {
   --tc: var(--wr-brand);
+
+  /* Spacing tokens — tweak here, propagate everywhere. */
+  --ti-pad-x: 16px;
+  --ti-pad-y: 12px;
+  --ti-section-pad-x: 14px;
+  --ti-section-pad-y: 12px;
+  --ti-row-gap: 6px;
+  --ti-divider: 1px solid var(--wr-b1);
+  --ti-divider-faint: 1px solid rgba(255, 255, 255, 0.05);
+
   display: flex;
   flex-direction: column;
   min-height: 0;
   --pnl-sheen: radial-gradient(ellipse 60% 60% at 10% 50%, color-mix(in srgb, var(--tc) 7%, transparent), transparent 65%);
 }
 
-/* ── Hero Narrative Card ── */
-.wr-ti-hero {
-  padding: 14px 18px 16px;
-  border-bottom: 1px solid var(--wr-b1);
+/* Faint procedural grain — adds analog "CRT" texture without an image asset. */
+.wr-team-intel-pnl::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 160px 160px;
+  z-index: 0;
+}
+.wr-team-intel-pnl > * { position: relative; z-index: 1; }
+
+/* Hero entry motion — staggered reveal triggered by team-color change.
+   Uses keyed remount via `key={selectedTeam}` on TeamHero, so each new
+   team selection re-runs the keyframes from scratch. */
+@keyframes wr-ti-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* Buffer — inline inside hero, not a separate block */
-.wr-ti-buffer-inline {
-  margin-bottom: 12px;
-  padding: 10px 12px;
-  border-left: 2px solid var(--tc);
-  background: color-mix(in srgb, var(--tc) 3%, transparent);
+/* ── Hero (persistent, horizontal 3-column layout — visible across all tabs) ── */
+.wr-ti-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 28fr) minmax(0, 26fr);
+  border-bottom: 1px solid var(--wr-b1);
+  background:
+    radial-gradient(ellipse 60% 120% at 0% 50%, color-mix(in srgb, var(--tc) 7%, transparent), transparent 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.022), transparent 60%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  position: relative;
 }
-.wr-ti-buffer-tag {
-  display: inline-block;
+.wr-ti-hero.has-buffer {
+  grid-template-columns: minmax(0, 26fr) minmax(0, 22fr) minmax(0, 52fr);
+}
+.wr-ti-hero::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--tc) 28%, transparent) 25%,
+    color-mix(in srgb, var(--tc) 32%, transparent) 50%,
+    color-mix(in srgb, var(--tc) 28%, transparent) 75%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* Hero columns */
+.wr-ti-hero-col {
+  padding: var(--ti-pad-y) var(--ti-pad-x);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-right: var(--ti-divider-faint);
+  animation: wr-ti-reveal 280ms ease-out both;
+}
+.wr-ti-hero-col:nth-child(2) { animation-delay: 60ms; }
+.wr-ti-hero-col:nth-child(3) { animation-delay: 120ms; }
+.wr-ti-hero-col:last-child {
+  border-right: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wr-ti-hero-col {
+    animation: none;
+  }
+}
+
+.wr-ti-hc-identity { gap: 7px; }
+.wr-ti-hc-context  { gap: 5px; }
+.wr-ti-hc-strategic {
+  gap: 6px;
+  background: color-mix(in srgb, var(--tc) 4%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--tc) 22%, rgba(255, 255, 255, 0.05));
+}
+
+/* Context column — labelled rows */
+.wr-ti-hero-line {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+.wr-ti-hero-lbl {
   font: 700 7.5px 'JetBrains Mono', monospace;
   letter-spacing: 1.2px;
   text-transform: uppercase;
   color: var(--tc);
-  border: 1px solid color-mix(in srgb, var(--tc) 40%, transparent);
-  padding: 1px 6px;
+  min-width: 26px;
+}
+.wr-ti-hero-val {
+  font: 500 10px 'JetBrains Mono', monospace;
+  color: var(--wr-t);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Hero injury chip — lives in context column */
+.wr-ti-hv-injury {
+  font: 700 8px 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 1px;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+.wr-ti-hv-injury.out {
+  background: color-mix(in srgb, var(--wr-loss) 18%, transparent);
+  color: var(--wr-loss);
+}
+.wr-ti-hv-injury.doubt {
+  background: color-mix(in srgb, var(--wr-brand) 18%, transparent);
+  color: var(--wr-brand);
+}
+
+/* Responsive: collapse the hero to a single column under ~1100px */
+@media (max-width: 1100px) {
+  .wr-ti-hero,
+  .wr-ti-hero.has-buffer {
+    grid-template-columns: 1fr;
+  }
+  .wr-ti-hero-col {
+    border-right: none;
+    border-bottom: var(--ti-divider-faint);
+    padding: 11px var(--ti-pad-x);
+  }
+  .wr-ti-hero-col:last-child { border-bottom: none; }
+  .wr-ti-hc-strategic {
+    border-left: none;
+    border-top: 1px solid color-mix(in srgb, var(--tc) 22%, rgba(255, 255, 255, 0.05));
+  }
+}
+
+/* Buffer — strategic column content (no wrapping div now) */
+.wr-ti-buffer-tag {
+  display: inline-block;
+  align-self: flex-start;
+  font: 700 7.5px 'JetBrains Mono', monospace;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--tc);
+  border: 1px solid var(--tc);
+  padding: 2px 7px;
   border-radius: 2px;
-  margin-bottom: 6px;
 }
 .wr-ti-buffer-body {
-  font: 400 11px 'Inter', sans-serif;
+  font: 400 10.5px 'Inter', sans-serif;
   color: var(--wr-t2);
-  line-height: 1.6;
+  line-height: 1.55;
   margin: 0;
 }
 
 .wr-ti-hero-hd {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   gap: 8px;
-  margin-bottom: 6px;
 }
-.wr-ti-hero-mood { font-size: 16px; }
+.wr-ti-hero-mood {
+  font-size: 14px;
+  line-height: 1.25;
+  flex-shrink: 0;
+}
 .wr-ti-hero-title {
   font: 800 13px 'Anybody', sans-serif;
   color: var(--wr-t);
   letter-spacing: 0.4px;
+  line-height: 1.25;
+  /* Allow wrap up to 2 lines for long titles like "Thrills and Heartbreak" */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
 }
 .wr-ti-hero-vitals {
   display: flex;
   align-items: center;
   gap: 5px;
-  margin-bottom: 10px;
   flex-wrap: wrap;
 }
 .wr-ti-hv {
@@ -120,13 +274,13 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
-  border-bottom: 1px solid var(--wr-b1);
+  border-bottom: var(--ti-divider);
 }
 .wr-ti-col {
-  padding: 12px 16px 14px;
+  padding: var(--ti-section-pad-y) var(--ti-pad-x) calc(var(--ti-section-pad-y) + 2px);
 }
 .wr-ti-col:first-child {
-  border-right: 1px solid var(--wr-b1);
+  border-right: var(--ti-divider);
 }
 @media (max-width: 1000px) {
   .wr-ti-cols { grid-template-columns: 1fr; }
@@ -139,8 +293,12 @@
   margin-bottom: 6px;
   border-left: 2px solid color-mix(in srgb, var(--tc) 35%, var(--wr-b2));
   background: color-mix(in srgb, var(--tc) 2%, transparent);
+  transition: background 0.18s ease-out;
 }
 .wr-ti-next-card:last-child { margin-bottom: 0; }
+.wr-ti-next-card:hover {
+  background: color-mix(in srgb, var(--tc) 6%, transparent);
+}
 .wr-ti-next-matchup {
   display: flex;
   align-items: baseline;
@@ -163,61 +321,15 @@
   margin: 0;
 }
 
-/* ── Wire Dispatches (team-filtered intelligence) ── */
-.wr-ti-dispatches {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.wr-ti-dispatch {
-  display: flex;
-  gap: 8px;
-  padding: 7px 9px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  border-left: 3px solid var(--wr-t3);
-  border-radius: 2px;
-  align-items: flex-start;
-}
-.wr-ti-dispatch.alarm {
-  border-left-color: var(--wr-loss);
-  background: rgba(239, 68, 68, 0.03);
-}
-.wr-ti-dispatch.alert {
-  border-left-color: var(--wr-brand);
-  background: rgba(253, 185, 19, 0.03);
-}
-.wr-ti-dispatch-emoji {
-  font-size: 12px;
-  flex-shrink: 0;
-  line-height: 1.3;
-}
-.wr-ti-dispatch-body {
-  flex: 1;
-  min-width: 0;
-}
-.wr-ti-dispatch-hl {
-  display: block;
-  font: 600 10px 'Inter', sans-serif;
-  color: var(--wr-t);
-  line-height: 1.45;
-  margin-bottom: 2px;
-}
-.wr-ti-dispatch-cat {
-  font: 500 7px 'JetBrains Mono', monospace;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  color: var(--wr-tm);
-}
-
 .wr-ti-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 1.5px;
 }
 .wr-ti-dot.w  { background: var(--wr-win); }
 .wr-ti-dot.l  { background: var(--wr-loss); opacity: 0.7; }
 .wr-ti-dot.nr { background: var(--wr-t3); opacity: 0.5; }
+.wr-ti-hv-dots { gap: 4px; }
 
 /* Scroll area */
 .wr-team-intel-scroll {
@@ -233,7 +345,7 @@
   min-height: 0;
 }
 .wr-ti-main {
-  border-right: 1px solid var(--wr-b1);
+  border-right: var(--ti-divider);
   min-width: 0;
 }
 .wr-ti-side {
@@ -246,18 +358,19 @@
 
 /* Sections */
 .wr-ti-section {
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--wr-b1);
+  padding: var(--ti-section-pad-y) var(--ti-section-pad-x);
+  border-bottom: var(--ti-divider);
 }
 .wr-ti-section:last-child { border-bottom: none; }
 .wr-ti-sh {
-  font: 600 8px 'JetBrains Mono', monospace;
+  font: 600 9px 'JetBrains Mono', monospace;
   letter-spacing: 1.4px;
   text-transform: uppercase;
   color: var(--wr-t3);
   margin-bottom: 9px;
-  padding-left: 7px;
+  padding-left: 8px;
   border-left: 2px solid var(--tc);
+  line-height: 1.2;
 }
 
 /* Empty state */
@@ -298,9 +411,18 @@
   border-left: 3px solid var(--wr-t3);
   background: rgba(255, 255, 255, 0.04);
 }
-.wr-ti-elim.danger { border-left-color: var(--wr-loss); background: rgba(239, 68, 68, 0.04); }
-.wr-ti-elim.watch  { border-left-color: var(--wr-brand); background: rgba(253, 185, 19, 0.04); }
-.wr-ti-elim.safe   { border-left-color: var(--wr-win); background: rgba(74, 222, 128, 0.04); }
+.wr-ti-elim.danger {
+  border-left-color: var(--wr-loss);
+  background: color-mix(in srgb, var(--wr-loss) 5%, transparent);
+}
+.wr-ti-elim.watch {
+  border-left-color: var(--wr-brand);
+  background: color-mix(in srgb, var(--wr-brand) 5%, transparent);
+}
+.wr-ti-elim.safe {
+  border-left-color: var(--wr-win);
+  background: color-mix(in srgb, var(--wr-win) 5%, transparent);
+}
 .wr-ti-elim-hd {
   display: flex;
   align-items: center;
@@ -313,9 +435,18 @@
   padding: 2px 6px;
   border-radius: 1px;
 }
-.wr-ti-elim-badge.danger { background: rgba(239, 68, 68, 0.2); color: var(--wr-loss); }
-.wr-ti-elim-badge.watch  { background: rgba(253, 185, 19, 0.2); color: var(--wr-brand); }
-.wr-ti-elim-badge.safe   { background: rgba(74, 222, 128, 0.15); color: var(--wr-win); }
+.wr-ti-elim-badge.danger {
+  background: color-mix(in srgb, var(--wr-loss) 20%, transparent);
+  color: var(--wr-loss);
+}
+.wr-ti-elim-badge.watch {
+  background: color-mix(in srgb, var(--wr-brand) 20%, transparent);
+  color: var(--wr-brand);
+}
+.wr-ti-elim-badge.safe {
+  background: color-mix(in srgb, var(--wr-win) 18%, transparent);
+  color: var(--wr-win);
+}
 .wr-ti-elim-metric {
   font: 600 9px 'JetBrains Mono', monospace;
   color: var(--wr-t2);
@@ -326,36 +457,6 @@
   color: var(--wr-t3);
   line-height: 1.55;
   margin: 0;
-}
-
-/* ── If Tonight scenarios ── */
-.wr-ti-tonight {
-  padding: 4px 0;
-}
-.wr-ti-tonight-match {
-  font: 600 9px 'JetBrains Mono', monospace;
-  color: var(--wr-t2);
-  letter-spacing: 0.3px;
-  margin-bottom: 6px;
-}
-.wr-ti-tonight-row {
-  display: flex;
-  gap: 8px;
-  padding: 5px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.025);
-  align-items: baseline;
-}
-.wr-ti-tonight-row:last-child { border-bottom: none; }
-.wr-ti-tonight-result {
-  flex-shrink: 0;
-  font: 700 9px 'JetBrains Mono', monospace;
-  color: var(--wr-t);
-  min-width: 56px;
-}
-.wr-ti-tonight-impact {
-  font: 400 10px 'Inter', sans-serif;
-  color: var(--wr-t3);
-  line-height: 1.5;
 }
 
 /* ── Milestones ── */
@@ -517,13 +618,13 @@
   color: var(--wr-t3);
 }
 .wr-ti-rank-badge.up {
-  background: rgba(74, 222, 128, 0.08);
-  border-color: rgba(74, 222, 128, 0.15);
+  background: color-mix(in srgb, var(--wr-win) 9%, transparent);
+  border-color: color-mix(in srgb, var(--wr-win) 16%, transparent);
   color: var(--wr-win);
 }
 .wr-ti-rank-badge.down {
-  background: rgba(239, 68, 68, 0.08);
-  border-color: rgba(239, 68, 68, 0.15);
+  background: color-mix(in srgb, var(--wr-loss) 9%, transparent);
+  border-color: color-mix(in srgb, var(--wr-loss) 16%, transparent);
   color: var(--wr-loss);
 }
 
@@ -561,9 +662,18 @@
   padding: 2px 6px;
   border-radius: 1px;
 }
-.wr-dos-lvl.high { background: rgba(255, 68, 68, 0.18); color: var(--wr-loss); }
-.wr-dos-lvl.mid  { background: rgba(253, 185, 19, 0.18); color: var(--wr-brand); }
-.wr-dos-lvl.low  { background: rgba(255, 255, 255, 0.05); color: var(--wr-t3); }
+.wr-dos-lvl.high {
+  background: color-mix(in srgb, var(--wr-loss) 18%, transparent);
+  color: var(--wr-loss);
+}
+.wr-dos-lvl.mid {
+  background: color-mix(in srgb, var(--wr-brand) 18%, transparent);
+  color: var(--wr-brand);
+}
+.wr-dos-lvl.low {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--wr-t3);
+}
 
 /* Weaknesses */
 .wr-dos-weak { margin-top: 10px; padding: 0 14px; }
@@ -580,7 +690,7 @@
   color: var(--wr-t3);
   line-height: 1.5;
   padding: 3px 0 3px 10px;
-  border-left: 1px solid rgba(255, 61, 81, 0.2);
+  border-left: 1px solid color-mix(in srgb, var(--wr-loss) 20%, transparent);
   margin-bottom: 4px;
 }
 
@@ -638,4 +748,180 @@
   background: rgba(255, 255, 255, 0.06);
   border-color: var(--wr-b2);
   color: var(--wr-t);
+}
+.wr-bct.has-data::after {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: var(--tc);
+  vertical-align: middle;
+}
+
+/* ── Keyboard focus rings (a11y) — scoped to team intel only ── */
+.wr-team-intel-pnl button:focus-visible,
+.wr-team-intel-pnl a:focus-visible {
+  outline: 1px solid var(--tc);
+  outline-offset: 1px;
+  border-radius: 1px;
+}
+
+/* ── SQUAD tab ── */
+.wr-ti-squad-meta {
+  font: 500 8px 'JetBrains Mono', monospace;
+  color: var(--wr-t3);
+  margin-left: 6px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.wr-ti-squad-list {
+  display: flex;
+  flex-direction: column;
+}
+.wr-ti-sq-row {
+  display: grid;
+  grid-template-columns: 18px 1fr 54px 30px 30px auto;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 6px 6px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.025);
+  border-left: 2px solid transparent;
+  transition: background 0.18s ease-out;
+}
+.wr-ti-sq-row:last-child { border-bottom: none; }
+.wr-ti-sq-row:hover { background: rgba(255, 255, 255, 0.025); }
+.wr-ti-sq-row.captain {
+  border-left-color: var(--tc);
+}
+.wr-ti-sq-row.captain:hover {
+  background: color-mix(in srgb, var(--tc) 4%, rgba(255, 255, 255, 0.025));
+}
+.wr-ti-sq-row.out {
+  background: color-mix(in srgb, var(--wr-loss) 5%, transparent);
+}
+.wr-ti-sq-row.out:hover {
+  background: color-mix(in srgb, var(--wr-loss) 9%, transparent);
+}
+.wr-ti-sq-row.doubt {
+  background: color-mix(in srgb, var(--wr-brand) 4%, transparent);
+}
+.wr-ti-sq-row.doubt:hover {
+  background: color-mix(in srgb, var(--wr-brand) 8%, transparent);
+}
+.wr-ti-sq-badge {
+  font: 700 8px 'JetBrains Mono', monospace;
+  text-align: center;
+  color: var(--wr-t3);
+}
+.wr-ti-sq-row.captain .wr-ti-sq-badge { color: var(--tc); }
+.wr-ti-sq-row.overseas .wr-ti-sq-badge { color: var(--wr-brand); }
+
+.wr-ti-sq-name {
+  font: 600 11.5px 'Inter', sans-serif;
+  color: var(--wr-t);
+  letter-spacing: 0.1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wr-ti-sq-price {
+  font: 500 9.5px 'JetBrains Mono', monospace;
+  color: var(--wr-t2);
+  text-align: right;
+}
+.wr-ti-sq-acq {
+  font: 400 8px 'JetBrains Mono', monospace;
+  color: var(--wr-t3);
+  text-transform: uppercase;
+  text-align: center;
+}
+.wr-ti-sq-apps {
+  font: 500 8.5px 'JetBrains Mono', monospace;
+  color: var(--wr-t3);
+  text-align: right;
+}
+.wr-ti-sq-inj-badge {
+  font: 700 7.5px 'JetBrains Mono', monospace;
+  padding: 1px 5px;
+  border-radius: 1px;
+  letter-spacing: 0.5px;
+}
+.wr-ti-sq-inj-badge.out {
+  background: color-mix(in srgb, var(--wr-loss) 18%, transparent);
+  color: var(--wr-loss);
+}
+.wr-ti-sq-inj-badge.doubtful {
+  background: color-mix(in srgb, var(--wr-brand) 18%, transparent);
+  color: var(--wr-brand);
+}
+
+/* ── Injury Watch sidebar ── */
+.wr-ti-sq-injuries {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wr-ti-sq-inj {
+  padding: 7px 9px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid var(--wr-t3);
+  border-radius: 2px;
+  transition: background 0.18s ease-out;
+}
+.wr-ti-sq-inj:hover { background: rgba(255, 255, 255, 0.05); }
+.wr-ti-sq-inj.out {
+  border-left-color: var(--wr-loss);
+  background: color-mix(in srgb, var(--wr-loss) 5%, transparent);
+}
+.wr-ti-sq-inj.out:hover {
+  background: color-mix(in srgb, var(--wr-loss) 9%, transparent);
+}
+.wr-ti-sq-inj.doubtful {
+  border-left-color: var(--wr-brand);
+  background: color-mix(in srgb, var(--wr-brand) 4%, transparent);
+}
+.wr-ti-sq-inj.doubtful:hover {
+  background: color-mix(in srgb, var(--wr-brand) 8%, transparent);
+}
+.wr-ti-sq-inj-hd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.wr-ti-sq-inj-tag {
+  font: 700 7px 'JetBrains Mono', monospace;
+  padding: 1px 4px;
+  border-radius: 1px;
+}
+.wr-ti-sq-inj-tag.out {
+  background: color-mix(in srgb, var(--wr-loss) 18%, transparent);
+  color: var(--wr-loss);
+}
+.wr-ti-sq-inj-tag.doubtful {
+  background: color-mix(in srgb, var(--wr-brand) 18%, transparent);
+  color: var(--wr-brand);
+}
+.wr-ti-sq-inj-name {
+  font: 700 10px 'Anybody', sans-serif;
+  color: var(--wr-t);
+}
+.wr-ti-sq-inj-reason {
+  font: 400 9.5px 'Inter', sans-serif;
+  color: var(--wr-t2);
+}
+.wr-ti-sq-inj-eta {
+  font: 500 8px 'JetBrains Mono', monospace;
+  color: var(--wr-t3);
+  margin-top: 2px;
+}
+.wr-ti-sq-inj-quote {
+  font: 400 9px 'Inter', sans-serif;
+  font-style: italic;
+  color: var(--wr-t3);
+  margin-top: 4px;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  padding-left: 6px;
 }

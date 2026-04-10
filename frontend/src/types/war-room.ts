@@ -432,3 +432,20 @@ export interface WRAvailability {
   by_team: Record<string, WRAvailabilityEntry[]>;
   players: WRAvailabilityEntry[];
 }
+
+// ── roster.json ──
+
+export interface WRRosterPlayer {
+  player: string;
+  is_captain: boolean;
+  is_overseas: boolean;
+  price_inr: number | null;
+  acquisition_type: string | null; // "auction" | "retained" | "rtm"
+  appearances: number;
+}
+
+export interface WRRoster {
+  generated_at: string;
+  season: string;
+  by_team: Record<string, WRRosterPlayer[]>;
+}
