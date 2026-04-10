@@ -45,10 +45,15 @@
 
 /* Auto-fit card grid — used by Matchups and Form to spread cards
    across the available width without manual column splitting. Two
-   cards on desktop, single column on narrow widths. */
+   cards per row on desktop, single column on narrow widths.
+   Each row takes its tallest item's height (auto rows) and items
+   in the same row stretch to fill (align-items: stretch, default).
+   Combined with the flex column card body below, both cards in a
+   row end up identical: header anchored at top, footer at bottom. */
 .wr-br-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  align-items: stretch;
   gap: 8px;
   padding: 10px 12px 12px;
 }
@@ -100,20 +105,32 @@
 
 .wr-br-card {
   position: relative;
+  display: flex;
+  flex-direction: column;
   padding: 12px 14px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
     var(--wr-s2);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 4px;
+  min-width: 0;
+  /* Force the card to fill its grid cell. Without this, a flex
+     column card resists vertical stretching from the parent grid
+     and sizes only to the sum of its children, leaving cards in
+     the same row at different heights. */
+  height: 100%;
 }
-.wr-br-card + .wr-br-card { margin-top: 8px; }
+/* No adjacent-sibling margin: spacing comes from the parent container's
+   `gap` (.wr-br-stack, .wr-br-cards). Adding margin-top here would also
+   apply to siblings inside a horizontal grid row, where it would push
+   one card down relative to the other and break the alignment. */
 
 .wr-br-card-hd {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
+  flex-shrink: 0;
 }
 .wr-br-card-hd .wr-br-label { margin: 0; }
 .wr-br-card-hd-aside {
@@ -123,19 +140,28 @@
   gap: 6px;
 }
 
+/* Body fills the available card height so the footer docks to the
+   bottom of the box even when the card grew taller than its content. */
 .wr-br-card-body {
   font: 400 12px 'Inter', sans-serif;
   color: var(--wr-t);
   line-height: 1.6;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
+/* margin-top: auto absorbs whatever vertical slack the card box has
+   over its content, docking the footer to the bottom edge. With the
+   card stretched to its grid row height, two adjacent cards in the
+   same row both have their footers anchored at the same y. */
 .wr-br-card-foot {
-  margin-top: 8px;
+  margin-top: auto;
   padding-top: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   font: 400 11px 'Inter', sans-serif;
   color: var(--wr-t2);
   line-height: 1.55;
+  flex-shrink: 0;
 }
 
 /* Team-tinted card variant — applied via inline style for the
