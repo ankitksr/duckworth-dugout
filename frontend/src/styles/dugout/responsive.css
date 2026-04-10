@@ -43,16 +43,24 @@
     display: contents;
   }
 
-  /* --- Panel ordering: tactical brief, league state, AI signals, fixtures.
-     Briefing/Team Intel leads (primary AI surface). Standings + Pulse
-     follow as a paired "where things stand" block right under the brief.
-     AI Wire comes next to keep editorial signals high in the flow.
-     Time-sensitive feeds (matches, caps, intel) close out. --- */
+  /* --- Panel ordering rationale ---
+     1. Briefing — primacy slot. Single-panel answer to "what's at stake
+        tonight". The app's differentiator (AI synthesis); CLAUDE.md vision.
+     2. AI Wire — only panel with info NOT already in the Briefing.
+        Highest refresh rate (~5 min). Keeps the AI block contiguous so
+        Dugout's editorial layer is what loads above the fold.
+     3. Standings — reference table; the "where things stand" anchor.
+     4. Season Pulse — trajectory view of #3. Paired by Gestalt proximity
+        so rank and momentum read together without scrolling between them.
+     5. Matches — lower urgency on mobile because Briefing covers tonight.
+     6. Cap Race — individual leaderboards, deeper reference.
+     7. Intel Feed — raw news firehose; Wire has already surfaced what
+        matters, this is the browse-for-anything tier. */
   .wr-briefing-pnl    { order: 1; }
   .wr-team-intel-pnl  { order: 1; }  /* replaces briefing when team selected */
-  .wr-standings-pnl   { order: 2; }
-  .wr-pulse-pnl       { order: 3; }
-  .wr-wire-pnl        { order: 4; }
+  .wr-wire-pnl        { order: 2; }
+  .wr-standings-pnl   { order: 3; }
+  .wr-pulse-pnl       { order: 4; }
   .wr-matches-pnl     { order: 5; }
   .wr-caps-pnl        { order: 6; }
   .wr-log-pnl         { order: 7; }
