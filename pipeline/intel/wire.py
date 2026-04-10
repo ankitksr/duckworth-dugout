@@ -31,8 +31,12 @@ import duckdb
 from rich.console import Console
 
 from pipeline.clock import today_ist_iso
+from pipeline.intel.live_context import (
+    build_live_context,
+    format_availability_block,
+)
 from pipeline.intel.roster_context import summary as roster_summary
-from pipeline.intel.wire_generators import HASH_VERSION, GeneratorContext, _load_json
+from pipeline.intel.wire_generators import HASH_VERSION, GeneratorContext
 from pipeline.intel.wire_generators.newsdesk import NewsDeskGenerator
 from pipeline.intel.wire_generators.preview import MatchdayPreviewGenerator
 from pipeline.intel.wire_generators.scout import ScoutReportGenerator
@@ -48,62 +52,27 @@ _SHORT = {fid: d["short_name"] for fid, d in IPL_FRANCHISES.items() if not d.get
 
 # ── Base context builder ────────────────────────────────────────────
 
-def _build_availability_block(availability: dict | None) -> str:
-    """Format availability.json as a verified-facts block.
-
-    The wire system prompts instruct all five generators to only make
-    injury/availability claims that appear in this block. Without it, Pro
-    models happily invent plausible-sounding injuries from stale training
-    data (e.g. a player who was injured in a past season). Every generator
-    sees this because it's in the shared base_context.
-    """
-    if not availability:
-        return ""
-    by_team = availability.get("by_team") or {}
-    if not by_team:
-        return ""
-
-    lines: list[str] = []
-    for fid, entries in by_team.items():
-        for e in entries:
-            player = e.get("player", "").strip()
-            status = e.get("status", "").strip()
-            reason = e.get("reason", "").strip()
-            if not player or not status:
-                continue
-            short = _SHORT.get(fid, fid.upper())
-            tail = f" — {reason}" if reason else ""
-            lines.append(f"  {player} ({short}, {status}){tail}")
-    if not lines:
-        return ""
-    return (
-        "INJURY/AVAILABILITY (the ONLY verified facts — do not invent any "
-        "other player as injured, doubtful, missing, or unavailable):\n"
-        + "\n".join(lines)
-    )
-
-
 def _build_base_context(
     conn: duckdb.DuckDBPyConnection,
     season: str,
-    standings: list[dict],
-    schedule: list[dict] | None,
-    availability: dict | None = None,
+    live_ctx: dict,
 ) -> str:
     """Build the shared grounding context (~400 tokens) for all generators.
 
     Contains: season info, roster summary, table snapshot, and the
-    verified injury/availability block.
+    verified injury/availability block. Pulls everything from live_ctx
+    so all wire generators see the same snapshot the rest of the LLM
+    layer sees.
     """
     parts: list[str] = []
 
+    standings = live_ctx.get("standings") or []
+    schedule = live_ctx.get("schedule") or []
+
     # Season header
-    completed = 0
-    total = 0
-    if schedule:
-        completed = sum(1 for m in schedule if m.get("status") == "completed")
-        total = len(schedule)
-    today = today_ist_iso()
+    completed = sum(1 for m in schedule if m.get("status") == "completed")
+    total = len(schedule)
+    today = live_ctx.get("today_ist") or today_ist_iso()
     parts.append(
         f"SEASON: IPL {season} | {completed}/{total} matches completed | TODAY: {today}"
     )
@@ -122,10 +91,9 @@ def _build_base_context(
         )
         parts.append(f"TABLE SNAPSHOT:\n{table_line}")
 
-    # Injury/availability ground truth (appears near the bottom of
-    # base_context so it's adjacent to the focused context the LLM reads
-    # most carefully)
-    avail_block = _build_availability_block(availability)
+    # Injury/availability ground truth (shared formatter so every LLM
+    # generator renders it identically)
+    avail_block = format_availability_block(live_ctx)
     if avail_block:
         parts.append(avail_block)
 
@@ -264,11 +232,11 @@ async def generate_wire(
         if force_expired:
             console.print(f"  [dim]Wire: force-expired {len(force_expired)} same-day entries[/dim]")
 
-    # Load shared data
-    standings = _load_json("standings.json") or []
-    caps = _load_json("caps.json")
-    schedule = _load_json("schedule.json")
-    availability = _load_json("availability.json")
+    # Shared ground-truth bundle used by every LLM generator in this sync
+    live_ctx = build_live_context(conn, season)
+    standings = live_ctx.get("standings") or []
+    caps = live_ctx.get("caps")
+    schedule = live_ctx.get("schedule")
 
     if not standings:
         console.print("  [yellow]Wire: no standings — skipping[/yellow]")
@@ -279,9 +247,7 @@ async def generate_wire(
     set_enrichment_conn(conn)
 
     # Build shared base context (includes injury/availability block)
-    base_context = _build_base_context(
-        conn, season, standings, schedule, availability
-    )
+    base_context = _build_base_context(conn, season, live_ctx)
 
     # Drop already-completed matches so generators (esp. Preview) only see
     # fixtures that still need editorial coverage. Without this, the LLM

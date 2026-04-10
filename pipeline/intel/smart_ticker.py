@@ -21,6 +21,7 @@ from rich.console import Console
 
 from pipeline.clock import today_ist_iso
 from pipeline.config import DATA_DIR
+from pipeline.intel.live_context import format_availability_block
 from pipeline.intel.prompts import load_prompt
 from pipeline.intel.schemas import TickerItemResponse
 from pipeline.ipl.franchise_metadata import IPL_FRANCHISES
@@ -204,39 +205,6 @@ def _build_mcp_context(
     return "\n\n".join(parts)
 
 
-def _build_availability_block(availability: dict | None) -> str:
-    """Format availability.json as a verified-facts block.
-
-    The LLM is instructed (in the system prompt) to ONLY make
-    injury/availability claims that appear in this block. Without it,
-    the model invents plausible-sounding injuries from prior knowledge.
-    """
-    if not availability:
-        return ""
-    by_team = availability.get("by_team") or {}
-    if not by_team:
-        return ""
-
-    lines: list[str] = []
-    for fid, entries in by_team.items():
-        for e in entries:
-            player = e.get("player", "").strip()
-            status = e.get("status", "").strip()
-            reason = e.get("reason", "").strip()
-            if not player or not status:
-                continue
-            short = _short(fid)
-            tail = f" — {reason}" if reason else ""
-            lines.append(f"  {player} ({short}, {status}){tail}")
-    if not lines:
-        return ""
-    return (
-        "INJURY/AVAILABILITY (the ONLY verified facts — do not invent any "
-        "other player as injured, doubtful, missing, or unavailable):\n"
-        + "\n".join(lines)
-    )
-
-
 def _build_season_context(
     standings: list[dict],
     caps: dict | None,
@@ -303,7 +271,7 @@ def _build_season_context(
             ]
             parts.append("UPCOMING:\n" + "\n".join(lines))
 
-    avail_block = _build_availability_block(availability)
+    avail_block = format_availability_block({"availability": availability})
     if avail_block:
         parts.append(avail_block)
 
