@@ -483,38 +483,42 @@ function VenueTab({ briefing }: { briefing: WRBriefing }) {
 
   return (
     <div className="wr-br-cols">
-      {/* Main column: venue metric tiles */}
-      <div className="wr-br-section">
-        <div className="wr-br-section-hd">
-          <span className="wr-br-label">Venue Stats</span>
-        </div>
-        <div className="wr-br-metrics-grid">
-          {stats.map((s) => (
-            <div key={s.label} className="wr-br-metric">
-              <span className="wr-br-metric-value">{s.value}</span>
-              <span className="wr-br-metric-label">{s.label}</span>
-              <span className="wr-br-metric-detail">{s.detail}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Sidebar column: ground context, team records, player records */}
+      {/* Main column: venue intrinsic — stats grid + ground context.
+          Both describe the venue itself; pairing them in one column
+          balances the column heights against the historical data on
+          the right. */}
       <div className="wr-br-stack">
         <div className="wr-br-section">
           <div className="wr-br-section-hd">
-            <span className="wr-br-label">Ground Context</span>
+            <span className="wr-br-label">Venue Stats</span>
           </div>
-          {hasGroundContext ? (
+          <div className="wr-br-metrics-grid">
+            {stats.map((s) => (
+              <div key={s.label} className="wr-br-metric">
+                <span className="wr-br-metric-value">{s.value}</span>
+                <span className="wr-br-metric-label">{s.label}</span>
+                <span className="wr-br-metric-detail">{s.detail}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {hasGroundContext && (
+          <div className="wr-br-section">
+            <div className="wr-br-section-hd">
+              <span className="wr-br-label">Ground Context</span>
+            </div>
             <div className="wr-br-card">
               {vs.note && <div className="wr-br-card-body" style={{ marginBottom: 8 }}>{vs.note}</div>}
               <VenueIntel vs={vs} />
             </div>
-          ) : (
-            <div className="wr-empty">No ground notes</div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
 
+      {/* Sidebar column: historical performance — who has done what
+          at this venue. Team Records on top, Player Records below. */}
+      <div className="wr-br-stack">
         {Object.keys(teamRecords).length > 0 && (
           <div className="wr-br-section">
             <div className="wr-br-section-hd">
@@ -561,6 +565,10 @@ function VenueTab({ briefing }: { briefing: WRBriefing }) {
               })}
             </div>
           </div>
+        )}
+
+        {Object.keys(teamRecords).length === 0 && playerRecords.length === 0 && (
+          <div className="wr-empty">No historical records for this venue</div>
         )}
       </div>
     </div>

@@ -43,19 +43,32 @@
 }
 .wr-br-stack-tight { gap: 4px; }
 
-/* Auto-fit card grid — used by Matchups and Form to spread cards
-   across the available width without manual column splitting. Two
-   cards per row on desktop, single column on narrow widths.
-   Each row takes its tallest item's height (auto rows) and items
-   in the same row stretch to fill (align-items: stretch, default).
-   Combined with the flex column card body below, both cards in a
-   row end up identical: header anchored at top, footer at bottom. */
+/* Card grid — used by Matchups (N cards) and Form (2 cards).
+   Fixed 2-column layout instead of auto-fit so we always pair cards
+   for visual comparison. The :last-child:nth-child(odd) rule lets
+   an odd-count grid (3, 5, ...) span the trailing card across both
+   columns instead of leaving an orphan in a half-row.
+   align-content: start keeps rows top-anchored — the parent grid
+   (.wr-briefing-scroll) stretches us, and without this the single
+   row would inflate to fill all available height, blowing the cards
+   up far past their content. */
 .wr-br-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
+  align-content: start;
   gap: 8px;
   padding: 10px 12px 12px;
+}
+.wr-br-cards > .wr-br-card:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+/* Narrow widths: collapse to single column. */
+@container briefing (max-width: 600px) {
+  .wr-br-cards {
+    grid-template-columns: 1fr;
+  }
 }
 
 
