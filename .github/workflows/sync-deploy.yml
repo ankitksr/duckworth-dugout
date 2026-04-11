@@ -54,11 +54,25 @@ jobs:
       - name: Resolve sync target from inputs
         id: tier
         run: |
-          # Single panel override
+          # Single panel override — used for targeted reruns. Note:
+          # single-panel runs can ship stale schedule/standings if
+          # the cache is old. Prefer tier-based dispatch.
           if [ -n "${{ inputs.panel }}" ]; then
             echo "what=${{ inputs.panel }}" >> "$GITHUB_OUTPUT"
           elif [ -n "${{ inputs.tiers }}" ]; then
-            echo "what=${{ inputs.tiers }}" >> "$GITHUB_OUTPUT"
+            # Auto-prefix "live," if the requested tiers don't
+            # already include it or "all". Hot-only and warm-only
+            # runs would otherwise build and deploy whatever
+            # schedule.json was in the restored api-data cache —
+            # which can be hours stale if the last warm/cool run
+            # predates a match end. Always refreshing the live
+            # panels in the same run closes that gap.
+            TIERS="${{ inputs.tiers }}"
+            case ",${TIERS}," in
+              *,all,*|*,live,*) WHAT="${TIERS}" ;;
+              *) WHAT="live,${TIERS}" ;;
+            esac
+            echo "what=${WHAT}" >> "$GITHUB_OUTPUT"
           else
             # Manual run with no inputs — default to a full sync
             echo "what=all" >> "$GITHUB_OUTPUT"

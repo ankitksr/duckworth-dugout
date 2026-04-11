@@ -89,14 +89,21 @@ export default {
     }
 
     if (event.cron === "*/30 * * * *") {
-      // sync-deploy hot tier. In match window: live + hot. Off-window:
-      // hot only, and only on the hour (every other 30-min tick) to
-      // mirror the existing off-peak hourly cadence.
-      if (isMatchWindow(now)) {
+      // sync-deploy always runs `live,hot` — never `hot` alone. Hot
+      // tier (intel_log + wire + caps) doesn't touch schedule or
+      // standings, so a hot-only run would build and deploy whatever
+      // schedule.json was in the restored api-data cache. If the
+      // cache is stale (e.g. last warm/cool save was 4h ago, before
+      // a match ended), hot-only would publish stale scores and
+      // overwrite whatever live-update had just deployed. Prefixing
+      // with `live` refreshes schedule/standings/pulse in the same
+      // run so the cache save + deploy always carries current state.
+      //
+      // Cadence: every 30 min during match window, on the hour
+      // off-peak (matches the old 30-min / hourly schedule).
+      const topOfHour = now.getUTCMinutes() === 0;
+      if (isMatchWindow(now) || topOfHour) {
         return dispatch(env, "sync-deploy.yml", { tiers: "live,hot" });
-      }
-      if (now.getUTCMinutes() === 0) {
-        return dispatch(env, "sync-deploy.yml", { tiers: "hot" });
       }
       return;
     }
