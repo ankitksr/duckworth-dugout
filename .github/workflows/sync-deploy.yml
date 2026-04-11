@@ -304,3 +304,18 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy frontend/dist --project-name=duckworth-dugout --branch=main
+
+      # Cache the Cloudflare-shaped dist (root base, no /duckworth-dugout
+      # prefix) so live-update can overlay fresh JSON and re-deploy
+      # without rebuilding Astro. Updated on every sync-deploy run via
+      # delete-then-save (cache is immutable per key).
+      - name: Update dist cache
+        run: gh cache delete dist-cf || true
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Save dist cache
+        uses: actions/cache/save@v4
+        with:
+          path: frontend/dist
+          key: dist-cf

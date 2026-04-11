@@ -10,10 +10,8 @@ on:
     - cron: '*/5 9-19 * 3-5 0,6'
 
 permissions:
-  actions: write
+  actions: write   # for self-chain gh workflow run (deleted in Phase 6)
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   # Shared with sync-deploy.yml so both workflows serialize on the
@@ -27,9 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TZ: UTC
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -91,44 +86,44 @@ jobs:
       # (scores expire in minutes) and re-applied from the base cache
       # on each run. This avoids a delete/save race with scheduled-sync.
 
-      # Build + deploy (only when live scores changed)
+      # ── Cloudflare Pages deploy via dist overlay ──
+      # The frontend fetches JSON at runtime, so HTML/JS bundles never
+      # change between live cycles — we just need fresh JSON files
+      # under /api/ipl/war-room/. Restore the Cloudflare-shaped dist
+      # cached by sync-deploy, copy fresh JSON into it, run wrangler
+      # pages deploy directly. This skips ~35s of npm ci + Astro build.
+      #
+      # Cache eviction is rare (sync-deploy refreshes the cache on its
+      # 30-min cron). Fallback rebuild step handles the edge case where
+      # the cache is genuinely missing (e.g. first run after eviction).
+      - name: Restore cached dist
+        id: dist-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: frontend/dist
+          key: dist-cf
+          restore-keys: dist-cf
+
       - uses: actions/setup-node@v4
-        if: steps.live.outputs.has_updates == 'true'
+        if: steps.dist-cache.outputs.cache-hit != 'true'
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install frontend
-        if: steps.live.outputs.has_updates == 'true'
+      - name: Fallback rebuild if dist cache missed
+        if: steps.dist-cache.outputs.cache-hit != 'true'
         working-directory: frontend
-        run: npm ci
+        run: |
+          npm ci
+          npm run build
 
-      - name: Build
-        if: steps.live.outputs.has_updates == 'true'
-        working-directory: frontend
-        env:
-          ASTRO_BASE: /duckworth-dugout
-        run: npm run build
-
-      - uses: actions/upload-pages-artifact@v3
-        if: steps.live.outputs.has_updates == 'true'
-        with:
-          path: frontend/dist
-
-      - name: Deploy
-        if: steps.live.outputs.has_updates == 'true'
-        id: deploy
-        uses: actions/deploy-pages@v4
-
-      # ── Cloudflare Pages (parallel deploy — same JSON, root base path) ──
-      - name: Rebuild frontend for Cloudflare (root base)
-        if: steps.live.outputs.has_updates == 'true'
-        working-directory: frontend
-        run: npm run build
+      - name: Overlay fresh JSON into dist
+        run: |
+          mkdir -p frontend/dist/api/ipl/war-room
+          cp -a frontend/public/api/ipl/war-room/*.json frontend/dist/api/ipl/war-room/
 
       - name: Deploy to Cloudflare Pages
-        if: steps.live.outputs.has_updates == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
