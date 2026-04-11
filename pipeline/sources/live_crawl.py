@@ -166,7 +166,12 @@ def _parse_from_json(
     )
 
     # ── Match status + status text (ESPN-authored) ─────────────
-    if match.get("stage", "") != "RUNNING":
+    # ESPN leaves `stage="RUNNING"` even after a match ends; the fields
+    # that actually flip are `state` ("LIVE" → "POST") and `status`
+    # ("Live" → "RESULT"). Trust those.
+    state = (match.get("state") or "").upper()
+    status_val = (match.get("status") or "").upper()
+    if state == "POST" or status_val == "RESULT":
         result.status = "completed"
     result.status_text = match.get("statusText")
 
@@ -396,6 +401,34 @@ def _match_id_from_url(url: str) -> str | None:
     return m.group(1) if m else None
 
 
+_WINNER_RE = re.compile(r"^\s*(.+?)\s+won\s+(?:by|the)\s+", re.IGNORECASE)
+
+
+def _extract_winner_fid(
+    status_text: str | None, team1: str, team2: str,
+) -> str | None:
+    """Parse ESPN's statusText to identify the winning franchise.
+
+    Handles "PBKS won by 6 wickets (with 7 balls remaining)",
+    "Punjab Kings won by 6 wickets", "PBKS won the Super Over".
+    Returns None for tied / no result / abandoned / unparseable.
+    """
+    if not status_text:
+        return None
+    m = _WINNER_RE.match(status_text)
+    if not m:
+        return None
+    name = m.group(1).strip()
+    upper = name.upper()
+    for fid in (team1, team2):
+        franchise = IPL_FRANCHISES.get(fid, {})
+        if upper == (franchise.get("short_name") or "").upper():
+            return fid
+        if name.lower() == (franchise.get("name") or "").lower():
+            return fid
+    return None
+
+
 # ── Orchestration ────────────────────────────────────────────────────
 
 
@@ -490,6 +523,19 @@ def patch_schedule_with_live(results: list[LiveMatchData]) -> int:
                     m["toss"] = data.toss
                 if data.status == "completed":
                     m["status"] = "completed"
+                    # Backfill winner/result from ESPN's statusText so
+                    # _patch_standings_with_schedule can fire without
+                    # waiting for Cricsheet (lags 1–2 days in-season).
+                    # Don't clobber values a prior authoritative overlay
+                    # (Cricsheet / Wikipedia) already filled in.
+                    if not m.get("winner"):
+                        fid = _extract_winner_fid(
+                            data.status_text, m["team1"], m["team2"],
+                        )
+                        if fid:
+                            m["winner"] = fid
+                    if not m.get("result") and data.status_text:
+                        m["result"] = data.status_text
                 patched += 1
                 break
 
