@@ -144,7 +144,7 @@ function HeroStrip({ briefing }: { briefing: WRBriefing }) {
         </div>
         <div className="wr-bp-detail-compact" aria-hidden="true">
           {(city || venueName).toUpperCase()}
-          {briefing.time && <> &middot; {briefing.time}</>}
+          {briefing.time && <> &middot; {briefing.time.replace(/\s*IST\s*$/i, "")}</>}
           {briefing.match_number != null && <> &middot; M{briefing.match_number}</>}
         </div>
         {previewLink && (
