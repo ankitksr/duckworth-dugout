@@ -83,9 +83,9 @@ jobs:
           pre_sched=$(md5sum "$api/schedule.json" 2>/dev/null | awk '{print $1}')
           pre_stand=$(md5sum "$api/standings.json" 2>/dev/null | awk '{print $1}')
 
-          uv run python -m pipeline live-update
+          uv run --no-sync python -m pipeline live-update
           RC1=$?
-          uv run python -m pipeline refresh-standings
+          uv run --no-sync python -m pipeline refresh-standings
           RC2=$?
 
           if [ $RC1 -ne 0 ] && [ $RC2 -ne 0 ]; then
