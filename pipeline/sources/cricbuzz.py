@@ -58,6 +58,7 @@ def fetch_cricbuzz_standings(season: str) -> list[StandingsRow]:
         return []
 
     if not html:
+        console.print("  [yellow]Cricbuzz: empty response (IP block?)[/yellow]")
         return []
 
     payload = _extract_points_table_json(html)

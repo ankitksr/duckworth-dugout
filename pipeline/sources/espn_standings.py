@@ -60,6 +60,7 @@ def fetch_espn_standings(season: str) -> list[StandingsRow]:
         return []
 
     if not html:
+        console.print("  [yellow]ESPN: empty response (WAF block?)[/yellow]")
         return []
 
     m = _NEXT_DATA_RE.search(html)
