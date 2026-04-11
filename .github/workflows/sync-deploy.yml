@@ -214,6 +214,22 @@ jobs:
           uv run python -m pipeline sync $ARGS
         timeout-minutes: 10
 
+      # Every sync-deploy run ends here so the cache we save and the
+      # build we deploy always carry the current live match state.
+      # Without this, hot tier (cron every 30 min) would restore a
+      # stale schedule.json from cache, run intel_log+wire which don't
+      # touch schedule, re-save and redeploy — clobbering whatever
+      # live-update had published in between and rolling scores back
+      # by the hot-tier cadence.
+      - name: Overlay fresh live scores + standings before deploy
+        env:
+          CRICKET_DB_PATH: data/cricket.duckdb
+        run: |
+          set +e
+          uv run --no-sync python -m pipeline live-update
+          uv run --no-sync python -m pipeline refresh-standings
+          true
+
       # ── Cache pipeline output ───────────────────────────────────
       # GitHub Actions cache is immutable — delete then re-save to update
       - name: Update enrichment.duckdb cache
