@@ -47,19 +47,19 @@ DB_CONSUMERS: set[str] = {
 }
 
 
-def sync_tiers(
-    tiers: list[str],
+def sync_panels(
+    names: list[str],
     *,
     season: str = "2026",
-    panel: str | None = None,
     force: bool = False,
 ) -> None:
-    """Run sync for the given tiers (or a single panel)."""
-    # Resolve which panels to run
-    if panel:
-        active_panels = {panel}
-    else:
-        active_panels = resolve_panels(tiers)
+    """Run sync for a mixed list of tier names and panel names.
+
+    `names` is the parsed CLI arg — comma-split values like ["live"],
+    ["live", "hot"], ["standings"], or ["all"]. resolve_panels handles
+    expansion and validates each entry.
+    """
+    active_panels = resolve_panels(names)
 
     # Determine ordered execution list
     ordered = [p for p in PANEL_ORDER if p in active_panels]

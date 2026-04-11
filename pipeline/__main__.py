@@ -24,38 +24,40 @@ def cli() -> None:
 
 
 @cli.command()
-@click.option(
-    "--tiers",
-    default="all",
-    help="Comma-separated tiers to sync: hot, warm, cool, all",
-)
-@click.option(
-    "--panel",
-    default=None,
-    help="Sync a single panel by name (overrides --tiers)",
-)
+@click.argument("what", required=False, default="all")
 @click.option("--season", default="2026", help="IPL season (default: 2026)")
 @click.option("--watch", is_flag=True, help="Continuous polling mode")
 @click.option("--interval", default=300, type=int, help="Polling interval in seconds")
 @click.option("--force", is_flag=True, help="Force regeneration (bypass caches)")
 def sync(
-    tiers: str,
-    panel: str | None,
+    what: str,
     season: str,
     watch: bool,
     interval: int,
     force: bool,
 ) -> None:
-    """Sync war room panels."""
-    from pipeline.sync import sync_tiers
+    """Sync war room panels.
 
-    tier_list = [t.strip() for t in tiers.split(",")]
+    WHAT is a comma-separated list of tier names (live, hot, warm, cool,
+    all) and/or panel names (e.g. standings, pulse). Defaults to "all".
+
+    \b
+    Examples:
+      pipeline sync live                  # fast refresh path
+      pipeline sync live,hot              # live + intel/wire
+      pipeline sync standings             # single panel
+      pipeline sync standings,pulse       # two panels
+      pipeline sync all                   # everything
+    """
+    from pipeline.sync import sync_panels
+
+    names = [n.strip() for n in what.split(",") if n.strip()]
 
     if watch:
         console.print(f"[bold]Watch mode — syncing every {interval}s[/bold]")
         while True:
             try:
-                sync_tiers(tier_list, season=season, panel=panel, force=force)
+                sync_panels(names, season=season, force=force)
                 console.print(
                     f"\n[dim]Next sync in {interval}s... (Ctrl+C to stop)[/dim]\n"
                 )
@@ -64,7 +66,7 @@ def sync(
                 console.print("\n[bold]Stopped.[/bold]")
                 break
     else:
-        sync_tiers(tier_list, season=season, panel=panel, force=force)
+        sync_panels(names, season=season, force=force)
 
 
 @cli.command("live-update")
