@@ -83,12 +83,14 @@ def sync_panels(
     # Build sync context. skip_llm flips on when no LLM-output panel
     # is active — so e.g. `pipeline sync live` doesn't trigger the
     # schedule panel's inline LLM extraction even though schedule is
-    # in the live tier.
+    # in the live tier. active_panels lets downstream panels detect
+    # when an upstream they depend on is NOT being refreshed this run.
     ctx = SyncContext(
         season=season,
         data_dir=WAR_ROOM_DATA,
         public_dir=PUBLIC_API_DIR,
         skip_llm=not bool(active_panels & LLM_PANELS),
+        active_panels=active_panels,
     )
 
     # Per-panel resource gating. Only fetch what active panels actually

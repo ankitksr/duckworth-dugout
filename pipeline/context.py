@@ -35,3 +35,9 @@ class SyncContext:
     # when no LLM-output panels are active in the current run — i.e. the
     # caller is in a fast/live mode and doesn't want to burn LLM credits.
     skip_llm: bool = False
+
+    # The full panel name set sync.py is running in this cycle. Lets
+    # downstream panels detect when an upstream they depend on is NOT
+    # being refreshed in the same run (so they can warn about reading
+    # stale data from disk). Populated in sync.sync_panels.
+    active_panels: set = field(default_factory=set)

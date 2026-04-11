@@ -19,6 +19,23 @@ def sync(ctx: SyncContext) -> None:
     """Sync the Season Pulse panel."""
     from pipeline.sources.cricsheet import build_pulse_from_schedule
 
+    # Warn if either upstream isn't running in this sync. Pulse will
+    # still compute (against whatever's on disk), but the result reflects
+    # the last published state of standings/schedule, not necessarily
+    # the latest live data. The fix is to include the upstream panels
+    # explicitly: `pipeline sync standings,schedule,pulse` or `sync live`.
+    stale_inputs = [
+        name for name in ("standings", "schedule")
+        if name not in ctx.active_panels
+    ]
+    if stale_inputs:
+        console.print(
+            f"  [yellow]Note: {', '.join(stale_inputs)} not refreshed in this run; "
+            f"pulse reads from disk (possibly stale). "
+            f"For fresh pulse, run `pipeline sync live` or "
+            f"`pipeline sync {','.join(stale_inputs + ['pulse'])}`.[/yellow]"
+        )
+
     # Load schedule: prefer ctx data, fall back to saved JSON
     schedule: list[dict] = []
     if ctx.schedule_matches:
