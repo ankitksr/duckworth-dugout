@@ -1,16 +1,13 @@
 name: Live Score Update
 
+# Triggered exclusively via workflow_dispatch by the Cloudflare Worker
+# in cloudflare/worker.js. GH Actions cron has been removed because it
+# drifts 10-40 min randomly; Cloudflare Cron fires within ~1s of the
+# schedule. Self-chaining was also removed for the same reason.
 on:
   workflow_dispatch:
-  schedule:
-    # Cron acts as chain-starter — self-chaining takes over once live.
-    # Weekday evenings: 7 PM – 1 AM IST (UTC 13-19)
-    - cron: '*/5 13-19 * 3-5 1-5'
-    # Weekends: day + evening games (3 PM – 1 AM IST, UTC 9-19)
-    - cron: '*/5 9-19 * 3-5 0,6'
 
 permissions:
-  actions: write   # for self-chain gh workflow run (deleted in Phase 6)
   contents: read
 
 concurrency:
@@ -27,6 +24,10 @@ jobs:
       TZ: UTC
     steps:
       - uses: actions/checkout@v4
+
+      # No in-workflow window gate: cloudflare/worker.js gates at the
+      # Cron level so out-of-window fires never reach this workflow.
+      # Manual workflow_dispatch always runs through unconditionally.
 
       - name: Setup Python 3.13 + uv
         uses: astral-sh/setup-uv@v4
@@ -129,44 +130,3 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy frontend/dist --project-name=duckworth-dugout --branch=main
-
-      # Self-chain: keep polling during match windows.
-      # Chains on two cadences:
-      #   - Something changed (live scores or standings) → 3-min cooldown
-      #   - In window but nothing moved → 8-min cooldown (warmup)
-      # This bridges GitHub's unreliable cron gaps (~10-40 min skips).
-      # cancel-in-progress: false ensures chains queue, never cancel deploys.
-      - name: Chain next update
-        run: |
-          HOUR=$(date -u +%-H)
-          DOW=$(date -u +%u)  # 1=Mon .. 7=Sun
-          MONTH=$(date -u +%-m)
-
-          # Stay within IPL season months
-          [ "$MONTH" -lt 3 ] || [ "$MONTH" -gt 5 ] && exit 0
-
-          IN_WINDOW=false
-          if [ "$DOW" -ge 1 ] && [ "$DOW" -le 5 ]; then
-            [ "$HOUR" -ge 13 ] && [ "$HOUR" -le 19 ] && IN_WINDOW=true
-          else
-            [ "$HOUR" -ge 9 ] && [ "$HOUR" -le 19 ] && IN_WINDOW=true
-          fi
-
-          if [ "$IN_WINDOW" != "true" ]; then
-            echo "Outside match window — letting cron take over"
-            exit 0
-          fi
-
-          HAS_LIVE="${{ steps.live.outputs.has_updates }}"
-          if [ "$HAS_LIVE" = "true" ]; then
-            echo "Match live — 3-min cooldown before next chain"
-            sleep 180
-          else
-            echo "In window, no live match — 8-min warmup chain"
-            sleep 480
-          fi
-
-          echo "Chaining next update"
-          gh workflow run live-update.yml
-        env:
-          GH_TOKEN: ${{ github.token }}

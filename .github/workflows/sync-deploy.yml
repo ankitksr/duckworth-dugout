@@ -6,11 +6,17 @@ permissions:
   pages: write
   id-token: write
 
+# Triggered exclusively via workflow_dispatch by the Cloudflare Worker
+# in cloudflare/worker.js. Worker dispatches one of three shapes:
+#   - tiers=live,hot   (every 30 min during match window)
+#   - tiers=hot        (hourly off-peak)
+#   - tiers=all        (every 4h, full sync warm+cool)
+# GH Actions cron is removed because it drifts 10-40 min randomly.
 on:
   workflow_dispatch:
     inputs:
       tiers:
-        description: 'Tier override (hot, warm, cool, all). Leave empty for auto.'
+        description: 'Tier or panel list passed to `pipeline sync` (e.g. live, hot, live,hot, all). Leave empty for auto.'
         required: false
         type: string
         default: ''
@@ -29,18 +35,6 @@ on:
         required: false
         type: boolean
         default: false
-  schedule:
-    # Hot tier: every 30 min during match window (UTC 12-18 ~ IST 17:30-23:30)
-    - cron: '*/30 12-18 * 3-5 *'
-
-    # Hot tier: hourly off-peak (articles + wire stay fresh)
-    - cron: '0 0-11,19-23 * 3-5 *'
-
-    # Warm + cool tier: 6x daily (every 4h)
-    - cron: '10 1,5,9,13,17,21 * 3-5 *'
-
-    # DB update: daily at UTC 04:00 (IST 09:30)
-    - cron: '0 4 * 3-5 *'
 
 concurrency:
   # Shared with live-update.yml so both workflows serialize on the
@@ -57,54 +51,20 @@ jobs:
       update_db: ${{ steps.tier.outputs.update_db }}
       force: ${{ steps.tier.outputs.force }}
     steps:
-      - name: Resolve sync target from inputs or schedule time
+      - name: Resolve sync target from inputs
         id: tier
         run: |
-          # Manual override: single panel name
+          # Single panel override
           if [ -n "${{ inputs.panel }}" ]; then
             echo "what=${{ inputs.panel }}" >> "$GITHUB_OUTPUT"
-            echo "update_db=${{ inputs.update_cricket_db }}" >> "$GITHUB_OUTPUT"
-            echo "force=${{ inputs.force }}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # Manual override: tier or panel comma-list (passed straight to sync)
-          if [ -n "${{ inputs.tiers }}" ]; then
+          elif [ -n "${{ inputs.tiers }}" ]; then
             echo "what=${{ inputs.tiers }}" >> "$GITHUB_OUTPUT"
-            echo "update_db=${{ inputs.update_cricket_db }}" >> "$GITHUB_OUTPUT"
-            echo "force=${{ inputs.force }}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "force=false" >> "$GITHUB_OUTPUT"
-
-          HOUR=$(date -u +%-H)
-          MINUTE=$(date -u +%-M)
-
-          # DB update: 04:00 UTC (IST 09:30)
-          if [ "$HOUR" -eq 4 ] && [ "$MINUTE" -lt 10 ]; then
+          else
+            # Manual run with no inputs — default to a full sync
             echo "what=all" >> "$GITHUB_OUTPUT"
-            echo "update_db=true" >> "$GITHUB_OUTPUT"
-            exit 0
           fi
-
-          # Warm + cool full sync: cron is :10 past at hours 1, 5, 9,
-          # 13, 17, 21. Window widened to MINUTE 5..40 to absorb GH
-          # Actions cron jitter. Runs everything (live + articles + LLM).
-          if [ "$MINUTE" -ge 5 ] && [ "$MINUTE" -lt 40 ]; then
-            case "$HOUR" in
-              1|5|9|13|17|21)
-                echo "what=all" >> "$GITHUB_OUTPUT"
-                echo "update_db=false" >> "$GITHUB_OUTPUT"
-                exit 0
-                ;;
-            esac
-          fi
-
-          # Default: live + hot every 30 min during match window. Live
-          # panels run first so wire's newsdesk reads fresh schedule.
-          echo "what=live,hot" >> "$GITHUB_OUTPUT"
-          echo "update_db=false" >> "$GITHUB_OUTPUT"
+          echo "update_db=${{ inputs.update_cricket_db || 'false' }}" >> "$GITHUB_OUTPUT"
+          echo "force=${{ inputs.force || 'false' }}" >> "$GITHUB_OUTPUT"
 
   sync-and-deploy:
     needs: resolve

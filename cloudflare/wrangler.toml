@@ -1,0 +1,16 @@
+name = "duckworth-dugout-cron"
+main = "worker.js"
+compatibility_date = "2026-04-01"
+
+# Three cron entries — each routed to the right GitHub workflow by
+# event.cron in worker.js. Cloudflare Workers cron fires within ~1s
+# of the schedule (vs GitHub Actions cron which drifts 10–40 min).
+#
+# Schedules use UTC. The Worker itself short-circuits outside the
+# IPL season (March–May) so off-season ticks are no-ops.
+[triggers]
+crons = [
+  "*/5 * * * *",      # live-update.yml every 5 min
+  "*/30 * * * *",     # sync-deploy.yml live+hot every 30 min
+  "10 1,5,9,13,17,21 * * *",  # sync-deploy.yml all (warm+cool) — :10 past every 4h
+]
