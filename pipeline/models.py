@@ -101,14 +101,15 @@ class ScheduleMatch:
 
     @classmethod
     def from_schedule_dict(cls, m: dict) -> "ScheduleMatch":
-        """Build from a schedule.json entry, preserving status when present."""
-        return cls(**{k: m[k] for k in _SCHEDULE_MATCH_LOAD_FIELDS if k in m})
+        """Build from a schedule.json entry, preserving every field present.
 
-
-_SCHEDULE_MATCH_LOAD_FIELDS = (
-    "match_number", "date", "time", "venue", "city",
-    "team1", "team2", "status",
-)
+        Loads every dataclass field from the dict via `.get()` so missing
+        keys fall back to the dataclass default. Earlier versions of this
+        method only loaded a hardcoded 8-field tuple, silently dropping all
+        live/completed state — that stripped scores, winner, result, etc.
+        from any panel that round-tripped a match through this loader.
+        """
+        return cls(**{k: m.get(k) for k in cls.__dataclass_fields__ if k in m})
 
 
 @dataclass
