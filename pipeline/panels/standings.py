@@ -1,12 +1,18 @@
 """Standings panel — IPL points table.
 
-Cascade: Wisden RSS -> CricketAddictor -> Wikipedia -> Cricsheet.
+Cascade: Cricbuzz -> ESPNcricinfo -> Wisden RSS -> CricketAddictor
+         -> Wikipedia -> Cricsheet.
 
 The points table is pulled verbatim from upstream sources. No local
 derivation from schedule.json: a partial self-patch (e.g. one team
 updated from a completed fixture, another blocked by a no-result
 filter) produces an inconsistent table, which is worse than a
-uniformly-stale one. Accept RSS latency; trust the source.
+uniformly-stale one. Accept upstream latency; trust the source.
+
+Cricbuzz and ESPN both refresh within minutes of a match ending.
+Wisden / CricketAddictor / Wikipedia publish a new article per match
+and lag 30 min – several hours, so they now sit below the live
+scrapes as safety nets.
 """
 
 from dataclasses import asdict
@@ -22,10 +28,20 @@ console = Console()
 
 def sync(ctx: SyncContext) -> None:
     """Sync standings. Updates ctx.standings_rows for downstream panels."""
+    from pipeline.sources.cricbuzz import fetch_cricbuzz_standings
+    from pipeline.sources.espn_standings import fetch_espn_standings
     from pipeline.sources.standings import parse_standings, parse_standings_from_feed
 
-    source = "wisden"
-    rows = parse_standings(ctx.wisden_items or [])
+    source = "cricbuzz"
+    rows = fetch_cricbuzz_standings(ctx.season)
+
+    if not rows:
+        source = "espn"
+        rows = fetch_espn_standings(ctx.season)
+
+    if not rows:
+        source = "wisden"
+        rows = parse_standings(ctx.wisden_items or [])
 
     if not rows:
         source = "cricketaddictor"
