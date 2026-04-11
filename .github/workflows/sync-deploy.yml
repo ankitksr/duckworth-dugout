@@ -43,40 +43,39 @@ on:
     - cron: '0 4 * 3-5 *'
 
 concurrency:
-  group: pages
+  # Shared with live-update.yml so both workflows serialize on the
+  # api-data cache. cancel-in-progress: false means concurrent runs
+  # queue rather than cancel — we never want to drop a deploy.
+  group: pipeline-deploy
   cancel-in-progress: false
 
 jobs:
   resolve:
     runs-on: ubuntu-latest
     outputs:
-      tiers: ${{ steps.tier.outputs.tiers }}
-      panel: ${{ steps.tier.outputs.panel }}
+      what: ${{ steps.tier.outputs.what }}
       update_db: ${{ steps.tier.outputs.update_db }}
       force: ${{ steps.tier.outputs.force }}
     steps:
-      - name: Resolve tier from inputs or schedule time
+      - name: Resolve sync target from inputs or schedule time
         id: tier
         run: |
-          # Manual override: single panel
+          # Manual override: single panel name
           if [ -n "${{ inputs.panel }}" ]; then
-            echo "tiers=all" >> "$GITHUB_OUTPUT"
-            echo "panel=${{ inputs.panel }}" >> "$GITHUB_OUTPUT"
+            echo "what=${{ inputs.panel }}" >> "$GITHUB_OUTPUT"
             echo "update_db=${{ inputs.update_cricket_db }}" >> "$GITHUB_OUTPUT"
             echo "force=${{ inputs.force }}" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          # Manual override: tier selection
+          # Manual override: tier or panel comma-list (passed straight to sync)
           if [ -n "${{ inputs.tiers }}" ]; then
-            echo "tiers=${{ inputs.tiers }}" >> "$GITHUB_OUTPUT"
-            echo "panel=" >> "$GITHUB_OUTPUT"
+            echo "what=${{ inputs.tiers }}" >> "$GITHUB_OUTPUT"
             echo "update_db=${{ inputs.update_cricket_db }}" >> "$GITHUB_OUTPUT"
             echo "force=${{ inputs.force }}" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          echo "panel=" >> "$GITHUB_OUTPUT"
           echo "force=false" >> "$GITHUB_OUTPUT"
 
           HOUR=$(date -u +%-H)
@@ -84,28 +83,27 @@ jobs:
 
           # DB update: 04:00 UTC (IST 09:30)
           if [ "$HOUR" -eq 4 ] && [ "$MINUTE" -lt 10 ]; then
-            echo "tiers=all" >> "$GITHUB_OUTPUT"
+            echo "what=all" >> "$GITHUB_OUTPUT"
             echo "update_db=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          # Warm + cool: cron is :10 past at hours 1, 5, 9, 13, 17, 21.
-          # Window widened to MINUTE 5..40 to absorb GitHub Actions cron
-          # jitter (deliveries can lag 10–20 min). Without this, jittered
-          # warm+cool runs would fall through to the hot-tier default and
-          # the wire/standings/caps panels would skip their refresh.
+          # Warm + cool full sync: cron is :10 past at hours 1, 5, 9,
+          # 13, 17, 21. Window widened to MINUTE 5..40 to absorb GH
+          # Actions cron jitter. Runs everything (live + articles + LLM).
           if [ "$MINUTE" -ge 5 ] && [ "$MINUTE" -lt 40 ]; then
             case "$HOUR" in
               1|5|9|13|17|21)
-                echo "tiers=hot,warm,cool" >> "$GITHUB_OUTPUT"
+                echo "what=all" >> "$GITHUB_OUTPUT"
                 echo "update_db=false" >> "$GITHUB_OUTPUT"
                 exit 0
                 ;;
             esac
           fi
 
-          # Default: hot tier (match window every 30 min, off-peak hourly)
-          echo "tiers=hot" >> "$GITHUB_OUTPUT"
+          # Default: live + hot every 30 min during match window. Live
+          # panels run first so wire's newsdesk reads fresh schedule.
+          echo "what=live,hot" >> "$GITHUB_OUTPUT"
           echo "update_db=false" >> "$GITHUB_OUTPUT"
 
   sync-and-deploy:
@@ -191,7 +189,10 @@ jobs:
           cp -a frontend/public/api/ipl/war-room/*.json data/war-room/ 2>/dev/null || true
 
       # ── Pipeline sync ────────────────────────────────────────────
-      - name: Sync pipeline (${{ needs.resolve.outputs.panel || needs.resolve.outputs.tiers }})
+      # Single positional arg WHAT — accepts tier names (live, hot,
+      # warm, cool, all) and/or panel names. Live panels always run
+      # first per PANEL_ORDER so downstream LLM panels read fresh state.
+      - name: Sync pipeline (${{ needs.resolve.outputs.what }})
         env:
           CT_LLM_API_KEY: ${{ secrets.CT_LLM_API_KEY }}
           CT_LLM_VERTEX: 'true'
@@ -203,32 +204,13 @@ jobs:
           GOOGLE_CLOUD_LOCATION: ${{ vars.CT_LLM_GCP_LOCATION }}
           CRICKET_DB_PATH: data/cricket.duckdb
         run: |
-          if [ -n "${{ needs.resolve.outputs.panel }}" ]; then
-            ARGS="--panel ${{ needs.resolve.outputs.panel }}"
-          else
-            ARGS="--tiers ${{ needs.resolve.outputs.tiers }}"
-          fi
+          ARGS="${{ needs.resolve.outputs.what }}"
           if [ "${{ needs.resolve.outputs.force }}" = "true" ]; then
-            ARGS="$ARGS --force"
+            uv run python -m pipeline sync "$ARGS" --force
+          else
+            uv run python -m pipeline sync "$ARGS"
           fi
-          uv run python -m pipeline sync $ARGS
         timeout-minutes: 10
-
-      # Every sync-deploy run ends here so the cache we save and the
-      # build we deploy always carry the current live match state.
-      # Without this, hot tier (cron every 30 min) would restore a
-      # stale schedule.json from cache, run intel_log+wire which don't
-      # touch schedule, re-save and redeploy — clobbering whatever
-      # live-update had published in between and rolling scores back
-      # by the hot-tier cadence.
-      - name: Overlay fresh live scores + standings before deploy
-        env:
-          CRICKET_DB_PATH: data/cricket.duckdb
-        run: |
-          set +e
-          uv run --no-sync python -m pipeline live-update
-          uv run --no-sync python -m pipeline refresh-standings
-          true
 
       # ── Cache pipeline output ───────────────────────────────────
       # GitHub Actions cache is immutable — delete then re-save to update

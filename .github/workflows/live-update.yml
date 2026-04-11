@@ -16,7 +16,10 @@ permissions:
   id-token: write
 
 concurrency:
-  group: live-update
+  # Shared with sync-deploy.yml so both workflows serialize on the
+  # api-data cache. cancel-in-progress: false means concurrent runs
+  # queue rather than cancel — we never want to drop a deploy.
+  group: pipeline-deploy
   cancel-in-progress: false
 
 jobs:
@@ -71,36 +74,17 @@ jobs:
           echo "No API data cache — run Sync Pipeline & Deploy first"
           exit 1
 
-      # RSS + page crawl for rich live scores, and an RSS refresh of the
-      # points table. has_updates fires on any change to schedule.json
-      # or standings.json so Wisden catching up on a match result
-      # triggers a deploy even when no match is currently live.
-      - name: Update live scores + standings
+      # Run the live tier — schedule + standings + pulse. Single command,
+      # dependency-aware fetches (no article crawl, no LLM). The pipeline
+      # always writes fresh JSON; we always deploy. md5-diff gating is gone
+      # because runtime is low enough that always-deploy is correct + simpler.
+      - name: Sync live panels
         id: live
+        env:
+          CRICKET_DB_PATH: data/cricket.duckdb
         run: |
-          set +e
-          api=frontend/public/api/ipl/war-room
-          pre_sched=$(md5sum "$api/schedule.json" 2>/dev/null | awk '{print $1}')
-          pre_stand=$(md5sum "$api/standings.json" 2>/dev/null | awk '{print $1}')
-
-          uv run --no-sync python -m pipeline live-update
-          RC1=$?
-          uv run --no-sync python -m pipeline refresh-standings
-          RC2=$?
-
-          if [ $RC1 -ne 0 ] && [ $RC2 -ne 0 ]; then
-            echo "Both live-update and refresh-standings failed"
-            exit 1
-          fi
-
-          post_sched=$(md5sum "$api/schedule.json" 2>/dev/null | awk '{print $1}')
-          post_stand=$(md5sum "$api/standings.json" 2>/dev/null | awk '{print $1}')
-
-          if [ "$pre_sched" != "$post_sched" ] || [ "$pre_stand" != "$post_stand" ]; then
-            echo "has_updates=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_updates=false" >> "$GITHUB_OUTPUT"
-          fi
+          uv run --no-sync python -m pipeline sync live
+          echo "has_updates=true" >> "$GITHUB_OUTPUT"
 
       # Live-update does NOT write back to the api-data cache.
       # scheduled-sync owns that cache — live overlays are ephemeral
