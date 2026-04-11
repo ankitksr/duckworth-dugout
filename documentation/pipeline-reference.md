@@ -165,8 +165,12 @@ fires never reach GitHub Actions runners.
 
 | Day type | UTC window | IST window |
 |---|---|---|
-| Weekday (Mon–Fri) | 13:00 – 19:59 | 18:30 – 01:30 |
-| Weekend (Sat–Sun) | 09:00 – 19:59 | 14:30 – 01:30 |
+| Weekday (Mon–Fri) | 13:00 – 18:59 | 18:30 – 00:25 |
+| Weekend (Sat–Sun) | 09:00 – 18:59 | 14:30 – 00:25 |
+
+Last fire in both windows lands ~1.5h past a normal 23:00 IST match end —
+enough buffer for super overs + rain delays + post-match standings settle,
+but skipping the wasteful 00:30–01:30 IST tail.
 
 **Out of window**: live-update fires are silently dropped at the Worker level.
 **Out of season** (Jun–Feb): all three crons are silent no-ops.

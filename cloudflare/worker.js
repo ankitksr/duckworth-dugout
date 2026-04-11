@@ -34,12 +34,17 @@ function isInSeason(date) {
 function isMatchWindow(date) {
   const dow = date.getUTCDay(); // 0=Sun .. 6=Sat
   const hour = date.getUTCHours();
-  // Weekend (Sat/Sun): day games + evening, UTC 9-19 (IST 14:30-00:30)
+  // Last fire in both windows is UTC 18:55 = IST 00:25 — ~1.5h past a
+  // normal 23:00 IST match end. Covers rain delays + super overs +
+  // post-match standings settle without burning runner minutes on the
+  // 00:30-01:30 IST tail where nothing meaningful changes.
+  //
+  // Weekend (Sat/Sun): day + evening matches, UTC 9-18 (IST 14:30-00:25)
   if (dow === 0 || dow === 6) {
-    return hour >= 9 && hour <= 19;
+    return hour >= 9 && hour <= 18;
   }
-  // Weekday: evening only, UTC 13-19 (IST 18:30-00:30)
-  return hour >= 13 && hour <= 19;
+  // Weekday: evening matches only, UTC 13-18 (IST 18:30-00:25)
+  return hour >= 13 && hour <= 18;
 }
 
 async function dispatch(env, workflow, inputs) {
