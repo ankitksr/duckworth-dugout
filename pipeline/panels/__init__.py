@@ -9,10 +9,10 @@ article-driven panels, cool tier is all the LLM-heavy per-match work.
 
 TIERS: dict[str, list[str]] = {
     "live": ["standings", "schedule", "pulse"],
-    "hot": ["intel_log", "wire"],
+    "hot": ["intel_log", "wire", "caps"],
     "warm": [
-        "standings", "schedule", "pulse",
-        "caps", "ticker", "availability", "roster", "scenarios", "records",
+        "standings", "schedule", "pulse", "caps",
+        "ticker", "availability", "roster", "scenarios", "records",
     ],
     "cool": ["briefing", "narratives", "dossier", "match_notes"],
 }

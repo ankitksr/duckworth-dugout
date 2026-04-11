@@ -41,8 +41,8 @@ The other CLI commands (unchanged by the refactor):
 | Tier | Panels | LLM? | Notes |
 |---|---|:-:|---|
 | **live** | standings, schedule, pulse | no | Fast refresh path. PANEL_ORDER puts these first so downstream LLM panels read fresh state. |
-| **hot** | intel_log, wire | yes | Article ingest + wire generators. Triggers `_init_articles` (body crawl + LLM extraction). |
-| **warm** | standings, schedule, pulse, caps, ticker, availability, roster, scenarios, records | yes | Strict superset of live + medium-cost panels. |
+| **hot** | intel_log, wire, caps | yes | Article ingest + wire generators + cap leaderboards (ESPN crawl4ai). Triggers `_init_articles` (body crawl + LLM extraction). Caps refreshes within ~30 min of a match completing. |
+| **warm** | standings, schedule, pulse, caps, ticker, availability, roster, scenarios, records | yes | Superset of live + medium-cost panels (caps also in hot for 30-min cadence). |
 | **cool** | briefing, narratives, dossier, match_notes | yes | Per-match heavy LLM panels. |
 | **all** | everything | yes | Magic preset for the full sync. |
 
@@ -52,8 +52,9 @@ Tiers may overlap. `sync live,warm` dedupes — runs each panel once in `PANEL_O
 
 ```
 standings → schedule → pulse        # live tier
-→ intel_log                          # article ingest
-→ caps → availability → roster
+→ intel_log                          # article ingest (hot)
+→ caps                               # hot (ESPN crawl) + warm superset
+→ availability → roster
 → wire → ticker → scenarios → records
 → briefing → dossier → narratives → match_notes
 ```
