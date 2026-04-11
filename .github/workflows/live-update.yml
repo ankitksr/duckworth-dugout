@@ -71,19 +71,35 @@ jobs:
           echo "No API data cache — run Sync Pipeline & Deploy first"
           exit 1
 
-      # RSS + page crawl for rich live scores
-      - name: Update live scores
+      # RSS + page crawl for rich live scores, and an RSS refresh of the
+      # points table. has_updates fires on any change to schedule.json
+      # or standings.json so Wisden catching up on a match result
+      # triggers a deploy even when no match is currently live.
+      - name: Update live scores + standings
         id: live
         run: |
           set +e
-          OUTPUT=$(uv run python -m pipeline live-update 2>&1)
-          RC=$?
-          echo "$OUTPUT"
-          if [ $RC -ne 0 ]; then exit $RC; fi
-          if echo "$OUTPUT" | grep -q "No live IPL"; then
-            echo "has_updates=false" >> "$GITHUB_OUTPUT"
-          else
+          api=frontend/public/api/ipl/war-room
+          pre_sched=$(md5sum "$api/schedule.json" 2>/dev/null | awk '{print $1}')
+          pre_stand=$(md5sum "$api/standings.json" 2>/dev/null | awk '{print $1}')
+
+          uv run python -m pipeline live-update
+          RC1=$?
+          uv run python -m pipeline refresh-standings
+          RC2=$?
+
+          if [ $RC1 -ne 0 ] && [ $RC2 -ne 0 ]; then
+            echo "Both live-update and refresh-standings failed"
+            exit 1
+          fi
+
+          post_sched=$(md5sum "$api/schedule.json" 2>/dev/null | awk '{print $1}')
+          post_stand=$(md5sum "$api/standings.json" 2>/dev/null | awk '{print $1}')
+
+          if [ "$pre_sched" != "$post_sched" ] || [ "$pre_stand" != "$post_stand" ]; then
             echo "has_updates=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_updates=false" >> "$GITHUB_OUTPUT"
           fi
 
       # Live-update does NOT write back to the api-data cache.
@@ -137,8 +153,8 @@ jobs:
 
       # Self-chain: keep polling during match windows.
       # Chains on two cadences:
-      #   - Match live → 3-min cooldown (fast updates)
-      #   - In window but no live match → 8-min cooldown (pre-match warmup)
+      #   - Something changed (live scores or standings) → 3-min cooldown
+      #   - In window but nothing moved → 8-min cooldown (warmup)
       # This bridges GitHub's unreliable cron gaps (~10-40 min skips).
       # cancel-in-progress: false ensures chains queue, never cancel deploys.
       - name: Chain next update

@@ -141,6 +141,41 @@ def live_update(season: str) -> None:
         )
 
 
+@cli.command("refresh-standings")
+@click.option("--season", default="2026", help="IPL season (default: 2026)")
+def refresh_standings(season: str) -> None:
+    """Refresh standings from RSS — no LLM, no article crawl.
+
+    Intended for live-update workflow to keep the points table fresh
+    during match windows without running the full warm-tier sync
+    (which would trigger article extraction + LLM calls).
+
+    Runs just the standings panel over freshly-fetched Wisden +
+    CricketAddictor RSS. Wikipedia/Cricsheet fall back as usual if
+    RSS parse is empty.
+    """
+    from pipeline.config import DATA_DIR, ROOT_DIR
+    from pipeline.context import SyncContext
+    from pipeline.panels import standings as standings_panel
+    from pipeline.sources.feeds import FEEDS
+    from pipeline.sources.rss import RSSFetcher
+
+    public_dir = ROOT_DIR / "frontend" / "public" / "api" / "ipl" / "war-room"
+    data_dir = DATA_DIR / "war-room"
+
+    ctx = SyncContext(season=season, data_dir=data_dir, public_dir=public_dir)
+
+    console.print("[bold]Fetching Wisden feed...[/bold]")
+    ctx.wisden_items = RSSFetcher(FEEDS["wisden"]["url"]).fetch()
+    console.print(f"  [dim]{len(ctx.wisden_items)} items[/dim]")
+
+    console.print("[bold]Fetching CricketAddictor feed...[/bold]")
+    ctx.ca_items = RSSFetcher(FEEDS["cricketaddictor"]["url"]).fetch()
+    console.print(f"  [dim]{len(ctx.ca_items)} items[/dim]")
+
+    standings_panel.sync(ctx)
+
+
 @cli.command("pull-enrichment")
 @click.option("--output", default="data/enrichment.duckdb", help="Output path")
 def pull_enrichment(output: str) -> None:
