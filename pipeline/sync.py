@@ -46,6 +46,16 @@ DB_CONSUMERS: set[str] = {
     "match_notes",
 }
 
+# Panels that produce LLM-generated output. When NONE of these are
+# active in a sync run, ctx.skip_llm is set so other panels (notably
+# the schedule panel's inline extract_match_results step) skip their
+# own LLM calls — the caller is in a fast/live mode and doesn't want
+# to burn LLM credits on opportunistic refinement.
+LLM_PANELS: set[str] = {
+    "wire", "ticker", "scenarios", "records",
+    "briefing", "dossier", "narratives", "match_notes",
+}
+
 
 def sync_panels(
     names: list[str],
@@ -70,11 +80,15 @@ def sync_panels(
         border_style="bright_black",
     ))
 
-    # Build sync context
+    # Build sync context. skip_llm flips on when no LLM-output panel
+    # is active — so e.g. `pipeline sync live` doesn't trigger the
+    # schedule panel's inline LLM extraction even though schedule is
+    # in the live tier.
     ctx = SyncContext(
         season=season,
         data_dir=WAR_ROOM_DATA,
         public_dir=PUBLIC_API_DIR,
+        skip_llm=not bool(active_panels & LLM_PANELS),
     )
 
     # Per-panel resource gating. Only fetch what active panels actually

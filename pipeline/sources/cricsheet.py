@@ -43,6 +43,19 @@ def _connect() -> duckdb.DuckDBPyConnection:
     return connect_readonly(CRICKET_DB_PATH)
 
 
+def _db_available() -> bool:
+    """True if cricket.duckdb exists on disk.
+
+    Live-update workflows don't restore the cricsheet cache (it's
+    ~500MB) so any caller that goes through Cricsheet must be able
+    to degrade gracefully when the file isn't there. Helpers below
+    short-circuit on this check and return empty results so callers
+    fall back to schedule-derived data instead of crashing.
+    """
+    from pathlib import Path
+    return Path(CRICKET_DB_PATH).exists()
+
+
 def _parse_overs(overs: float | None) -> float:
     """Convert overs (e.g. 19.4) to balls, then back to decimal overs for NRR.
 
@@ -313,7 +326,10 @@ def query_completed_matches(season: str) -> dict[tuple[str, str, str], dict]:
     """Query completed match results from Cricsheet.
 
     Returns dict keyed by (date, sorted_team1, sorted_team2) → result info.
+    Returns empty dict if cricket.duckdb is not present (live-update path).
     """
+    if not _db_available():
+        return {}
     conn = _connect()
     try:
         rows = conn.execute("""
@@ -372,7 +388,11 @@ def _query_cricsheet_innings(season: str) -> dict[tuple[str, str], dict]:
     """Fetch per-match innings data from Cricsheet for NRR computation.
 
     Returns a dict keyed by (date, frozenset(fid1, fid2)) → innings data.
+    Returns empty dict if cricket.duckdb is not present so callers
+    fall back to schedule-derived NRR.
     """
+    if not _db_available():
+        return {}
     conn = _connect()
     try:
         rows = conn.execute("""

@@ -134,6 +134,33 @@ def load_fixtures(season: str) -> list[ScheduleMatch]:
     ) for m in data]
 
 
+def _load_existing_schedule(season: str) -> list[ScheduleMatch]:
+    """Load the previously-published schedule.json as the sync base.
+
+    Using the previous run's schedule as the starting point preserves
+    every field already known about each match (live scores, completion
+    state, winner, result text, ESPN URL, win-prob, hero, etc). Overlays
+    only ADD information; passing a richer base through them yields
+    richer state, with no separate "monotonic preserve" step.
+
+    Falls back to load_fixtures(season) on first run when no previous
+    schedule.json exists yet.
+    """
+    prev_path = ROOT_DIR / "frontend" / "public" / "api" / "ipl" / "war-room" / "schedule.json"
+    if not prev_path.exists():
+        return load_fixtures(season)
+
+    try:
+        data = json.loads(prev_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return load_fixtures(season)
+
+    if not data:
+        return load_fixtures(season)
+
+    return [ScheduleMatch.from_schedule_dict(m) for m in data]
+
+
 def overlay_completed(matches: list[ScheduleMatch], season: str) -> list[ScheduleMatch]:
     """Mark completed matches using Cricsheet data directly."""
     from pipeline.sources.cricsheet import query_completed_matches
@@ -144,8 +171,10 @@ def overlay_completed(matches: list[ScheduleMatch], season: str) -> list[Schedul
 
     count = 0
     for match in matches:
-        if match.status != "scheduled":
-            continue
+        # No scheduled-only gate: Cricsheet is authoritative for any
+        # match it has data for, including matches a previous overlay
+        # has already marked live or completed. Lets a wrongly-stuck-
+        # live state get corrected once Cricsheet ingests the result.
         key = (match.date, *sorted([match.team1, match.team2]))
         if key not in completed:
             continue
@@ -340,42 +369,40 @@ def overlay_from_standings(
     return matches
 
 
-def _carry_forward_urls(matches: list[ScheduleMatch]) -> None:
-    """Preserve match_url from previous schedule.json.
-
-    ESPNcricinfo match URLs are permanent but only captured during
-    live RSS overlay. Once a match drops off the feed, the URL would
-    be lost. This carries forward URLs from the last saved schedule.
-    """
-    prev_path = ROOT_DIR / "frontend" / "public" / "api" / "ipl" / "war-room" / "schedule.json"
-    if not prev_path.exists():
-        return
-    prev = json.loads(prev_path.read_text(encoding="utf-8"))
-    url_by_num = {
-        m["match_number"]: m["match_url"]
-        for m in prev if m.get("match_url")
-    }
-    for match in matches:
-        if not match.match_url and match.match_number in url_by_num:
-            match.match_url = url_by_num[match.match_number]
-
-
 def sync_schedule(
     season: str,
     standings: list[dict] | None = None,
 ) -> list[ScheduleMatch]:
-    """Sync schedule: fixtures → Cricsheet → Wikipedia → standings → live RSS."""
-    matches = load_fixtures(season)
-    if matches:
-        matches = overlay_completed(matches, season)
-        from pipeline.sources.wikipedia import overlay_wikipedia_fixtures
+    """Sync schedule incrementally.
 
-        matches = overlay_wikipedia_fixtures(matches, season)
-        if standings:
-            matches = overlay_from_standings(matches, standings)
-        matches = overlay_live_scores(matches)
-        _carry_forward_urls(matches)
-        console.print(
-            f"  [green]Schedule: {len(matches)} fixtures loaded[/green]"
-        )
+    Loads the previous run's schedule.json as the base (or fixtures
+    JSON on first run), resets stale "live" status so RSS / ESPN-crawl
+    re-promotion is the source of truth for what's currently live, then
+    layers overlays on top: Cricsheet → Wikipedia → standings → RSS.
+
+    Overlays only ADD information; the previous run's match_url, score,
+    winner, result, and other fields are preserved automatically.
+    """
+    matches = _load_existing_schedule(season)
+    if not matches:
+        return matches
+
+    # Stale-live reset: any match still flagged "live" from a prior run
+    # gets demoted to "scheduled" so the live overlay must re-confirm.
+    # Without this, a match that ended between runs would stay "live"
+    # if no overlay re-promotes (or demotes via Cricsheet/ESPN crawl).
+    for match in matches:
+        if match.status == "live":
+            match.status = "scheduled"
+
+    matches = overlay_completed(matches, season)
+    from pipeline.sources.wikipedia import overlay_wikipedia_fixtures
+
+    matches = overlay_wikipedia_fixtures(matches, season)
+    if standings:
+        matches = overlay_from_standings(matches, standings)
+    matches = overlay_live_scores(matches)
+    console.print(
+        f"  [green]Schedule: {len(matches)} fixtures loaded[/green]"
+    )
     return matches

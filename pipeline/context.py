@@ -27,6 +27,11 @@ class SyncContext:
     schedule_matches: list | None = None
     today_matches: list = field(default_factory=list)
 
-    # Per-article extraction stats populated by sync._init_db_and_articles
-    # and read by the availability panel for its payload telemetry.
+    # Per-article extraction stats populated by sync._init_articles and
+    # read by the availability panel for its payload telemetry.
     extraction_stats: dict = field(default_factory=dict)
+
+    # When True, panels skip any LLM calls in their sync. Set by sync.py
+    # when no LLM-output panels are active in the current run — i.e. the
+    # caller is in a fast/live mode and doesn't want to burn LLM credits.
+    skip_llm: bool = False

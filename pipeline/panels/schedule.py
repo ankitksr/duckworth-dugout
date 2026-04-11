@@ -30,8 +30,9 @@ def sync(ctx: SyncContext) -> None:
 
     matches = sync_schedule(ctx.season, standings=std_dicts)
 
-    # LLM extraction: fill scores/hero for completed matches missing them
-    if matches and ctx.db_conn is not None:
+    # LLM extraction: fill scores/hero for completed matches missing them.
+    # Skipped when ctx.skip_llm (live tier) or when DB isn't open.
+    if matches and ctx.db_conn is not None and not ctx.skip_llm:
         try:
             from pipeline.intel.extract import (
                 extract_match_results,
@@ -49,25 +50,12 @@ def sync(ctx: SyncContext) -> None:
         except Exception as e:
             console.print(f"  [yellow]Extract: LLM extraction skipped: {e}[/yellow]")
 
-    # Editorial match notes
+    # Editorial match notes — read from match-notes.json on disk and
+    # apply to matches[].note. The match_notes panel (cool tier) is the
+    # only place that GENERATES notes via LLM; this panel just merges
+    # them into the schedule output so the frontend's m.note read works.
     if matches:
-        try:
-            from pipeline.intel.match_notes import generate_match_notes
-
-            notes = asyncio.run(generate_match_notes(ctx.season))
-            if notes:
-                applied = 0
-                for m in matches:
-                    note = notes.get(m.match_number)
-                    if note:
-                        m.note = note
-                        applied += 1
-                if applied:
-                    console.print(
-                        f"  [green]Schedule: {applied} editorial note(s) applied[/green]"
-                    )
-        except Exception as e:
-            console.print(f"  [yellow]Match notes: skipped: {e}[/yellow]")
+        _apply_match_notes_from_disk(matches, ctx.public_dir)
 
     # Live match enrichment via page crawl (before writing panel)
     live_matches = [m for m in matches if m.status == "live" and m.match_url]
@@ -135,3 +123,35 @@ def sync(ctx: SyncContext) -> None:
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _apply_match_notes_from_disk(matches: list, public_dir) -> None:
+    """Merge match-notes.json (written by the match_notes panel) onto matches.
+
+    Frontend reads m.note from schedule.json. The match_notes panel is
+    the single LLM source for these notes; this helper just looks them
+    up by match_number and assigns. JSON dict keys can be ints or
+    strings depending on serialization, so we try both.
+    """
+    import json as _json
+    notes_path = public_dir / "match-notes.json"
+    if not notes_path.exists():
+        return
+    try:
+        notes = _json.loads(notes_path.read_text(encoding="utf-8"))
+    except (_json.JSONDecodeError, OSError):
+        return
+
+    if not isinstance(notes, dict):
+        return
+
+    applied = 0
+    for m in matches:
+        note = notes.get(m.match_number) or notes.get(str(m.match_number))
+        if note:
+            m.note = note
+            applied += 1
+    if applied:
+        console.print(
+            f"  [green]Schedule: merged {applied} match note(s) from disk[/green]"
+        )
