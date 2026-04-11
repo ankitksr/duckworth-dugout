@@ -27,6 +27,26 @@ WAR_ROOM_DATA = DATA_DIR / "war-room"
 PUBLIC_API_DIR = ROOT_DIR / "frontend" / "public" / "api" / "ipl" / "war-room"
 
 
+# Per-resource consumer sets — gate the fetch/init steps in sync_tiers
+# on whether ANY active panel actually consumes that resource. This
+# replaces the old blanket "any of 12 panels active → fetch everything"
+# trigger that made `sync --panel pulse` ingest articles and burn LLM
+# calls for nothing.
+#
+# RSS_CONSUMERS read from ctx.wisden_items / ca_items / ct_items /
+# espn_items. ARTICLE_CONSUMERS read from war_room_article_extractions
+# in the DB and therefore depend on the article ingest + crawl + LLM
+# extraction pipeline. DB_CONSUMERS need a connection to enrichment.duckdb
+# (with cricket.duckdb attached read-only) for queries or snapshot writes.
+RSS_CONSUMERS: set[str] = {"intel_log", "wire", "standings", "caps"}
+ARTICLE_CONSUMERS: set[str] = {"intel_log", "wire", "availability"}
+DB_CONSUMERS: set[str] = {
+    "roster", "availability", "pulse", "schedule", "standings", "caps",
+    "wire", "briefing", "dossier", "narratives", "scenarios", "records",
+    "match_notes",
+}
+
+
 def sync_tiers(
     tiers: list[str],
     *,
@@ -57,19 +77,15 @@ def sync_tiers(
         public_dir=PUBLIC_API_DIR,
     )
 
-    # Fetch shared feeds if any panel that reads articles is active.
-    # intel_log + wire are in this set so hot-only runs also ingest
-    # fresh articles and run per-article extraction before the wire
-    # panel queries war_room_article_extractions.
-    needs_feeds = active_panels & {
-        "intel_log", "wire",
-        "standings", "caps", "pulse", "schedule",
-        "scenarios", "records", "briefing", "narratives", "dossier",
-        "availability",
-    }
-    if needs_feeds:
+    # Per-panel resource gating. Only fetch what active panels actually
+    # consume. ARTICLE_CONSUMERS implies RSS_CONSUMERS because article
+    # ingest reads from ctx.wisden_items / ca_items / ct_items / espn_items.
+    if active_panels & (RSS_CONSUMERS | ARTICLE_CONSUMERS):
         _fetch_feeds(ctx)
-        _init_db_and_articles(ctx)
+    if active_panels & DB_CONSUMERS:
+        _open_db(ctx)
+    if active_panels & ARTICLE_CONSUMERS:
+        _init_articles(ctx)
 
     # Seed squad rosters (skips if already populated)
     if ctx.db_conn is not None:
@@ -156,20 +172,36 @@ def _fetch_feeds(ctx: SyncContext) -> None:
             ctx.espn_items = items
 
 
-def _init_db_and_articles(ctx: SyncContext) -> None:
-    """Initialize DB, ingest article feeds, and extract structured data.
+def _open_db(ctx: SyncContext) -> None:
+    """Open the enrichment.duckdb connection (with cricket.duckdb attached).
 
-    Extraction runs here (not inside the availability panel) so every
-    tier — including hot-only — drains freshly-ingested articles before
-    the wire's newsdesk generator queries war_room_article_extractions.
-    Without this, new stories were invisible to newsdesk until the next
-    warm cycle up to 4h later.
+    Idempotent — no-op if ctx.db_conn is already set. Catches connection
+    failures so panels that defensively re-open (wire, availability)
+    can still proceed if the file is missing.
     """
+    if ctx.db_conn is not None:
+        return
     try:
         from pipeline.db.connection import get_connection
-        from pipeline.intel.articles import crawl_missing_bodies, ingest_all_feeds
-
         ctx.db_conn = get_connection()
+    except Exception as e:
+        console.print(f"  [yellow]DB open failed: {e}[/yellow]")
+        ctx.db_conn = None
+
+
+def _init_articles(ctx: SyncContext) -> None:
+    """Ingest article feeds, crawl bodies, run per-article LLM extraction.
+
+    Assumes ctx.db_conn is already set (call _open_db first). Drains
+    freshly-ingested articles so the wire newsdesk generator sees new
+    stories the same cycle they're published, instead of waiting for
+    the next warm tier.
+    """
+    if ctx.db_conn is None:
+        console.print("  [yellow]Article store: no DB connection, skipping[/yellow]")
+        return
+    try:
+        from pipeline.intel.articles import crawl_missing_bodies, ingest_all_feeds
 
         console.print("\n[bold]Article Store[/bold]")
         feed_map: dict[str, list] = {}
@@ -200,4 +232,3 @@ def _init_db_and_articles(ctx: SyncContext) -> None:
             }
     except Exception as e:
         console.print(f"  [yellow]Article store: {e}[/yellow]")
-        ctx.db_conn = None
