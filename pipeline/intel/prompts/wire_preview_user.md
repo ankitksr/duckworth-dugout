@@ -1,10 +1,10 @@
 Produce 2-4 Matchday Preview dispatches for the IPL AI Wire.
 
-{base_context}
+<base_context>{base_context}</base_context>
 
 ---
 
-{focused_context}
+<focused_context>{focused_context}</focused_context>
 
 ---
 

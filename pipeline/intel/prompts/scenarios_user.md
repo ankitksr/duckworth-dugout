@@ -1,14 +1,14 @@
 Analyze the IPL 2026 playoff picture based on this data:
 
 STANDINGS (after {matches_played} league matches):
-{standings_text}
+<standings>{standings_text}</standings>
 
 REMAINING SCHEDULE (next 10 fixtures):
-{upcoming_text}
+<upcoming_fixtures>{upcoming_text}</upcoming_fixtures>
 
 TODAY'S DATE: {today}
 
-{availability_context}
+<availability>{availability_context}</availability>
 
 Generate a JSON object with EXACTLY these fields:
 

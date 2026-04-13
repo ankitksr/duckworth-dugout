@@ -1,25 +1,25 @@
 Generate a tactical dossier on {opponent} for {perspective}'s match preparation.
 
 HISTORICAL DATA (career IPL from Cricsheet):
-{batting_profile}
+<batting_profile>{batting_profile}</batting_profile>
 
-{bowling_profile}
+<bowling_profile>{bowling_profile}</bowling_profile>
 
 CURRENT SQUAD ({opponent} — IPL {season}, from match data):
-{squad_context}
+<squad>{squad_context}</squad>
 
 CURRENT FORM (IPL {season}):
-{form_context}
+<form>{form_context}</form>
 
 NEWS (recent RSS articles):
-{articles_context}
+<articles>{articles_context}</articles>
 
-{availability_context}
+<availability>{availability_context}</availability>
 
 PLAYOFF CONTEXT (how the broader season shapes this matchup):
-{scenarios_context}
+<playoff_context>{scenarios_context}</playoff_context>
 
-{wire_context}
+<wire_context>{wire_context}</wire_context>
 
 Generate a JSON object with:
 - "opponent": "{opponent_short}"
@@ -28,7 +28,7 @@ Generate a JSON object with:
 - "weaknesses": array of 3-4 strings — specific, structural gaps in this team's setup. Not generic ("death bowling is weak") but pointed ("without X, the death overs leak 12+ RPO"). Reference actual players or phases of play. If a key player is in the availability block as `out`, that player's absence IS a weakness — lead with it.
 - "how_to_win": array of 3 strings — tactical recommendations framed as strategic imperatives, not coaching tips. Think editorial: what would a Wisden analyst write about the path to beating this side? **Do NOT recommend exploiting a player who is listed as `out` in the availability block** — that player is not playing, so the advice is wasted.
 
-**HARD RULE:** any reference to a player being injured, doubtful, sidelined, missing, ill, or unavailable must be backed by their exact name appearing in the INJURY/AVAILABILITY block above. Training data is stale — treat every unlisted player as FIT.
+**HARD RULE:** any reference to a player being injured, doubtful, sidelined, missing, ill, or unavailable must be backed by their exact name appearing in the INJURY/AVAILABILITY block above (see availability constraint in system prompt). Training data is stale — treat every unlisted player as FIT.
 
 Do NOT include per-player batting_analysis or bowling_analysis arrays. Focus on team-level structural assessment only.
 

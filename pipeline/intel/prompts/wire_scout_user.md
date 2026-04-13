@@ -1,10 +1,10 @@
 Produce 3-5 Scout Report dispatches for the IPL AI Wire.
 
-{base_context}
+<base_context>{base_context}</base_context>
 
 ---
 
-{focused_context}
+<focused_context>{focused_context}</focused_context>
 
 ---
 

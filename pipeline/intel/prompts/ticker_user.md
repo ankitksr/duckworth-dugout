@@ -1,8 +1,8 @@
 Generate 6-8 ticker items for the IPL 2026 War Room based on this data:
 
-{mcp_context}
+<career_stats>{mcp_context}</career_stats>
 
-{season_context}
+<season_data>{season_context}</season_data>
 
 Each item must be a JSON object with:
 - "category": one of MILESTONE, RECORD, QUIRK, FORM, SCENARIO, H2H, EMERGING

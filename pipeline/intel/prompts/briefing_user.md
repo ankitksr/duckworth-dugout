@@ -5,29 +5,29 @@ DATE: {date}, {time}
 VENUE: {venue}, {city}
 
 VENUE DATA (from Cricsheet, all-time):
-{venue_context}
+<venue_data>{venue_context}</venue_data>
 
 HEAD TO HEAD (from Cricsheet, all-time):
-{h2h_context}
+<h2h_data>{h2h_context}</h2h_data>
 
 CURRENT SQUADS (from match data this season):
-{squad_context}
+<squads>{squad_context}</squads>
 
 CURRENT FORM (IPL 2026):
-{form_context}
+<form>{form_context}</form>
 
 NEWS COVERAGE (recent RSS articles):
-{articles_context}
+<articles>{articles_context}</articles>
 
 ESPNCRICINFO ARTICLES (title + link):
-{espn_context}
+<espn_articles>{espn_context}</espn_articles>
 
-{availability_context}
+<availability>{availability_context}</availability>
 
 PLAYOFF CONTEXT (how this match fits the season):
-{scenarios_context}
+<playoff_context>{scenarios_context}</playoff_context>
 
-{wire_context}
+<wire_context>{wire_context}</wire_context>
 
 Generate a JSON object with these fields:
 
@@ -39,7 +39,7 @@ Generate a JSON object with these fields:
 
 - "form": object with "{team1_short}" and "{team2_short}" sub-objects each having "trend" only (1-2 sentences on current momentum/issues). Do NOT include wins/losses/NRR — those are injected from source data.
 
-- "squad_news": array of 2-4 strings — injuries, playing XI changes, tactical notes. **Hard rules:** (a) an injury claim is only valid if the exact player name appears in the INJURY/AVAILABILITY block above, OR is the subject of a direct quote from a RECENT RSS article (not a past-tense recap). (b) Your training data is months stale — treat every player not in the availability block as FIT. (c) If nothing meaningful is happening for a team, write "no significant squad news" for that team — do NOT invent a non-event. (d) If a role tag is shown in brackets next to a player name in the squad list, respect it — never describe a `[bowler]` as a batting-order fixture or vice versa.
+- "squad_news": array of 2-4 strings — injuries, playing XI changes, tactical notes. **Hard rules:** (a) an injury claim is only valid if the exact player name appears in the INJURY/AVAILABILITY block above, OR is the subject of a direct quote from a RECENT RSS article (not a past-tense recap). (b) Your training data is months stale — treat every player not in the availability block as FIT (see availability constraint in system prompt). (c) If nothing meaningful is happening for a team, write "no significant squad news" for that team — do NOT invent a non-event. (d) If a role tag is shown in brackets next to a player name in the squad list, respect it — never describe a `[bowler]` as a batting-order fixture or vice versa.
 
 - "key_matchups": array of 2-3 objects with structured fields:
   {{

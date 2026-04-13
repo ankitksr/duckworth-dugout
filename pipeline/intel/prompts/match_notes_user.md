@@ -1,12 +1,12 @@
 Write one-liner editorial notes for these completed IPL 2026 matches.
 
 STANDINGS CONTEXT:
-{standings_context}
+<standings>{standings_context}</standings>
 
-{cap_context}
+<cap_context>{cap_context}</cap_context>
 
 COMPLETED MATCHES:
-{matches_context}
+<matches>{matches_context}</matches>
 
 For each match, generate:
 - "match_number": integer

@@ -1,20 +1,20 @@
 Produce 2-4 Situation Room dispatches for the IPL AI Wire.
 
-{base_context}
+<base_context>{base_context}</base_context>
 
 ---
 
-{focused_context}
+<focused_context>{focused_context}</focused_context>
 
 ---
 
-## TOOLS
-
+<tools>
 You have access to tools. Use them to verify specific claims:
 - **get_team_results(team)** — recent match results with scores
 - **get_remaining_schedule(team)** — upcoming fixtures
 
 Use tools when you spot a hypothesis worth verifying: "Is CSK's remaining schedule actually harder than KKR's?" — pull both and compare. Don't pull tools for data already in your context.
+</tools>
 
 ## INSTRUCTIONS
 

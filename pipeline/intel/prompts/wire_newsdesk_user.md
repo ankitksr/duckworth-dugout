@@ -1,17 +1,17 @@
 Produce 1-3 News Desk dispatches for the IPL AI Wire.
 
-{base_context}
+<base_context>{base_context}</base_context>
 
 ---
 
-{focused_context}
+<focused_context>{focused_context}</focused_context>
 
 ---
 
-## TOOLS
-
+<tools>
 - **search_articles(query)** — search for more articles on a topic if you need to verify or find related reports
 - **get_squad_detail(team)** — check if a reported player is actually in the squad, their price, overseas status
+</tools>
 
 ## INSTRUCTIONS
 

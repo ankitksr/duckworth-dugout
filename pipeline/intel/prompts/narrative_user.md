@@ -1,20 +1,20 @@
 Generate season narrative arcs for these IPL 2026 franchises based on their results, standings, and news coverage.
 
 STANDINGS & RESULTS:
-{standings_context}
+<standings>{standings_context}</standings>
 
-{pulse_context}
+<pulse_data>{pulse_context}</pulse_data>
 
 NEWS COVERAGE (from RSS feeds):
-{articles_context}
+<articles>{articles_context}</articles>
 
 UPCOMING FIXTURES (next match per team):
-{upcoming_context}
+<upcoming_fixtures>{upcoming_context}</upcoming_fixtures>
 
 QUALIFICATION PICTURE:
-{qualification_context}
+<qualification>{qualification_context}</qualification>
 
-{availability_context}
+<availability>{availability_context}</availability>
 
 For each team, generate a JSON object with:
 - "franchise_id": team ID (e.g. "csk")
@@ -29,7 +29,7 @@ For each team, generate a JSON object with:
   1. What the results so far have built or damaged structurally
   2. A player breakout, tactical shift, or key trend worth watching
   3. What remains unproven — the stress test or challenge ahead
-  **If a player in this team appears in the INJURY/AVAILABILITY block, weaving that into an arc bullet is valid (e.g. "Dhoni's calf injury has shifted the finishing load to Dube"). Do NOT invent injuries for players not in the block — your training data is stale.**
+  **If a player in this team appears in the INJURY/AVAILABILITY block, weaving that into an arc bullet is valid (e.g. "Dhoni's calf injury has shifted the finishing load to Dube"). Do NOT invent injuries for players not in the block — see availability constraint in system prompt.**
 - "next_test": object with:
   - "opponent": franchise_id of next opponent (e.g. "mi")
   - "match_number": integer
