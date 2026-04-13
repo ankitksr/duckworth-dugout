@@ -1,10 +1,20 @@
-Based on this IPL data, identify records and milestones to watch:
+Based on this IPL data, identify records and milestones to watch.
 
+<career_data source="cricsheet_all_time" authority="authoritative for career totals">
 {mcp_context}
+</career_data>
 
+<season_data source="caps_json_current_season" authority="authoritative for 2026 runs/wickets">
 {season_context}
+</season_data>
 
+<availability>
 {availability_block}
+</availability>
+
+<grounding_rule>
+All career totals, gaps-to-milestone, and rankings must come from `<career_data>`. All current-season runs, wickets, and standings come from `<season_data>`. Do not mix them, and do not estimate from training memory — current-season numbers from memory are stale.
+</grounding_rule>
 
 Generate a JSON object with:
 - "imminent": array of objects — records that could be broken THIS WEEK (within 1-2 matches). Each: {{"player": "...", "team": "...", "current": "...", "target": "...", "note": "..."}}. **Do NOT list any player who appears in the CURRENTLY UNAVAILABLE block above** — they are not playing in the relevant window, so their milestone is not imminent.

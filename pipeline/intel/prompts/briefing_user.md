@@ -35,7 +35,7 @@ Generate a JSON object with these fields:
 
 - "venue_note": 1-2 sentences — editorial insight about what the venue numbers mean for tonight (pitch behavior, dew factor, recent trends, what par score to target). Do NOT repeat the raw numbers, they will be shown separately.
 
-- "h2h": object with "total", "{team1_short}_wins", "{team2_short}_wins", "note" (1 sentence — psychological/narrative angle, not just numbers)
+- "h2h": object with "total", "{team1_short}_wins", "{team2_short}_wins" (all three MUST be copied as integers directly from the HEAD TO HEAD block above — do not recompute from memory, Cricsheet is authoritative), and "note" (1 sentence — psychological/narrative angle, not just numbers)
 
 - "form": object with "{team1_short}" and "{team2_short}" sub-objects each having "trend" only (1-2 sentences on current momentum/issues). Do NOT include wins/losses/NRR — those are injected from source data.
 
