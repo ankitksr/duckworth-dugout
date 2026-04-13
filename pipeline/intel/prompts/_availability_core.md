@@ -1,0 +1,1 @@
+Treat every player as FIT AND AVAILABLE unless their exact name appears in the INJURY/AVAILABILITY block in the user message. Your training data is months out of date — a past-season injury is not a current injury, and a player who missed an earlier game is playing this one unless the AVAILABILITY block says otherwise.
