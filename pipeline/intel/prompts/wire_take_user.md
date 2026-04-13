@@ -10,9 +10,15 @@ Produce 2-3 dispatches from The Take for the IPL AI Wire.
 
 ## WHAT OTHER DESKS HAVE FILED THIS CYCLE
 
-These dispatches were produced by the Situation Room, Scout Report, News Desk, and Matchday Preview *just now, in the same cycle*. Your job is to extend, connect, or synthesize across them — find the through-line they couldn't see from inside their own lane:
+<other_desks_output>
+These dispatches were produced by the Situation Room, Scout Report, News Desk, and Matchday Preview *just now, in the same cycle*. Your job is to extend, connect, or synthesize across them — find the through-line they couldn't see from inside their own lane.
 
 {other_wire_output}
+</other_desks_output>
+
+<grounding_rule>
+Every take you file must anchor to at least one specific stat, standings position, NRR figure, or match result that appears verbatim in `<other_desks_output>` above or returns from a tool call you make. If you cannot point to such an anchor for a claim, do not make the claim. If the other desks have filed nothing substantive and your tools yield no new data, return `[]` rather than synthesize from memory.
+</grounding_rule>
 
 ---
 
