@@ -2,7 +2,7 @@
 
 # DUCKWORTH DUGOUT
 
-**IPL season command center. Standings, pulse, cap races, match intel. One screen.**
+**IPL monitor. Standings, pulse, cap races, match intel. One screen.**
 
 [![Live Site](https://img.shields.io/badge/Live_Site-ankitksr.github.io-fdb913?style=flat-square)](https://ankitksr.github.io/duckworth-dugout)
 [![License: MIT](https://img.shields.io/badge/License-MIT-white?style=flat-square)](LICENSE)
@@ -12,7 +12,7 @@
 <br>
 
 <a href="https://ankitksr.github.io/duckworth-dugout">
-  <img src="docs/screenshot.png" alt="Duckworth Dugout — IPL Command Center" width="100%">
+  <img src="docs/screenshot.png" alt="Duckworth Dugout · IPL Monitor" width="100%">
 </a>
 
 <br>

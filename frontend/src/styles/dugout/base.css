@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   Duckworth Dugout — IPL Command Center
+   Duckworth Dugout · IPL Monitor
    Minimal reset + War Room styles (scoped under .wr)
    ═══════════════════════════════════════════════════════════ */
 
@@ -25,7 +25,7 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   WAR ROOM — League-wide IPL command center
+   WAR ROOM — League-wide IPL monitor
    Scoped under .wr to avoid leaking into other views
    ═══════════════════════════════════════════════════════════ */
 

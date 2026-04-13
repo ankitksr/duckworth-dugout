@@ -20,7 +20,7 @@ console = Console()
 
 @click.group()
 def cli() -> None:
-    """Duckworth Dugout — IPL season command center pipeline."""
+    """Duckworth Dugout — IPL monitor pipeline."""
 
 
 @cli.command()

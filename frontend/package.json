@@ -1,6 +1,6 @@
 {
   "name": "duckworth-dugout",
-  "description": "IPL season command center — live standings, match intel & season pulse",
+  "description": "IPL monitor — live standings, match intel & season pulse",
   "type": "module",
   "version": "0.1.0",
   "private": true,

@@ -1,7 +1,7 @@
 [project]
 name = "duckworth-dugout"
 version = "0.1.0"
-description = "IPL season command center — real-time standings, intel, and LLM-powered analysis"
+description = "IPL monitor — real-time standings, intel, and LLM-powered analysis"
 readme = "README.md"
 requires-python = ">=3.13"
 license = "MIT"

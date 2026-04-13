@@ -27,6 +27,20 @@
   border-radius: 1px;
   display: block;
 }
+.wr-logo-sep {
+  color: var(--wr-t3);
+  font-weight: 400;
+  letter-spacing: 0;
+  margin: 0 1px 0 2px;
+}
+.wr-logo-desc {
+  font: 500 11px 'Anybody', sans-serif;
+  letter-spacing: 2px;
+  color: var(--wr-t2);
+}
+.wr-logo-desc-short {
+  display: none;
+}
 
 .wr-pills {
   display: flex;

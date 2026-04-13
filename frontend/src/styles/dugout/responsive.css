@@ -190,6 +190,11 @@
     margin-left: auto;
   }
 
+  /* Descriptor: abbreviate on phones so logo + clock + LIVE all fit
+     row 1 down to 320px without wrapping into the pills row. */
+  .wr-logo-desc-full { display: none; }
+  .wr-logo-desc-short { display: inline; }
+
   /* Row 2: pills — full width, horizontal scroll */
   .wr-pills {
     order: 3;

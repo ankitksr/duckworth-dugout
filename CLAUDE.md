@@ -1,6 +1,6 @@
 # Duckworth Dugout
 
-IPL season command center — a single-screen dashboard that surfaces live standings,
+IPL monitor — a single-screen dashboard that surfaces live standings,
 match timelines, cap races, and AI-powered editorial intelligence during the IPL season.
 
 **Live site:** ankitksr.github.io/duckworth-dugout

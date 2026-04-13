@@ -39,7 +39,10 @@ export function WarRoomTopBar() {
     <header className="wr-top">
       <div className="wr-logo">
         <i />
-        DUGOUT
+        <span className="wr-logo-brand">DUGOUT</span>
+        <span className="wr-logo-sep">·</span>
+        <span className="wr-logo-desc wr-logo-desc-full">IPL MONITOR</span>
+        <span className="wr-logo-desc wr-logo-desc-short">IPL</span>
       </div>
       <div className="wr-pills">
         {standings?.map((t) => (
