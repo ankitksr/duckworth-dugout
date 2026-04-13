@@ -53,6 +53,118 @@ def _format_player(name: str, is_captain: bool, is_overseas: bool) -> str:
     return f"{name}{suffix}" if suffix else name
 
 
+# Known name mismatches between ipl_season_squad (Wikipedia-style) and
+# cricket.players (Cricsheet-style) that don't resolve via initials/surname.
+# Extend as false-matches are discovered. Values are the canonical name in
+# cricket.players.
+_NAME_ALIASES: dict[str, str] = {
+    "Rohit Sharma": "RG Sharma",  # exact "Rohit Sharma" in cricket.players is a different player
+    "Axar Patel": "AR Patel",     # single-initial "A Patel" collides with many players
+}
+
+
+def _cricsheet_initials(full_name: str) -> str:
+    """'Mitchell Marsh' -> 'M Marsh'. Single-word or already-initials unchanged."""
+    parts = full_name.split()
+    if len(parts) < 2:
+        return full_name
+    # If the first token looks like initials already (e.g. "KL", "MS"), leave it
+    if parts[0].isupper() and len(parts[0]) <= 3:
+        return full_name
+    return "".join(p[0] for p in parts[:-1]).upper() + " " + parts[-1]
+
+
+def _role_tag(playing_role: str | None, bowling_style_broad: str | None) -> str:
+    """Compact role annotation. Empty string when unknown."""
+    if playing_role:
+        pr = playing_role.lower()
+        if "wicketkeeper" in pr:
+            return "wk-batter"
+        if "allrounder" in pr or "all-rounder" in pr:
+            return "allrounder"
+        if "bowler" in pr:
+            return "bowler"
+        if "batter" in pr or "batsman" in pr:
+            return "batter"
+    if bowling_style_broad:
+        return f"{bowling_style_broad.lower()}-bowler"
+    return ""
+
+
+def resolve_squad_roles(
+    conn: duckdb.DuckDBPyConnection,
+    squad_names: list[str],
+) -> dict[str, str]:
+    """Map squad player names to a short role tag via cricket.players enrichment.
+
+    Resolution order: alias → exact → initials form → fuzzy (surname +
+    first-initial). Missing players map to an empty tag, not excluded.
+    Safe if cricket.players is unenriched — returns all-empty dict.
+    """
+    try:
+        rows = conn.execute(
+            "SELECT name, playing_role, bowling_style_broad FROM cricket.players "
+            "WHERE playing_role IS NOT NULL OR bowling_style_broad IS NOT NULL"
+        ).fetchall()
+    except Exception:
+        return {}
+
+    by_name: dict[str, tuple[str | None, str | None]] = {
+        r[0]: (r[1], r[2]) for r in rows
+    }
+    by_surname: dict[str, list[str]] = {}
+    for name in by_name:
+        surname = name.split()[-1].lower()
+        by_surname.setdefault(surname, []).append(name)
+
+    result: dict[str, str] = {}
+    for sq_name in squad_names:
+        hit: tuple[str | None, str | None] | None = None
+
+        # Tier 1: alias
+        alias = _NAME_ALIASES.get(sq_name)
+        if alias and alias in by_name:
+            hit = by_name[alias]
+
+        # Tier 2: exact
+        if hit is None and sq_name in by_name:
+            hit = by_name[sq_name]
+
+        # Tier 3: initials form — only accept when playing_role is populated,
+        # otherwise "A Patel" / "M Marsh"-style under-specified rows collide
+        # with many players and yield wrong tags.
+        if hit is None:
+            ini = _cricsheet_initials(sq_name)
+            cand = by_name.get(ini) if ini != sq_name else None
+            if cand and cand[0]:
+                hit = cand
+
+        # Tier 4: fuzzy by surname + first-initial. Prefer candidates with
+        # playing_role set; fall back to bowling-style-only if that's all
+        # we have and it's unique.
+        if hit is None:
+            parts = sq_name.split()
+            if len(parts) >= 2:
+                surname = parts[-1].lower()
+                first_initial = parts[0][0].upper()
+                candidates = [
+                    n for n in by_surname.get(surname, [])
+                    if n and n[0].upper() == first_initial
+                ]
+                with_role = [n for n in candidates if by_name[n][0]]
+                if len(with_role) == 1:
+                    hit = by_name[with_role[0]]
+                elif not with_role and len(candidates) == 1:
+                    hit = by_name[candidates[0]]
+
+        if hit is not None:
+            tag = _role_tag(hit[0], hit[1])
+            if tag:
+                result[sq_name] = tag
+
+    return result
+
+
 def _format_squad_line(short: str, players: list[tuple]) -> str:
     """One-line squad: 'CSK: Gaikwad(c), Samson, Dube, Dhoni, +13 more'."""
     names = [_format_player(p[1], p[2], p[3]) for p in players]
@@ -230,11 +342,13 @@ def _format_full_squad(
     players: list[tuple],
     appearances: dict[str, int] | None = None,
     availability: dict[str, dict] | None = None,
+    roles: dict[str, str] | None = None,
 ) -> str:
     """Full squad block for a team."""
     lines = [f"{short} SQUAD ({len(players)} players):"]
     for fid, name, is_cap, is_ovs, price, acq in players:
         tag = _format_player(name, is_cap, is_ovs)
+        role_tag = f"[{roles[name]}]" if roles and roles.get(name) else ""
         price_cr = f"₹{price / 1e7:.1f}Cr" if price else ""
         acq_tag = f"[{acq}]" if acq and acq != "auction" else ""
         played = ""
@@ -244,7 +358,7 @@ def _format_full_squad(
         avail_tag = ""
         if availability and name in availability:
             avail_tag = _format_availability_tag(availability[name])
-        parts = [f"  {tag}", price_cr, acq_tag, played, avail_tag]
+        parts = [f"  {tag}", role_tag, price_cr, acq_tag, played, avail_tag]
         lines.append(" ".join(p for p in parts if p))
     return "\n".join(lines)
 
@@ -344,11 +458,18 @@ def for_match(
     appearances = _query_appearances(conn, season)
     avail = availability_map(conn, season)
     parts = []
+    all_names: list[str] = []
+    team_rows: dict[str, list[tuple]] = {}
     for fid in (team1, team2):
-        players = _query_squad(conn, season, fid)
+        rows = _query_squad(conn, season, fid)
+        team_rows[fid] = rows
+        all_names.extend(r[1] for r in rows)
+    roles = resolve_squad_roles(conn, all_names)
+    for fid in (team1, team2):
+        players = team_rows[fid]
         short = _SHORT.get(fid, fid.upper())
         if players:
-            parts.append(_format_full_squad(short, players, appearances, avail))
+            parts.append(_format_full_squad(short, players, appearances, avail, roles))
         else:
             parts.append(f"{short}: (no squad data)")
     return "\n\n".join(parts)
@@ -369,10 +490,11 @@ def all_squads(conn: duckdb.DuckDBPyConnection, season: str) -> str:
     for r in rows:
         by_team.setdefault(r[0], []).append(r)
 
+    roles = resolve_squad_roles(conn, [r[1] for r in rows])
     parts = [f"CURRENT ROSTERS (IPL {season}):"]
     for fid in sorted(by_team, key=lambda f: _SHORT.get(f, f)):
         short = _SHORT.get(fid, fid.upper())
-        parts.append(_format_full_squad(short, by_team[fid], appearances, avail))
+        parts.append(_format_full_squad(short, by_team[fid], appearances, avail, roles))
     return "\n\n".join(parts)
 
 
@@ -386,7 +508,8 @@ def for_team(conn: duckdb.DuckDBPyConnection, season: str, team: str) -> str:
     players = _query_squad(conn, season, team)
     short = _SHORT.get(team, team.upper())
     if players:
-        return _format_full_squad(short, players, appearances, avail)
+        roles = resolve_squad_roles(conn, [r[1] for r in players])
+        return _format_full_squad(short, players, appearances, avail, roles)
     return f"{short}: (no squad data)"
 
 

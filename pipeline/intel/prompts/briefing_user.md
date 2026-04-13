@@ -39,7 +39,7 @@ Generate a JSON object with these fields:
 
 - "form": object with "{team1_short}" and "{team2_short}" sub-objects each having "trend" only (1-2 sentences on current momentum/issues). Do NOT include wins/losses/NRR — those are injected from source data.
 
-- "squad_news": array of 2-4 strings — injuries, playing XI changes, tactical notes. **Hard rules:** (a) an injury claim is only valid if the exact player name appears in the INJURY/AVAILABILITY block above, OR is the subject of a direct quote from a RECENT RSS article (not a past-tense recap). (b) Your training data is months stale — treat every player not in the availability block as FIT. (c) If nothing meaningful is happening for a team, write "no significant squad news" for that team — do NOT invent a non-event.
+- "squad_news": array of 2-4 strings — injuries, playing XI changes, tactical notes. **Hard rules:** (a) an injury claim is only valid if the exact player name appears in the INJURY/AVAILABILITY block above, OR is the subject of a direct quote from a RECENT RSS article (not a past-tense recap). (b) Your training data is months stale — treat every player not in the availability block as FIT. (c) If nothing meaningful is happening for a team, write "no significant squad news" for that team — do NOT invent a non-event. (d) If a role tag is shown in brackets next to a player name in the squad list, respect it — never describe a `[bowler]` as a batting-order fixture or vice versa.
 
 - "key_matchups": array of 2-3 objects with structured fields:
   {{
@@ -52,6 +52,7 @@ Generate a JSON object with these fields:
     "insight": "1-2 sentences — why this duel matters tonight"
   }}
   IMPORTANT: ONLY use players listed in the CURRENT SQUADS section above. These are confirmed from match data. Do NOT use players from memory who may have been traded in the mega auction. Do NOT feature a player whose name appears in the INJURY/AVAILABILITY block with status `out` or `doubtful` — pick a fit alternative from the same team.
+  Each squad entry may carry a role tag in brackets — `[batter]`, `[bowler]`, `[allrounder]`, `[wk-batter]`, `[pace-bowler]`, `[spin-bowler]`. Respect these tags: do NOT place a `[bowler]` in a top-order batting role, do NOT cast a pure `[batter]` as a bowling threat, and set `player1_role` / `player2_role` consistently with the tag. Players without a tag are unknown — rely on general cricket knowledge but be conservative.
   Pick the most consequential batter-vs-bowler duels.
 
 - "tactical_edge": 1-2 sentences — concise summary of who has the advantage and the single biggest reason why.
