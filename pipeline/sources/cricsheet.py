@@ -33,6 +33,11 @@ def _short(fid: str) -> str:
     return IPL_FRANCHISES.get(fid, {}).get("short_name", fid.upper())
 
 
+def _primary(fid: str) -> str:
+    """Authentic brand color."""
+    return IPL_FRANCHISES.get(fid, {}).get("primary_color", "#888")
+
+
 def _color(fid: str) -> str:
     """War-room-optimized color for dark backgrounds. Falls back to primary_color."""
     fdata = IPL_FRANCHISES.get(fid, {})
@@ -166,7 +171,8 @@ def query_standings(season: str) -> list[StandingsRow] | None:
         result_rows.append(StandingsRow(
             franchise_id=fid,
             short_name=_short(fid),
-            primary_color=_color(fid),
+            primary_color=_primary(fid),
+            war_room_color=_color(fid),
             played=t["played"],
             wins=t["w"],
             losses=t["l"],

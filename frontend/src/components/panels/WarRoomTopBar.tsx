@@ -51,12 +51,15 @@ export function WarRoomTopBar() {
             className={`wr-pill ${selectedTeam === t.franchise_id ? "on" : ""}`}
             style={
               selectedTeam === t.franchise_id
-                ? {
-                    color: t.primary_color,
-                    borderColor: t.primary_color,
-                    background: `${t.primary_color}18`,
-                    boxShadow: `0 0 8px ${t.primary_color}33`,
-                  }
+                ? (() => {
+                    const c = t.war_room_color ?? t.primary_color;
+                    return {
+                      color: c,
+                      borderColor: c,
+                      background: `${c}18`,
+                      boxShadow: `0 0 8px ${c}33`,
+                    };
+                  })()
                 : undefined
             }
             onClick={() => handleSelectTeam(t.franchise_id)}

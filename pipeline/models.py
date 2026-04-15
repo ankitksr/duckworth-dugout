@@ -27,6 +27,7 @@ class StandingsRow:
     franchise_id: str
     short_name: str
     primary_color: str
+    war_room_color: str
     played: int
     wins: int
     losses: int

@@ -9,6 +9,7 @@ export interface WRStanding {
   franchise_id: string;
   short_name: string;
   primary_color: string;
+  war_room_color: string;
   played: number;
   wins: number;
   losses: number;

@@ -100,6 +100,9 @@ def fetch_espn_standings(season: str) -> list[StandingsRow]:
             franchise_id=fid,
             short_name=short,
             primary_color=franchise.get("primary_color", "#888888"),
+            war_room_color=franchise.get(
+                "war_room_color", franchise.get("primary_color", "#888888")
+            ),
             played=int(t.get("matchesPlayed") or 0),
             wins=int(t.get("matchesWon") or 0),
             losses=int(t.get("matchesLost") or 0),

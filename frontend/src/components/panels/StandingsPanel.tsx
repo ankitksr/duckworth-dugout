@@ -26,7 +26,7 @@ export function StandingsPanel() {
                 <span className="wr-st-pos">{t.position}</span>
                 <div
                   className="wr-st-bar"
-                  style={{ background: t.primary_color }}
+                  style={{ background: t.war_room_color ?? t.primary_color }}
                 />
                 <span className="wr-st-name">{t.short_name}</span>
                 <span />

@@ -33,7 +33,7 @@ export function AIWirePanel() {
     if (!standings) return {};
     const map: Record<string, { short: string; color: string }> = {};
     for (const s of standings) {
-      map[s.franchise_id] = { short: s.short_name, color: s.primary_color };
+      map[s.franchise_id] = { short: s.short_name, color: s.war_room_color ?? s.primary_color };
     }
     return map;
   }, [standings]);

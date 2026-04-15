@@ -13,12 +13,13 @@ from pipeline.sources.rss import FeedItem
 
 console = Console()
 
-# Reverse lookup: lowercased team name/short_name → (franchise_id, short_name, color)
-_NAME_TO_FRANCHISE: dict[str, tuple[str, str, str]] = {}
+# Reverse lookup: lowercased team name/short_name → (franchise_id, short_name, primary, war_room)
+_NAME_TO_FRANCHISE: dict[str, tuple[str, str, str, str]] = {}
 for _fid, _fdata in IPL_FRANCHISES.items():
     if _fdata.get("defunct"):
         continue
-    _info = (_fid, _fdata["short_name"], _fdata.get("war_room_color", _fdata["primary_color"]))
+    _primary = _fdata["primary_color"]
+    _info = (_fid, _fdata["short_name"], _primary, _fdata.get("war_room_color", _primary))
     for _name in _fdata["cricsheet_names"]:
         _NAME_TO_FRANCHISE[_name.lower()] = _info
     # Also register the short name (e.g. "CSK" → csk)
@@ -90,8 +91,8 @@ def _parse_int(val: str) -> int:
         return 0
 
 
-def _resolve_team(name: str) -> tuple[str, str, str] | None:
-    """Resolve a team name to (franchise_id, short_name, primary_color)."""
+def _resolve_team(name: str) -> tuple[str, str, str, str] | None:
+    """Resolve a team name to (franchise_id, short_name, primary_color, war_room_color)."""
     key = name.strip().lower()
     if key in _NAME_TO_FRANCHISE:
         return _NAME_TO_FRANCHISE[key]
@@ -149,7 +150,7 @@ def _standings_from_table_rows(table_rows: list[list[str]]) -> list[StandingsRow
         if resolved is None:
             continue
 
-        fid, short, color = resolved
+        fid, short, primary, war_room = resolved
         nrr_col = col_map.get("nrr", 99)
         nrr_val = row[nrr_col].strip() if nrr_col < len(row) else "-"
 
@@ -160,7 +161,8 @@ def _standings_from_table_rows(table_rows: list[list[str]]) -> list[StandingsRow
         rows.append(StandingsRow(
             franchise_id=fid,
             short_name=short,
-            primary_color=color,
+            primary_color=primary,
+            war_room_color=war_room,
             played=_parse_int(_col_val("played")),
             wins=_parse_int(_col_val("won")),
             losses=_parse_int(_col_val("lost")),
