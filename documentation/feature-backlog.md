@@ -73,3 +73,35 @@ Prioritized by user demand (how many of 6 personas asked for it) × feasibility.
 ### 13. Slower/pausable ticker
 **What:** Reduce ticker scroll speed. Pause on hover/tap.
 **Effort:** Low — CSS animation-duration tweak + JS pause handler.
+
+### 14. Expert takes panel (YouTube pre-match previews)
+**Asked by:** Reddit feedback (post-launch)
+**What:** Side panel in Briefing column surfacing curated analyst YouTube previews for tonight's match — thumbnail, channel, title, duration, click-through. Channels like Irfan Pathan, Cricket With Ashwin, Aakash Chopra, Cricbuzz.
+**Methodology — surface, don't synthesize:**
+- Curated channel allowlist (8–12 trusted analysts) in pipeline config
+- YouTube Data API v3 (`search.list` + `videos.list`) hit hourly during match window
+- Title-match to tonight's fixture via team abbreviations + keywords (`preview`, `prediction`, `vs`)
+- Render as thumbnail grid with click-through to YouTube (no embeds, no paraphrasing)
+- *v2 option:* LLM generates 1-line hook from **title + description only** (not transcript) for scannability
+**Why not transcript summarization:** attribution risk (LLM putting words in a named analyst's mouth), YouTube ToS violation, fragile unofficial libraries, poor auto-caption quality on cricket jargon.
+**Data source:** YouTube Data API v3 (10k units/day default quota — sufficient for ~12 channels polled hourly).
+**Effort:** Medium — ~1.5 days (pipeline panel + channel curation + frontend component). New env var for API key.
+**Defer until:** P0 items (player cards, scenarios, availability) ship first.
+
+---
+
+## Wire desk backlog — from 8-agent review (Apr 2026)
+
+Shipped in Apr 2026:
+- **Newsdesk** — story_type sort (team_news/injury/controversy first) + hard rule against injury-platitude dispatches.
+- **The Take** — screenshot test + forbidden recap-layer phrases + 1-per-cycle `reframe` carve-out.
+- **Records** — schema adds `phase_context` + `tonight_relevance`; prompt demands phase-level framing.
+- **The Archive** (new desk) — cricket historian, Flash @ 0.3, fires only on structural triggers (unbeaten start ≥3, winless ≥4 with NRR ≤-0.8, cap leader milestone). Anti-nostalgia prompt.
+
+Not yet shipped:
+- **Integrity Desk** — off-field governance beat (fines, bans, BCCI/ACU actions, complaints, umpiring). Fills a real gap today (Bhinder ACU show-cause, CSK DJ complaint landed unused in intel-log). Trigger on article-pattern match. Flash, ≤1/day.
+- **Consensus Meter** — deterministic badge on each wire card ("4 desks agree" / "contested" / "contradicts narratives"). No LLM. Low-risk way to surface monocultures that emerged today (e.g. 7 MI-terminal dispatches from 4 desks).
+- **Act Break as Take sub-mode** — fold Dramaturg's narrative-arc idea into The Take as `category: "act_break"` with strict threshold triggers (first loss of unbeaten run, NRR flips sign, end of act 1 at match 23). Avoids a sixth top-level desk.
+- **The Sceptic / Shadow mode** — full contrarian desk, risky. If Consensus Meter + Take's reframe carve-out don't surface enough counter-pressure, ship Sceptic writing to `wire-sceptic-shadow.json` for 2 weeks before surfacing.
+- **The Pulse Room** — momentum / emotional-arc layer. Likely overlaps with narratives.json. Revisit only after surfacing narratives.json on the wire rail (see Dramaturg's "click-gated" critique).
+- **Phase/venue analytics deepening** — Data Analyst agent flagged that Scout and Matchday Preview already have `get_phase_stats` / `get_venue_stats` tools wired but their outputs rarely show phase splits. Prompt tightening here (before building Pitch Report / Pattern Lab as new desks).

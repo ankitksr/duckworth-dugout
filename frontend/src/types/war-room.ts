@@ -207,6 +207,8 @@ export interface WRRecordEntry {
   current?: string;
   target?: string;
   note: string;
+  phase_context?: string;
+  tonight_relevance?: string;
 }
 
 export interface WRSeasonBest {

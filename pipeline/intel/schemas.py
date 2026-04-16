@@ -171,6 +171,23 @@ class RecordEntry(BaseModel):
     current: str
     target: str
     note: str
+    phase_context: str = Field(
+        default="",
+        description=(
+            "One-sentence phase or role framing that makes the milestone "
+            "editorial — e.g. 'death-overs wicket concentration', 'powerplay "
+            "strike-rate leader', 'middle-order anchor'. Empty string if the "
+            "LLM cannot cite a specific phase-level pattern."
+        ),
+    )
+    tonight_relevance: str = Field(
+        default="",
+        description=(
+            "One-sentence reason the milestone matters in the near-term match "
+            "window (venue fit, matchup edge, recent form inflection). Empty "
+            "string when not applicable."
+        ),
+    )
 
 
 class SeasonBest(BaseModel):

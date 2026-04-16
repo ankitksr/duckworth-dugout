@@ -326,7 +326,7 @@ async def generate_records(season: str) -> dict | None:
             "|".join(sorted(unavailable)).encode()
         ).hexdigest()[:6]
     )
-    cache_key = f"records_v2_{today}_{avail_marker}"
+    cache_key = f"records_v3_{today}_{avail_marker}"
 
     # Active player filter + franchise lookup runs on every path
     active = _get_active_players(season)

@@ -37,6 +37,7 @@ from pipeline.intel.live_context import (
 )
 from pipeline.intel.roster_context import summary as roster_summary
 from pipeline.intel.wire_generators import HASH_VERSION, GeneratorContext
+from pipeline.intel.wire_generators.archive import TheArchiveGenerator
 from pipeline.intel.wire_generators.newsdesk import NewsDeskGenerator
 from pipeline.intel.wire_generators.preview import MatchdayPreviewGenerator
 from pipeline.intel.wire_generators.scout import ScoutReportGenerator
@@ -274,23 +275,29 @@ async def generate_wire(
     scout = ScoutReportGenerator()
     newsdesk = NewsDeskGenerator()
     preview = MatchdayPreviewGenerator()
+    archive = TheArchiveGenerator()
     take = TheTakeGenerator()
 
-    # Phase 1: Run first four generators in parallel
-    console.print("  [dim]Wire: running generators (situation, scout, newsdesk, preview)…[/dim]")
+    # Phase 1: Run first five generators in parallel
+    console.print(
+        "  [dim]Wire: running generators "
+        "(situation, scout, newsdesk, preview, archive)…[/dim]"
+    )
     phase1_results = await asyncio.gather(
         situation.generate(ctx, force=force),
         scout.generate(ctx, force=force),
         newsdesk.generate(ctx, force=force),
         preview.generate(ctx, force=force),
+        archive.generate(ctx, force=force),
         return_exceptions=True,
     )
 
     # Collect successful results from phase 1
     all_items: list[dict] = []
+    phase1_names = ["situation", "scout", "newsdesk", "preview", "archive"]
     for i, result in enumerate(phase1_results):
         if isinstance(result, Exception):
-            gen_name = ["situation", "scout", "newsdesk", "preview"][i]
+            gen_name = phase1_names[i]
             console.print(f"  [yellow]Wire/{gen_name}: failed — {result}[/yellow]")
         elif isinstance(result, list):
             all_items.extend(result)
@@ -388,7 +395,8 @@ def export_wire_json(
                 WHEN 'newsdesk'  THEN 1
                 WHEN 'preview'   THEN 2
                 WHEN 'scout'     THEN 3
-                ELSE 4
+                WHEN 'archive'   THEN 4
+                ELSE 5
             END,
             generated_at DESC
         """,

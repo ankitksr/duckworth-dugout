@@ -48,6 +48,7 @@ DAILY_CAP: dict[str, int] = {
     "newsdesk": 8,
     "preview": 8,
     "take": 8,
+    "archive": 3,
 }
 
 

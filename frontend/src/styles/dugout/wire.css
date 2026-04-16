@@ -198,6 +198,10 @@
   color: #f87171;
   background: rgba(248, 113, 113, 0.12);
 }
+.wr-wire-source-archive {
+  color: #d4b483;
+  background: rgba(212, 180, 131, 0.12);
+}
 .wr-wire-source-wire {
   color: var(--wr-tm);
   background: rgba(255, 255, 255, 0.06);

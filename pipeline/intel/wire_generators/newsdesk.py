@@ -78,6 +78,9 @@ class NewsDeskGenerator(WireGenerator):
         return self._count_recent_extractions(ctx.conn) > 0
 
     def build_context(self, ctx: GeneratorContext) -> str:
+        # Sort by story_type priority first so availability / team news /
+        # controversy don't get crowded out by match_report articles on
+        # match days. `published DESC` is the secondary key.
         try:
             rows = ctx.conn.execute(
                 """
@@ -89,7 +92,18 @@ class NewsDeskGenerator(WireGenerator):
                 WHERE a.is_ipl = TRUE
                   AND e.is_relevant = TRUE
                   AND a.published >= (now() - INTERVAL '8 hours')
-                ORDER BY a.published DESC
+                ORDER BY
+                    CASE e.story_type
+                        WHEN 'injury_update'    THEN 0
+                        WHEN 'team_news'        THEN 0
+                        WHEN 'controversy'      THEN 0
+                        WHEN 'transfer_auction' THEN 1
+                        WHEN 'match_preview'    THEN 2
+                        WHEN 'interview'        THEN 2
+                        WHEN 'match_report'     THEN 3
+                        ELSE 4
+                    END,
+                    a.published DESC
                 LIMIT 12
                 """,
                 [EXTRACTION_VERSION],
