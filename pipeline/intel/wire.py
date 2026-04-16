@@ -318,7 +318,7 @@ async def generate_wire(
 
 # ── Export with aggregation ─────────────────────────────────────────
 
-_MAX_PER_TEAM = 4
+_MAX_PER_TEAM = 8
 _MAX_CONSECUTIVE_SAME_SOURCE = 2
 
 

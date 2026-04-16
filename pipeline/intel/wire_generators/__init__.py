@@ -45,9 +45,9 @@ HASH_VERSION = "v5"
 DAILY_CAP: dict[str, int] = {
     "situation": 8,
     "scout": 8,
-    "newsdesk": 6,
+    "newsdesk": 8,
     "preview": 8,
-    "take": 6,
+    "take": 8,
 }
 
 
@@ -120,11 +120,18 @@ class WireGenerator(ABC):
         return hashlib.sha256("|".join(parts).encode()).hexdigest()[:16]
 
     def already_ran(self, ctx: GeneratorContext, ctx_hash: str) -> bool:
-        """Check if we already generated for this context hash + source."""
+        """Check if we already generated for this context hash + source.
+
+        Scoped to non-expired rows so yesterday's expired entries don't
+        block today's regeneration. Without this, a generator whose hash
+        is stable day-over-day (e.g. situation/scout when no match has
+        completed) would be silently skipped forever.
+        """
         row = ctx.conn.execute(
             """
             SELECT 1 FROM war_room_wire
             WHERE context_hash = ? AND season = ? AND source = ?
+              AND expired = FALSE
             LIMIT 1
             """,
             [ctx_hash, ctx.season, self.SOURCE],
