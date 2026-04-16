@@ -9,6 +9,7 @@ const SOURCE_LABELS: Record<WRWireSource, string> = {
   newsdesk: "NEWS",
   preview: "PREVIEW",
   take: "THE TAKE",
+  archive: "ARCHIVE",
   wire: "WIRE",
 };
 
@@ -18,6 +19,7 @@ const FILTER_SOURCES: WRWireSource[] = [
   "newsdesk",
   "preview",
   "scout",
+  "archive",
   "take",
 ];
 

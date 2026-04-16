@@ -380,6 +380,7 @@ export type WRWireSource =
   | "newsdesk"
   | "preview"
   | "take"
+  | "archive"
   | "wire"; // legacy fallback
 
 export interface WRWireItem {
