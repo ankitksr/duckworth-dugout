@@ -11,6 +11,7 @@ Usage:
 """
 
 import asyncio
+import concurrent.futures
 import json
 import re
 
@@ -27,6 +28,17 @@ _PLAYER_LINK_RE = re.compile(
 )
 
 _cache = CacheManager()
+
+# Per-sync result cache keyed by season. Populated on first call to
+# crawl_missing_scorecards; subsequent callers in the same sync get the
+# cached dict without re-querying Cricsheet or re-logging. Reset by
+# reset_crawl_cache() at the start of each sync (called from sync.py).
+_result_cache: dict[str, dict[str, int]] = {}
+
+
+def reset_crawl_cache() -> None:
+    """Drop the in-process result cache. Call once at the start of each sync."""
+    _result_cache.clear()
 
 
 def _clean_name(raw: str) -> str:
@@ -83,6 +95,25 @@ async def _crawl_single(match_url: str) -> str | None:
         return None
 
 
+def _run_async(coro: object) -> object:
+    """Run a coroutine from synchronous code, even inside a running event loop.
+
+    asyncio.run() raises RuntimeError when a loop is already running (e.g. when
+    called from an async function via a sync helper). In that case we spin up a
+    fresh thread — which has no event loop — and run the coroutine there instead.
+    """
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop is not None and loop.is_running():
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(asyncio.run, coro)
+            return future.result()
+    return asyncio.run(coro)
+
+
 def _crawl_and_parse(match_url: str, match_number: int) -> list[str] | None:
     """Crawl a scorecard and extract player names, with caching."""
     cache_key = f"m{match_number}"
@@ -92,8 +123,8 @@ def _crawl_and_parse(match_url: str, match_number: int) -> list[str] | None:
     if cached is not None:
         return cached.get("players", [])
 
-    # Crawl
-    md = asyncio.run(_crawl_single(match_url))
+    # Crawl — use _run_async so this works whether called from sync or async code
+    md = _run_async(_crawl_single(match_url))
     if not md:
         return None
 
@@ -115,7 +146,14 @@ def crawl_missing_scorecards(
 
     Returns {player_name: appearance_count} from crawled data only.
     Matches already in Cricsheet are skipped — Cricsheet is canonical.
+
+    Result is cached for the lifetime of the sync (reset_crawl_cache() at
+    sync start) so repeated callers (roster, availability, briefing, dossier,
+    narratives) share one crawl instead of logging and querying nine times.
     """
+    if season in _result_cache:
+        return _result_cache[season]
+
     # Load schedule
     for path in (
         DATA_DIR / "war-room" / "schedule.json",
@@ -124,6 +162,7 @@ def crawl_missing_scorecards(
         if path.exists():
             break
     else:
+        _result_cache[season] = {}
         return {}
 
     schedule = json.loads(path.read_text(encoding="utf-8"))
@@ -148,6 +187,7 @@ def crawl_missing_scorecards(
             to_crawl.append(m)
 
     if not to_crawl:
+        _result_cache[season] = {}
         return {}
 
     console.print(
@@ -163,4 +203,5 @@ def crawl_missing_scorecards(
             for name in players:
                 counts[name] = counts.get(name, 0) + 1
 
+    _result_cache[season] = counts
     return counts
