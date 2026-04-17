@@ -77,6 +77,11 @@ def sync_panels(
     # can group "what this run cost" without relying on timestamps.
     set_sync_id(uuid.uuid4().hex[:12])
 
+    # Drop the scorecard-crawl in-process cache so this sync gets a
+    # fresh read (schedule may have changed since the last run).
+    from pipeline.sources.scorecard_crawl import reset_crawl_cache
+    reset_crawl_cache()
+
     # Determine ordered execution list
     ordered = [p for p in PANEL_ORDER if p in active_panels]
 
