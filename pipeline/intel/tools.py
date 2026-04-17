@@ -60,6 +60,62 @@ def _fid_short(fid: str) -> str:
     return _SHORT.get(fid, fid.upper())
 
 
+# Squad lookup — built lazily per process from ipl_season_squad. Used to stamp
+# authoritative team tags onto every player name returned by the tools below,
+# so downstream LLM generators can never re-attribute a performance by
+# narrative inference (regression guard for the de Kock → PBKS hallucination).
+_SQUAD_CACHE: dict[str, dict[str, str]] = {}
+
+
+def _squad_map(season: str | None = None) -> dict[str, str]:
+    """Return {lowercased player name → team short} for the given season.
+
+    Uses the enrichment connection set by the wire orchestrator. Cached per
+    season string. Returns an empty map if the connection isn't set (tools
+    called outside the wire flow) — callers must treat a missing entry as
+    "team unknown" and fall back gracefully.
+    """
+    key = season or "current"
+    if key in _SQUAD_CACHE:
+        return _SQUAD_CACHE[key]
+    out: dict[str, str] = {}
+    if _enrichment_conn is None:
+        return out
+    try:
+        sql = "SELECT franchise_id, player_name FROM ipl_season_squad"
+        params: list = []
+        if season:
+            sql += " WHERE season = ?"
+            params.append(int(season))
+        rows = _enrichment_conn.execute(sql, params).fetchall()
+        for fid, name in rows:
+            short = _SHORT.get(fid)
+            if short and name:
+                out[name.lower()] = short
+    except Exception:
+        pass
+    _SQUAD_CACHE[key] = out
+    return out
+
+
+def _player_team(name: str, squad_map: dict[str, str]) -> str | None:
+    """Resolve a player's team short from the squad map. Tries full name then
+    surname-only match. Returns None if the name isn't in any seeded squad
+    (mid-season signings — caller should degrade gracefully)."""
+    if not name:
+        return None
+    hit = squad_map.get(name.lower())
+    if hit:
+        return hit
+    parts = name.split()
+    if len(parts) >= 2:
+        last = parts[-1].lower()
+        matches = [v for k, v in squad_map.items() if k.split()[-1:] == [last]]
+        if len(matches) == 1:
+            return matches[0]
+    return None
+
+
 def _utc_iso(value: object) -> str:
     if value is None:
         return ""
@@ -99,9 +155,12 @@ def get_batter_vs_bowler(batter: str, bowler: str) -> dict[str, Any]:
 
         balls, runs, dismissals, fours, sixes = row
         sr = round(runs / balls * 100, 1) if balls else 0
+        squad = _squad_map()
         return {
             "batter": batter,
+            "batter_team": _player_team(batter, squad) or "unknown",
             "bowler": bowler,
+            "bowler_team": _player_team(bowler, squad) or "unknown",
             "balls": balls,
             "runs": runs,
             "dismissals": dismissals,
@@ -296,20 +355,48 @@ def get_team_results(team: str, last_n: int = 5) -> dict[str, Any]:
         }
         if m.get("toss"):
             entry["toss"] = m["toss"]
-        # Top performers
+        # Top performers. Positional convention:
+        #   top_batter1 → team1 (batted first), top_batter2 → team2
+        #   top_bowler1 → team2 (bowled vs team1), top_bowler2 → team1
+        # Team tag is authoritative via squad map; falls back to the positional
+        # team short so mid-season signings still carry a tag.
+        squad = _squad_map()
+        pos = {
+            "top_batter1": m.get("team1"),
+            "top_batter2": m.get("team2"),
+            "top_bowler1": m.get("team2"),
+            "top_bowler2": m.get("team1"),
+        }
+
+        # Remember each performer's resolved team so the POTM line can inherit
+        # it — critical for losing-cause POTMs whose hero_name isn't in the
+        # seeded squad (e.g. mid-season signings like de Kock).
+        local: dict[str, str] = {}
         for key in ("top_batter1", "top_batter2", "top_bowler1", "top_bowler2"):
             perf = m.get(key)
             if perf and perf.get("name"):
+                resolved = (
+                    _player_team(perf["name"], squad)
+                    or (_fid_short(pos[key]) if pos[key] else None)
+                )
+                if resolved:
+                    local[perf["name"].lower()] = resolved
+                tag = f" ({resolved})" if resolved else ""
                 if "batter" in key:
                     entry.setdefault("top_batters", []).append(
-                        f"{perf['name']} {perf.get('runs', '?')}({perf.get('balls', '?')})"
+                        f"{perf['name']}{tag} {perf.get('runs', '?')}"
+                        f"({perf.get('balls', '?')})"
                     )
                 else:
                     entry.setdefault("top_bowlers", []).append(
-                        f"{perf['name']} {perf.get('wickets', '?')}/{perf.get('runs', '?')}"
+                        f"{perf['name']}{tag} {perf.get('wickets', '?')}"
+                        f"/{perf.get('runs', '?')}"
                     )
         if m.get("hero_name"):
-            entry["potm"] = f"{m['hero_name']} {m.get('hero_stat', '')}"
+            hero = m["hero_name"]
+            hero_team = _player_team(hero, squad) or local.get(hero.lower())
+            hero_tag = f" ({hero_team})" if hero_team else ""
+            entry["potm"] = f"{hero}{hero_tag} {m.get('hero_stat', '')}"
         matches.append(entry)
 
     wins = sum(1 for m in matches if m["won"])
@@ -656,20 +743,38 @@ def get_player_season_stats(player: str) -> dict[str, Any]:
     # Aggregate from match scorecards (top performer entries)
     schedule = _load_json("schedule.json")
     if schedule:
+        squad = _squad_map()
         batting_entries: list[dict[str, Any]] = []
         bowling_entries: list[dict[str, Any]] = []
         potm_count = 0
+        player_team: str | None = None
 
         for m in schedule:
             if m.get("status") != "completed":
                 continue
             mnum = m.get("match_number")
+            pos = {
+                "top_batter1": m.get("team1"),
+                "top_batter2": m.get("team2"),
+                "top_bowler1": m.get("team2"),
+                "top_bowler2": m.get("team1"),
+            }
+            def _resolve(nm: str, fallback_fid: str | None) -> str:
+                t = _player_team(nm, squad)
+                if not t and fallback_fid:
+                    t = _fid_short(fallback_fid)
+                return t or "unknown"
+
             # Check top batters
             for bkey in ("top_batter1", "top_batter2"):
                 tb = m.get(bkey)
                 if tb and tb.get("name") and query in tb["name"].lower():
+                    team = _resolve(tb["name"], pos[bkey])
+                    if team != "unknown" and not player_team:
+                        player_team = team
                     batting_entries.append({
                         "match": mnum,
+                        "team": team,
                         "runs": tb.get("runs"),
                         "balls": tb.get("balls"),
                         "not_out": tb.get("not_out", False),
@@ -678,14 +783,21 @@ def get_player_season_stats(player: str) -> dict[str, Any]:
             for bkey in ("top_bowler1", "top_bowler2"):
                 bw = m.get(bkey)
                 if bw and bw.get("name") and query in bw["name"].lower():
+                    team = _resolve(bw["name"], pos[bkey])
+                    if team != "unknown" and not player_team:
+                        player_team = team
                     bowling_entries.append({
                         "match": mnum,
+                        "team": team,
                         "wickets": bw.get("wickets"),
                         "runs_conceded": bw.get("runs"),
                     })
             # POTM
             if m.get("hero_name") and query in m["hero_name"].lower():
                 potm_count += 1
+
+        if player_team:
+            result["team"] = player_team
 
         if batting_entries:
             total_runs = sum(e["runs"] for e in batting_entries if e.get("runs"))

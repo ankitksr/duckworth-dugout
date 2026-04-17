@@ -72,14 +72,17 @@ class TheArchiveGenerator(WireGenerator):
             if wins == 0 and played >= 4 and nrr <= -0.8:
                 triggers.append(f"winless:{short}:p{played}:nrr{round(nrr, 1)}")
 
-        # Cap-leader milestone chases (orange / purple)
+        # Cap-leader milestone chases (orange / purple). Include team in the
+        # trigger so precedent dispatches can't invert player→team under the
+        # scout-class failure mode.
         if ctx.caps:
             for key in ("orange_cap", "purple_cap"):
                 entries = ctx.caps.get(key, []) or []
                 if entries:
                     top = entries[0]
                     triggers.append(
-                        f"{key}:{top.get('player', '?')}:{top.get('stat', '')}"
+                        f"{key}:{top.get('player', '?')}"
+                        f" ({top.get('team_short', '?')}):{top.get('stat', '')}"
                     )
 
         return triggers

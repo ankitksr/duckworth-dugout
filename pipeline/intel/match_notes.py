@@ -120,26 +120,33 @@ async def generate_match_notes(season: str) -> dict[int, str] | None:
             line += f"\n  Toss: {m['toss']}"
         if m.get("wiki_notes"):
             line += f"\n  Wikipedia notes: {m['wiki_notes']}"
+        # Inn 1 = team1 batting, team2 bowling. Inn 2 = team2 batting, team1
+        # bowling. Label each performer with their team so the LLM never has
+        # to infer attribution from the toss/score narrative.
         b1 = m.get("top_batter1")
         w1 = m.get("top_bowler1")
         if b1 or w1:
             parts: list[str] = []
             if b1:
                 not_out = "*" if b1.get("not_out") else ""
-                parts.append(f"{b1['name']} {b1['runs']}{not_out}({b1['balls']})")
+                parts.append(
+                    f"{b1['name']} ({t1}) {b1['runs']}{not_out}({b1['balls']})"
+                )
             if w1:
-                parts.append(f"{w1['name']} {w1['wickets']}/{w1['runs']}")
-            line += f"\n  Inn 1: {' | '.join(parts)}"
+                parts.append(f"{w1['name']} ({t2}) {w1['wickets']}/{w1['runs']}")
+            line += f"\n  Inn 1 ({t1} bat): {' | '.join(parts)}"
         b2 = m.get("top_batter2")
         w2 = m.get("top_bowler2")
         if b2 or w2:
             parts = []
             if b2:
                 not_out = "*" if b2.get("not_out") else ""
-                parts.append(f"{b2['name']} {b2['runs']}{not_out}({b2['balls']})")
+                parts.append(
+                    f"{b2['name']} ({t2}) {b2['runs']}{not_out}({b2['balls']})"
+                )
             if w2:
-                parts.append(f"{w2['name']} {w2['wickets']}/{w2['runs']}")
-            line += f"\n  Inn 2: {' | '.join(parts)}"
+                parts.append(f"{w2['name']} ({t1}) {w2['wickets']}/{w2['runs']}")
+            line += f"\n  Inn 2 ({t2} bat): {' | '.join(parts)}"
         matches_lines.append(line)
     matches_context = "\n".join(matches_lines)
 

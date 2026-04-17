@@ -106,7 +106,61 @@ async def generate_narratives(
         )
         return cached["parsed"]
 
-    # Build standings + results context
+    # Build standings + results context. POTM entries carry an explicit team
+    # tag — the schedule's hero_name has no team field, so without a tag the
+    # LLM must infer team from match narrative. That's exactly how the scout
+    # "de Kock → PBKS" hallucination happened when a losing-cause POTM was
+    # absorbed into the winning team's arc.
+    from pipeline.intel.roster_context import _query_squad
+    squad_map: dict[str, str] = {}
+    for fid_, name_, *_ in _query_squad(conn, str(season)):
+        if name_ and fid_:
+            squad_map[name_.lower()] = _short(fid_)
+
+    def _hero_team_from_innings(hero: str, match: dict) -> str | None:
+        """Match the POTM name to a top-performer slot in this exact match and
+        use the positional team. This is the only reliable resolver for
+        mid-season signings (de Kock at MI) whose names aren't in the seeded
+        squad and whose team differs from the match winner."""
+        if not hero:
+            return None
+        pos = {
+            "top_batter1": match.get("team1"),
+            "top_batter2": match.get("team2"),
+            "top_bowler1": match.get("team2"),
+            "top_bowler2": match.get("team1"),
+        }
+        for key, fid_ in pos.items():
+            perf = match.get(key) or {}
+            pname = (perf.get("name") or "").lower()
+            if pname and (pname == hero.lower() or hero.lower() in pname or pname in hero.lower()):
+                return _short(fid_) if fid_ else None
+        return None
+
+    def _hero_team(hero: str, match: dict) -> str:
+        if not hero:
+            return ""
+        # 1. Squad map (authoritative for auction-era squads)
+        hit = squad_map.get(hero.lower())
+        if hit:
+            return hit
+        # 2. Innings performer match (authoritative for mid-season signings
+        #    — catches de Kock's 112* for MI where squad map misses him)
+        from_innings = _hero_team_from_innings(hero, match)
+        if from_innings:
+            return from_innings
+        # 3. Surname-only fallback for multi-word names
+        parts = hero.split()
+        if len(parts) >= 2:
+            last = parts[-1].lower()
+            matches = [v for k, v in squad_map.items() if k.split()[-1:] == [last]]
+            if len(matches) == 1:
+                return matches[0]
+        # 4. Give up — return empty so the POTM line renders without a tag
+        #    rather than a wrong one. The narrative hard_constraint handles
+        #    the rest.
+        return ""
+
     standings_lines: list[str] = []
     completed = [
         m for m in schedule if m.get("status") == "completed"
@@ -123,11 +177,12 @@ async def generate_narratives(
             opp = m["team2"] if m["team1"] == fid else m["team1"]
             hero_name = m.get("hero_name", "")
             hero_stat = m.get("hero_stat", "")
-            potm_suffix = (
-                f" — POTM: {hero_name} {hero_stat}"
-                if hero_name and hero_stat
-                else ""
-            )
+            hero_team_short = _hero_team(hero_name, m)
+            if hero_name and hero_stat:
+                tag = f" ({hero_team_short})" if hero_team_short else ""
+                potm_suffix = f" — POTM: {hero_name}{tag} {hero_stat}"
+            else:
+                potm_suffix = ""
             results.append(
                 f"{'W' if won else 'L'} vs {_short(opp)}"
                 f" ({m.get('result', '')}){potm_suffix}"
