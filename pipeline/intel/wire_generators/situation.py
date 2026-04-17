@@ -42,6 +42,53 @@ class SituationRoomGenerator(WireGenerator):
     def should_run(self, ctx: GeneratorContext) -> bool:
         return bool(ctx.standings)
 
+    def get_previous_entries(self, ctx: GeneratorContext, limit: int = 30) -> str:
+        """Situation sees its own prior entries AND what other desks have
+        already filed on the same mathematical fact.
+
+        Situation and take both tend to write about the same elimination /
+        qualification story from different angles. The base implementation
+        source-scopes to `situation`, so situation never sees the KKR-eliminated
+        dispatch that newsdesk or take filed yesterday and cheerfully files its
+        own copy today. Mirroring take's cross-desk pull closes that loop.
+        """
+        own = ctx.conn.execute(
+            """
+            SELECT category, headline, text FROM war_room_wire
+            WHERE season = ? AND expired = FALSE AND source = 'situation'
+            ORDER BY generated_at DESC
+            LIMIT ?
+            """,
+            [ctx.season, limit],
+        ).fetchall()
+        cross = ctx.conn.execute(
+            """
+            SELECT source, category, headline, text FROM war_room_wire
+            WHERE season = ? AND expired = FALSE AND source != 'situation'
+            ORDER BY generated_at DESC
+            LIMIT 40
+            """,
+            [ctx.season],
+        ).fetchall()
+        own_text = (
+            "\n".join(f"- [{r[0]}] {r[1]}: {r[2]}" for r in own)
+            or "(none yet)"
+        )
+        cross_text = (
+            "\n".join(f"- [{r[0]}:{r[1]}] {r[2]}: {r[3]}" for r in cross)
+            or "(none yet)"
+        )
+        return (
+            "YOUR PRIOR SITUATION ROOM DISPATCHES (do not restate any of "
+            "these):\n"
+            + own_text
+            + "\n\nWHAT OTHER DESKS HAVE ALREADY FILED ON RELATED MATH "
+            "(do not file a fresh situation dispatch whose core claim is "
+            "already on the wire from another desk — pick a different "
+            "mathematical angle, or advance the thread with what changed):\n"
+            + cross_text
+        )
+
     def build_context(self, ctx: GeneratorContext) -> str:
         parts: list[str] = []
 
