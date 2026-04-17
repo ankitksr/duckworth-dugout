@@ -574,7 +574,7 @@ def search_articles(query: str, limit: int = 5) -> dict[str, Any]:
 
 
 def get_player_career_stats(player: str) -> dict[str, Any]:
-    """Get a player's all-time IPL career stats, plus current-season breakdown with freshness date."""
+    """All-time IPL career stats plus a current-season breakdown with a freshness date."""
     try:
         conn = _connect()
 

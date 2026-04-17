@@ -32,7 +32,10 @@ from pipeline.llm.cache import LLMCache
 
 console = Console()
 
-EXTRACTION_VERSION = 2  # v2: stricter prompt + exact-match resolver for article names. The v2 prompt was further tightened in-place to reject past-tense recaps — that change applies to articles processed going forward, without mass re-extraction.
+# v2: stricter prompt + exact-match resolver for article names. The v2 prompt
+# was further tightened in-place to reject past-tense recaps — that change
+# applies to articles processed going forward, without mass re-extraction.
+EXTRACTION_VERSION = 2
 _CACHE_TASK = "war_room_article_extraction"
 
 # Articles older than this are skipped (covers full season + run-up)
@@ -265,7 +268,7 @@ async def _extract_one(
         body=body,
     )
 
-    provider = GeminiProvider()
+    provider = GeminiProvider(panel="article_extraction")
     result = await provider.generate(
         prompt,
         system=_SYSTEM_PROMPT,
@@ -532,7 +535,7 @@ async def run_extraction(
         f" (version {EXTRACTION_VERSION})[/dim]"
     )
 
-    cache = LLMCache()
+    cache = LLMCache(panel="article_extraction")
     squad_whitelist = _build_squad_whitelist(conn, season)
 
     # Build flat squad name set once for strict article-side resolution

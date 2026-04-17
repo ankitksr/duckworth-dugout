@@ -23,6 +23,11 @@ def cli() -> None:
     """Duckworth Dugout — IPL monitor pipeline."""
 
 
+from pipeline.commands.cost import cost_report  # noqa: E402
+
+cli.add_command(cost_report)
+
+
 @cli.command()
 @click.argument("what", required=False, default="all")
 @click.option("--season", default="2026", help="IPL season (default: 2026)")
@@ -78,7 +83,10 @@ def pull_enrichment(output: str) -> None:
 
     tag = "data-snapshot"
     asset = "enrichment.duckdb"
-    cmd = ["gh", "release", "download", tag, "-p", asset, "-D", str(output).rsplit("/", 1)[0], "--clobber"]
+    cmd = [
+        "gh", "release", "download", tag, "-p", asset,
+        "-D", str(output).rsplit("/", 1)[0], "--clobber",
+    ]
     console.print(f"[dim]Downloading {asset} from release '{tag}'…[/dim]")
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
