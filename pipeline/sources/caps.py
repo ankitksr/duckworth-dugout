@@ -17,6 +17,26 @@ from pipeline.sources.standings import _TableParser
 
 console = Console()
 
+# Historical / evergreen article markers — articles that mention "purple cap"
+# or "orange cap" but list all-time winners (e.g. Bravo, Malinga) rather than
+# the current season's leaderboard. Wisden recycles these pieces through its
+# RSS feed, so the title is our only cheap signal to skip them.
+_HISTORICAL_TITLE_RE = re.compile(
+    r"\b("
+    r"all[\s-]?time|history|ever|greatest|most[\s-]+(?:ever|in\s+ipl\s+history)"
+    r"|winners?[\s-]+list|list\s+of\s+all|complete\s+list"
+    r"|season[\s-]by[\s-]season|year[\s-]by[\s-]year|by[\s-]season"
+    r"|every\s+season|hall\s+of\s+fame|retired|legends?|throwback"
+    r")\b",
+    re.IGNORECASE,
+)
+
+
+def _is_historical_title(title: str) -> bool:
+    """True if the title looks like a historical/all-time recap, not current season."""
+    return bool(_HISTORICAL_TITLE_RE.search(title))
+
+
 # Reverse lookups for team resolution
 _SHORT_TO_FRANCHISE: dict[str, tuple[str, str]] = {}
 _NAME_TO_FRANCHISE: dict[str, tuple[str, str]] = {}
@@ -94,16 +114,35 @@ def _parse_cap_table(encoded: str, stat_label: str) -> list[CapEntry]:
     return _entries_from_table_rows(table_rows, stat_label)
 
 
-def parse_caps(wisden_items: list[FeedItem], top_n: int = 10) -> CapsData:
-    """Parse Orange/Purple Cap articles from Wisden feed."""
+def parse_caps(
+    wisden_items: list[FeedItem],
+    top_n: int = 10,
+    season: str | None = None,
+) -> CapsData:
+    """Parse Orange/Purple Cap articles from Wisden feed.
+
+    Prefers articles whose title references ``season`` (current season) and
+    skips anything that looks like a historical/all-time recap — otherwise
+    evergreen Wisden pieces ("IPL Purple Cap winners list", "Most Purple
+    Caps of all time") pollute the leaderboard with retired players.
+    """
     orange: list[CapEntry] = []
     purple: list[CapEntry] = []
     updated: str | None = None
 
-    for item in wisden_items:
+    # Two-pass: prefer articles matching the current season, fall back to
+    # any non-historical cap article if no season-tagged article is found.
+    ordered = list(wisden_items)
+    if season:
+        ordered.sort(key=lambda it: 0 if season in (it.title or "") else 1)
+
+    for item in ordered:
         title = item.title.lower()
         encoded = item.raw.get("encoded", "")
         if not encoded:
+            continue
+
+        if _is_historical_title(title):
             continue
 
         if "orange cap" in title and not orange:
@@ -145,6 +184,7 @@ def parse_caps_from_feed(
     items: list[FeedItem],
     source_name: str = "feed",
     top_n: int = 10,
+    season: str | None = None,
 ) -> CapsData:
     """Parse Orange/Purple Cap from any RSS feed.
 
@@ -152,12 +192,18 @@ def parse_caps_from_feed(
     1. Separate articles per cap (like Wisden) — title contains "orange cap" or "purple cap"
     2. Combined article (like CricketAddictor) — title contains both; tables appear
        after the standings table, identified by header keywords (runs/wickets + player).
+
+    Historical/all-time articles are skipped; season-tagged articles are tried first.
     """
     orange: list[CapEntry] = []
     purple: list[CapEntry] = []
     updated: str | None = None
 
-    for item in items:
+    ordered = list(items)
+    if season:
+        ordered.sort(key=lambda it: 0 if season in (it.title or "") else 1)
+
+    for item in ordered:
         title = item.title.lower()
         encoded = item.raw.get("encoded", "")
         if not encoded:
@@ -166,6 +212,9 @@ def parse_caps_from_feed(
         has_orange = "orange cap" in title
         has_purple = "purple cap" in title
         if not has_orange and not has_purple:
+            continue
+
+        if _is_historical_title(title):
             continue
 
         if item.published:
