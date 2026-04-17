@@ -89,11 +89,11 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
 
       # ── Python + pipeline ────────────────────────────────────────
       - name: Setup Python 3.13 + uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v8.1.0
         with:
           python-version: '3.13'
 
@@ -102,7 +102,7 @@ jobs:
 
       - name: Restore Playwright browsers
         id: pw-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5.0.5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium
@@ -113,14 +113,14 @@ jobs:
 
       - name: Save Playwright cache
         if: steps.pw-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5.0.5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium
 
       # ── cricket.duckdb (from duckworth-mcp) ──────────────────────
       - name: Restore cricket.duckdb cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5.0.5
         with:
           path: data/cricket.duckdb
           key: cricket-db
@@ -143,7 +143,7 @@ jobs:
 
       # ── enrichment.duckdb (articles, wire, snapshots) ────────────
       - name: Restore enrichment.duckdb cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5.0.5
         with:
           path: data/enrichment.duckdb
           key: enrichment-db
@@ -151,7 +151,7 @@ jobs:
 
       # ── Restore prior panel data (partial syncs layer on top) ───
       - name: Restore API data from last sync
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5.0.5
         with:
           path: frontend/public/api/ipl/war-room
           key: api-data
@@ -195,7 +195,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: Save enrichment.duckdb cache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5.0.5
         with:
           path: data/enrichment.duckdb
           key: enrichment-db
@@ -223,7 +223,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: Save API data cache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5.0.5
         with:
           path: frontend/public/api/ipl/war-room
           key: api-data
@@ -237,13 +237,13 @@ jobs:
 
       - name: Save cricket.duckdb cache
         if: needs.resolve.outputs.update_db == 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5.0.5
         with:
           path: data/cricket.duckdb
           key: cricket-db
 
       # ── Frontend build + deploy ──────────────────────────────────
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6.3.0
         with:
           node-version: 22
           cache: npm
@@ -259,13 +259,13 @@ jobs:
           ASTRO_BASE: /duckworth-dugout
         run: npm run build
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5.0.0
         with:
           path: frontend/dist
 
       - name: Deploy to GitHub Pages
         id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5.0.0
 
       # ── Cloudflare Pages (parallel deploy — same commit, root base path) ──
       - name: Rebuild frontend for Cloudflare (root base)
@@ -273,11 +273,11 @@ jobs:
         run: npm run build
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v3.15.0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy frontend/dist --project-name=duckworth-dugout --branch=main
+          command: pages deploy frontend/dist --project-name=duckworth-dugout --branch=main --commit-dirty=true
 
       # Cache the Cloudflare-shaped dist (root base, no /duckworth-dugout
       # prefix) so live-update can overlay fresh JSON and re-deploy
@@ -289,7 +289,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: Save dist cache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5.0.5
         with:
           path: frontend/dist
           key: dist-cf

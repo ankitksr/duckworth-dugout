@@ -23,14 +23,14 @@ jobs:
     env:
       TZ: UTC
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6.0.2
 
       # No in-workflow window gate: cloudflare/worker.js gates at the
       # Cron level so out-of-window fires never reach this workflow.
       # Manual workflow_dispatch always runs through unconditionally.
 
       - name: Setup Python 3.13 + uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v8.1.0
         with:
           python-version: '3.13'
 
@@ -39,7 +39,7 @@ jobs:
 
       - name: Restore Playwright browsers
         id: pw-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5.0.5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium
@@ -50,7 +50,7 @@ jobs:
 
       - name: Save Playwright cache
         if: steps.pw-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5.0.5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium
@@ -58,7 +58,7 @@ jobs:
       # Restore latest API data from pipeline cache
       - name: Restore API data
         id: api-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5.0.5
         with:
           path: frontend/public/api/ipl/war-room
           key: api-data
@@ -99,13 +99,13 @@ jobs:
       # the cache is genuinely missing (e.g. first run after eviction).
       - name: Restore cached dist
         id: dist-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5.0.5
         with:
           path: frontend/dist
           key: dist-cf
           restore-keys: dist-cf
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6.3.0
         if: steps.dist-cache.outputs.cache-hit != 'true'
         with:
           node-version: 22
@@ -125,8 +125,8 @@ jobs:
           cp -a frontend/public/api/ipl/war-room/*.json frontend/dist/api/ipl/war-room/
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v3.15.0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy frontend/dist --project-name=duckworth-dugout --branch=main
+          command: pages deploy frontend/dist --project-name=duckworth-dugout --branch=main --commit-dirty=true
