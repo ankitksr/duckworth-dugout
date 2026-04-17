@@ -21,11 +21,15 @@ def sync(ctx: SyncContext) -> None:
     from pipeline.sources.caps import caps_from_cricsheet, parse_caps, parse_caps_from_feed
 
     source = "wisden"
-    caps = parse_caps(ctx.wisden_items or [])
+    caps = parse_caps(ctx.wisden_items or [], season=ctx.season)
 
     if not caps.orange_cap and not caps.purple_cap:
         source = "cricketaddictor"
-        caps = parse_caps_from_feed(ctx.ca_items or [], source_name="CricketAddictor")
+        caps = parse_caps_from_feed(
+            ctx.ca_items or [],
+            source_name="CricketAddictor",
+            season=ctx.season,
+        )
 
     # ESPNcricinfo: primary source for SR, Economy, MVP; fallback for Orange/Purple
     espn_caps = None
