@@ -24,6 +24,13 @@ class MatchNote(BaseModel):
     note: str
 
 
+class MatchNoteResponse(BaseModel):
+    """Single-match response shape — the match_number is known at call time
+    and supplied by the caller, so the LLM only produces the prose."""
+
+    note: str
+
+
 # ---------------------------------------------------------------------------
 # extract.py
 # ---------------------------------------------------------------------------

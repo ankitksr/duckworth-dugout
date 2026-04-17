@@ -9,7 +9,9 @@ precedent team, year, match number, then-numbers, and end-of-season
 numbers. Anti-pattern block in the system prompt forbids "class of",
 "echoes of", "storied", etc.
 
-Model: Flash @ 0.3 — cheap, tight grounding via tool use.
+Model: Pro @ 0.3 — voice compression matters on the historian desk. Every
+dispatch is a comparative one-liner with a specific year + team + numbers;
+Flash tends to blur the comparison into nostalgia.
 """
 
 import hashlib
@@ -45,7 +47,7 @@ class TheArchiveGenerator(WireGenerator):
         "get_player_career_stats",
         "get_remaining_schedule",
     ]
-    MODEL = "flash"
+    MODEL = "pro"
     TEMPERATURE = 0.3
 
     def _triggers(self, ctx: GeneratorContext) -> list[str]:

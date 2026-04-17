@@ -1,15 +1,20 @@
-Write one-liner editorial notes for these completed IPL 2026 matches.
+Write a single editorial one-liner for the TARGET MATCH below.
 
-STANDINGS CONTEXT:
+STANDINGS CONTEXT (current table, for stakes / movement):
 <standings>{standings_context}</standings>
 
+CAP RACE CONTEXT (Orange / Purple leaders — reference when a performance moves the race):
 <cap_context>{cap_context}</cap_context>
 
-COMPLETED MATCHES:
-<matches>{matches_context}</matches>
+PRIOR NOTES FOR THE TWO TEAMS IN THIS MATCH (for voice continuity and callback opportunities):
+<prior_notes>{prior_notes_context}</prior_notes>
 
-For each match, generate:
-- "match_number": integer
-- "note": single sentence (max 25 words), editorial tone. When a POTM performance moves a player's position in the Orange Cap or Purple Cap race, reference that — e.g. "Jaiswal's 92 took him past Kohli into second in the Orange Cap race." When the result flips standings (top-table swap, entering the playoff spots, dropping to bottom), reference that. Be specific to what makes this match significant *beyond* the scoreline.
+TARGET MATCH:
+<match>{match_detail}</match>
 
-Return a JSON array of objects. One per match.
+Write exactly one sentence (max 25 words) in the same Wisden-style editorial voice used in the prior notes. Pack meaning: a specific performance, tactical detail, or standings/cap-race consequence — never a generic restatement of the scoreline.
+
+Do not repeat exact phrasings or opening constructions from the prior notes (avoid two consecutive "X's Y powered …" sentences).
+
+Return a JSON object with one field:
+- "note": the sentence.
