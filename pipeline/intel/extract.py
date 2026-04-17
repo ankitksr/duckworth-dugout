@@ -45,6 +45,22 @@ class MatchExtract:
     hero_stat: str | None  # "70*(47)"
 
 
+# Strings the LLM uses to signal a washout / tie / no-result. These are not
+# team names, so _resolve_team_id naturally fails to match them — but they
+# should be treated as a known non-outcome rather than an aggregation failure.
+_NO_RESULT_STRINGS: frozenset[str] = frozenset({
+    "no result", "noresult", "no-result",
+    "abandoned", "cancelled", "canceled",
+    "tie", "tied",
+    "draw",
+})
+
+
+def _is_no_result_winner(raw: str) -> bool:
+    """True if the raw winner field signals a washout/tie rather than a team."""
+    return raw.lower().strip() in _NO_RESULT_STRINGS
+
+
 def _resolve_team_id(name: str) -> str:
     """Resolve a team name to franchise ID using detect_teams."""
     if not name:
@@ -117,15 +133,25 @@ def _aggregate_match(
 
     Aligns each claim's team1/team2 to match.team1/match.team2 by franchise
     ID. Drops claims that resolve to a different team pair.
+
+    Returns None when:
+    - no valid claims exist for this pair
+    - articles signal a washout/tie/no-result (see _is_no_result_winner)
+    - winner vote produces no majority across conflicting sources
     """
     # Per-team score buckets keyed by franchise ID
     scores: dict[str, list[str]] = {match.team1: [], match.team2: []}
     winners: list[str] = []
+    no_result_seen: bool = False
     margins: list[str] = []
     potms: list[str] = []
     heroes: list[str] = []
 
     for claim in claims:
+        raw_winner = claim.get("winner", "")
+        if raw_winner and _is_no_result_winner(raw_winner):
+            no_result_seen = True
+
         t1_fid = _resolve_team_id(claim.get("team1", ""))
         t2_fid = _resolve_team_id(claim.get("team2", ""))
         valid_pair = {t1_fid, t2_fid} == {match.team1, match.team2}
@@ -138,7 +164,7 @@ def _aggregate_match(
         if claim.get("team2_score") and t2_fid in scores:
             scores[t2_fid].append(claim["team2_score"])
 
-        winner_fid = _resolve_team_id(claim.get("winner", ""))
+        winner_fid = _resolve_team_id(raw_winner)
         if winner_fid in (match.team1, match.team2):
             winners.append(winner_fid)
         if claim.get("margin"):
@@ -147,6 +173,10 @@ def _aggregate_match(
             potms.append(claim["player_of_match"])
         if claim.get("hero_stat"):
             heroes.append(claim["hero_stat"])
+
+    # Articles explicitly called this a washout/tie — nothing to extract.
+    if no_result_seen and not winners:
+        return None
 
     # Need at least one valid claim
     if not winners and not any(scores.values()):
@@ -282,13 +312,28 @@ async def extract_match_results(
             )
             continue
 
+        # Check for no-result signals before aggregating so we can emit a
+        # dim log instead of a yellow warning for expected washout/tie cases.
+        no_result = any(
+            _is_no_result_winner(c.get("winner", ""))
+            for c in claims
+            if c.get("winner")
+        )
+
         ex = _aggregate_match(match, claims)
         if ex is None:
-            console.print(
-                f"  [yellow]Extract: claims for"
-                f" {match.team1.upper()} vs {match.team2.upper()}"
-                " did not aggregate cleanly[/yellow]"
-            )
+            if no_result:
+                console.print(
+                    f"  [dim]Extract: {match.team1.upper()} vs"
+                    f" {match.team2.upper()} — no result / washout"
+                    f" (articles agree)[/dim]"
+                )
+            else:
+                console.print(
+                    f"  [yellow]Extract: claims for"
+                    f" {match.team1.upper()} vs {match.team2.upper()}"
+                    " did not aggregate cleanly[/yellow]"
+                )
             continue
 
         extracts.append(ex)
