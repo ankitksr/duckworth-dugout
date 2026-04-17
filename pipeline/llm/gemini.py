@@ -25,6 +25,29 @@ console = Console()
 _RETRYABLE_ERRORS = ("429", "500", "503", "RESOURCE_EXHAUSTED", "UNAVAILABLE")
 
 
+def _coerce_schema(schema: Any, raw: Any) -> Any:
+    """Validate raw JSON through a Pydantic schema, then dump to plain Python.
+
+    Gemini structured-output returns raw JSON that satisfies the schema's
+    *shape*, but omitted optional fields arrive missing rather than
+    defaulted — so a `Field(default="")` on the schema never fires. Running
+    the value through a TypeAdapter fills in defaults and runs any
+    field_validator normalizers. We dump back to dicts/lists so downstream
+    consumers that use `parsed.get(...)` keep working unchanged.
+
+    Fails open: if validation raises (e.g. LLM returned extra fields that
+    strict mode rejects), we return the raw parse so the caller can still
+    use the response.
+    """
+    try:
+        from pydantic import TypeAdapter
+        adapter = TypeAdapter(schema)
+        validated = adapter.validate_python(raw)
+        return adapter.dump_python(validated, mode="python")
+    except Exception:
+        return raw
+
+
 class GeminiProvider:
     """Gemini provider wrapping the google-genai SDK."""
 
@@ -110,13 +133,19 @@ class GeminiProvider:
                 # Extract text
                 text = response.text or ""
 
-                # Parse structured output if schema was provided
+                # Parse structured output if schema was provided. Pydantic
+                # coercion runs Field defaults and @field_validator
+                # normalizers that Gemini's server-side structured output
+                # doesn't apply (omitted optional keys arrive missing, not
+                # defaulted).
                 parsed = None
                 if response_schema is not None and text:
                     try:
-                        parsed = json.loads(text)
+                        raw = json.loads(text)
                     except json.JSONDecodeError:
-                        parsed = None
+                        raw = None
+                    if raw is not None:
+                        parsed = _coerce_schema(response_schema, raw)
 
                 # Usage stats
                 usage = {}
