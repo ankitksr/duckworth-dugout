@@ -9,6 +9,7 @@ Usage (via __main__.py):
 
 import importlib
 import json
+import uuid
 from datetime import datetime, timezone
 
 from rich.console import Console
@@ -17,6 +18,7 @@ from rich.panel import Panel as RichPanel
 from pipeline.clock import today_ist_iso
 from pipeline.config import DATA_DIR, ROOT_DIR
 from pipeline.context import SyncContext
+from pipeline.llm.usage_ledger import set_sync_id
 from pipeline.panels import PANEL_ORDER, resolve_panels
 from pipeline.sources.rss import RSSFetcher
 from pipeline.writer import write_json
@@ -70,6 +72,10 @@ def sync_panels(
     expansion and validates each entry.
     """
     active_panels = resolve_panels(names)
+
+    # Tag every LLM call in this sync with a stable id so the ledger
+    # can group "what this run cost" without relying on timestamps.
+    set_sync_id(uuid.uuid4().hex[:12])
 
     # Determine ordered execution list
     ordered = [p for p in PANEL_ORDER if p in active_panels]

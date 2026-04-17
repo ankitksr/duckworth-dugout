@@ -317,7 +317,7 @@ async def generate_records(season: str) -> dict | None:
     # Cache by date + availability fingerprint so a new injury invalidates
     # the cached list (a milestone-chaser being ruled out should drop them
     # from imminent immediately, not 24h later).
-    cache = LLMCache()
+    cache = LLMCache(panel="records")
     today = today_ist_iso()
     unavailable = _unavailable_names()
     avail_marker = (
@@ -375,7 +375,7 @@ async def generate_records(season: str) -> dict | None:
 
     from pipeline.llm.gemini import GeminiProvider
 
-    provider = GeminiProvider()
+    provider = GeminiProvider(panel="records")
     prompt = _USER_PROMPT.format(
         mcp_context=mcp_context,
         season_context=season_context,

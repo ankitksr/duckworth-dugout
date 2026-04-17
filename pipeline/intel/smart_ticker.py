@@ -308,7 +308,7 @@ async def generate_smart_ticker(
     # even when the points table hasn't moved. The "v2" prefix invalidates
     # legacy cached entries that were generated without availability grounding
     # (and were therefore prone to fabricated injury claims).
-    cache = LLMCache()
+    cache = LLMCache(panel="ticker")
     s_hash = _standings_hash(standings)
     avail_marker = (availability or {}).get("total_unavailable", 0)
     cache_key = f"ticker_v2_{s_hash}_a{avail_marker}"
@@ -343,7 +343,7 @@ async def generate_smart_ticker(
     # LLM call
     from pipeline.llm.gemini import GeminiProvider
 
-    provider = GeminiProvider()
+    provider = GeminiProvider(panel="ticker")
     prompt = _USER_PROMPT.format(
         mcp_context=mcp_context,
         season_context=season_context,

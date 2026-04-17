@@ -75,7 +75,7 @@ async def generate_scenarios(season: str) -> dict | None:
     live_ctx = build_live_context(None, season)
 
     # Check cache
-    cache = LLMCache()
+    cache = LLMCache(panel="scenarios")
     s_hash = _standings_hash(standings)
     cache_key = f"scenarios_{s_hash}"
 
@@ -158,7 +158,7 @@ async def generate_scenarios(season: str) -> dict | None:
     # LLM call
     from pipeline.llm.gemini import GeminiProvider
 
-    provider = GeminiProvider()
+    provider = GeminiProvider(panel="scenarios")
     prompt = _USER_PROMPT.format(
         matches_played=matches_played,
         standings_text=standings_text,

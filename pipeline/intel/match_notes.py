@@ -80,7 +80,7 @@ async def generate_match_notes(season: str) -> dict[int, str] | None:
     live_ctx = build_live_context(None, season)
 
     # Check cache
-    cache = LLMCache()
+    cache = LLMCache(panel="match_notes")
     r_hash = _results_hash(schedule)
     cache_key = f"match_notes_v2_{r_hash}"
 
@@ -159,7 +159,7 @@ async def generate_match_notes(season: str) -> dict[int, str] | None:
     # LLM call
     from pipeline.llm.gemini import GeminiProvider
 
-    provider = GeminiProvider()
+    provider = GeminiProvider(panel="match_notes")
     prompt = _USER_PROMPT.format(
         standings_context=standings_context,
         matches_context=matches_context,

@@ -349,7 +349,7 @@ async def generate_dossier(
         format_wire_recent_block,
     )
 
-    cache = LLMCache()
+    cache = LLMCache(panel="dossier")
     # Build the shared ground-truth bundle once; the availability marker
     # flows into the cache key so an injury update invalidates the dossier
     # even before the next daily refresh.
@@ -424,7 +424,7 @@ async def generate_dossier(
     from pipeline.config import GEMINI_MODEL_PRO
     from pipeline.llm.gemini import GeminiProvider
 
-    provider = GeminiProvider(model=GEMINI_MODEL_PRO)
+    provider = GeminiProvider(model=GEMINI_MODEL_PRO, panel="dossier")
     prompt = _USER_PROMPT.format(
         opponent=_short(opponent),
         opponent_short=_short(opponent),

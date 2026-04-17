@@ -86,3 +86,33 @@ CREATE TABLE IF NOT EXISTS war_room_player_availability_events (
 
 CREATE INDEX IF NOT EXISTS idx_avail_events_article
     ON war_room_player_availability_events(article_guid);
+
+-- Per-request LLM usage ledger. One row per call (multi-round tool-use
+-- calls are summed into a single row). Both real LLM calls and
+-- app-layer cache hits are recorded. Hits have cost_usd=0 and
+-- app_cache_hit=TRUE so effective cache utility is queryable.
+CREATE TABLE IF NOT EXISTS llm_usage (
+    request_id         VARCHAR PRIMARY KEY,
+    ts                 TIMESTAMP DEFAULT current_timestamp,
+    sync_id            VARCHAR,
+    panel              VARCHAR NOT NULL,
+    sub_key            VARCHAR,
+    provider           VARCHAR NOT NULL,
+    model              VARCHAR NOT NULL,
+    input_tokens       INTEGER DEFAULT 0,
+    output_tokens      INTEGER DEFAULT 0,
+    cached_read_tokens INTEGER DEFAULT 0,
+    cache_write_tokens INTEGER DEFAULT 0,
+    tool_rounds        INTEGER DEFAULT 1,
+    latency_ms         INTEGER,
+    retries            INTEGER DEFAULT 0,
+    success            BOOLEAN DEFAULT TRUE,
+    error              VARCHAR,
+    app_cache_hit      BOOLEAN DEFAULT FALSE,
+    cost_usd           DECIMAL(12, 6) DEFAULT 0.0,
+    pricing_version    VARCHAR
+);
+
+CREATE INDEX IF NOT EXISTS idx_llm_usage_ts    ON llm_usage(ts);
+CREATE INDEX IF NOT EXISTS idx_llm_usage_panel ON llm_usage(panel);
+CREATE INDEX IF NOT EXISTS idx_llm_usage_model ON llm_usage(model);

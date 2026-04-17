@@ -857,7 +857,7 @@ async def generate_briefing(
         format_wire_recent_block,
     )
 
-    cache = LLMCache()
+    cache = LLMCache(panel="briefing")
     live_ctx = build_live_context(conn, season)
     avail_marker = _availability_cache_marker(live_ctx)
     cache_key = (
@@ -920,7 +920,7 @@ async def generate_briefing(
     from pipeline.config import GEMINI_MODEL_PRO
     from pipeline.llm.gemini import GeminiProvider
 
-    provider = GeminiProvider(model=GEMINI_MODEL_PRO)
+    provider = GeminiProvider(model=GEMINI_MODEL_PRO, panel="briefing")
     prompt = _USER_PROMPT.format(
         team1=_short(match.team1),
         team2=_short(match.team2),

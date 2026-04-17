@@ -95,7 +95,7 @@ async def generate_narratives(
     # invalidates the season arc (e.g. "CSK's arc shifted when Dhoni was
     # ruled out" needs to be written the moment Dhoni lands in the
     # availability list, not only when results change).
-    cache = LLMCache()
+    cache = LLMCache(panel="narrative")
     r_hash = _results_hash(schedule)
     cache_key = f"narratives_v2_{r_hash}_{avail_marker}"
 
@@ -304,7 +304,7 @@ async def generate_narratives(
     from pipeline.config import GEMINI_MODEL_PRO
     from pipeline.llm.gemini import GeminiProvider
 
-    provider = GeminiProvider(model=GEMINI_MODEL_PRO)
+    provider = GeminiProvider(model=GEMINI_MODEL_PRO, panel="narrative")
     prompt = _USER_PROMPT.format(
         standings_context=standings_context,
         articles_context=articles_context,

@@ -209,7 +209,7 @@ class WireGenerator(ABC):
         from pipeline.intel.tools import execute_tool, get_tool_declarations
         from pipeline.llm.gemini import GeminiProvider
 
-        provider = GeminiProvider(model=model)
+        provider = GeminiProvider(model=model, panel=f"wire/{self.SOURCE}")
         tools = get_tool_declarations(self.TOOLS) if self.TOOLS else None
 
         result = await provider.generate_with_tools(
