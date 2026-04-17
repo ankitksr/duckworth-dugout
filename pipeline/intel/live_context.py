@@ -175,13 +175,17 @@ def format_availability_block(ctx: dict) -> str:
     deliberately blunt — the model has a strong prior (stale training
     data) to overcome, so the rule can't be subtle.
     """
+    # Always emit the block — even when empty — so the LLM can tell the
+    # difference between "no unavailable players" and "block was truncated."
+    # Silence would implicitly license the fabricated-injury failure mode.
+    empty_sentinel = (
+        "INJURY/AVAILABILITY: none confirmed this sync — every squad member "
+        "is available. Do not invent absences."
+    )
     availability = ctx.get("availability")
     if not availability:
-        return ""
+        return empty_sentinel
     by_team = availability.get("by_team") or {}
-    if not by_team:
-        return ""
-
     lines: list[str] = []
     for fid, entries in by_team.items():
         for e in entries:
@@ -193,7 +197,7 @@ def format_availability_block(ctx: dict) -> str:
             tail = f" — {reason}" if reason else ""
             lines.append(f"  {player} ({_short(fid)}, {status}){tail}")
     if not lines:
-        return ""
+        return empty_sentinel
     return (
         "INJURY/AVAILABILITY (the ONLY verified facts — do not invent any "
         "other player as injured, doubtful, missing, or unavailable):\n"
