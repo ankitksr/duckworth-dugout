@@ -1,8 +1,17 @@
 Generate 6-8 ticker items for the IPL 2026 War Room based on this data:
 
-<career_stats>{mcp_context}</career_stats>
+<career_stats source="cricsheet_all_time" authority="authoritative for career totals; may lag 1–2 days">{mcp_context}</career_stats>
 
-<season_data>{season_context}</season_data>
+<season_data source="live_json_and_current_rosters" authority="authoritative for 2026 standings, cap races, and active squad membership">{season_context}</season_data>
+
+<grounding_rule>
+- Career totals, gaps-to-milestone, and all-time comparisons must come from `<career_stats>`.
+- Current-season standings, cap races, W/L/NRR, and recent results must come from `<season_data>`.
+- The CURRENT ROSTERS block inside `<season_data>` is the only source of truth for which players are active; do not reference any player whose name is not in that block, even if you remember them from prior seasons.
+- For any career milestone gap ≤ 3 units (e.g. "1 wicket short"), append "(approx.)" to the ticker text — Cricsheet may not yet reflect the most recent match.
+- Current-season cap leaders may be tied; when two players share a rank, either name both or write "tied for the lead with N".
+- Never blend career and season figures in the same sentence unless explicitly labelling each.
+</grounding_rule>
 
 Each item must be a JSON object with:
 - "category": one of MILESTONE, RECORD, QUIRK, FORM, SCENARIO, H2H, EMERGING
