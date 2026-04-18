@@ -25,6 +25,7 @@ Usage:
 """
 
 import asyncio
+import hashlib
 import json
 from datetime import datetime, timezone
 
@@ -149,13 +150,75 @@ def _expire_legacy_hash_version(
     return len(result)
 
 
+# ── Claim fingerprinting + cooldown ─────────────────────────────────
+
+_CLAIM_COOLDOWN_DAYS = 7
+
+
+def _compute_claim_fingerprint(item: dict) -> str:
+    """Derive a short stable key for day-over-day dedup.
+
+    Fingerprint = sha256(source | first_team | grounding.type | category).
+    Two dispatches sharing this key make the same structural claim about the
+    same team with the same framing — which is exactly what we want to prevent
+    from re-headlining every sync.
+    """
+    teams = sorted(item.get("teams") or [])
+    first_team = teams[0] if teams else ""
+    grounding = item.get("grounding") or {}
+    g_type = (grounding.get("type") or "").strip().lower()
+    category = (item.get("category") or "").strip().lower()
+    source = (item.get("source") or "wire").strip().lower()
+    key = f"{source}|{first_team}|{g_type}|{category}"
+    return hashlib.sha256(key.encode()).hexdigest()[:16]
+
+
+def _apply_cooldown(
+    conn: duckdb.DuckDBPyConnection,
+    season: str,
+    fingerprint: str,
+    proposed_severity: str,
+) -> str:
+    """If the same fingerprint has landed in the last N days, cap severity
+    at 'signal'. Demotion is display-only — the dispatch still ships, just
+    without the alarm/alert podium.
+    """
+    if proposed_severity == "signal":
+        return proposed_severity
+    hit = conn.execute(
+        f"""
+        SELECT 1 FROM war_room_wire
+        WHERE season = ? AND claim_fingerprint = ?
+          AND generated_at >= (current_timestamp - INTERVAL '{_CLAIM_COOLDOWN_DAYS} days')
+        LIMIT 1
+        """,
+        [season, fingerprint],
+    ).fetchone()
+    if hit:
+        console.print(
+            f"  [dim yellow]Wire: cooldown demotion — fingerprint "
+            f"{fingerprint[:8]} already fired in last "
+            f"{_CLAIM_COOLDOWN_DAYS}d; severity "
+            f"{proposed_severity} → signal[/dim yellow]"
+        )
+        return "signal"
+    return proposed_severity
+
+
 def _insert_items(
     conn: duckdb.DuckDBPyConnection,
     items: list[dict],
     season: str,
     today: str,
 ) -> None:
-    """Insert generated wire items into the database."""
+    """Insert generated wire items into the database.
+
+    Each row carries a `claim_fingerprint` derived from (source, first team,
+    grounding.type, category). Before insert, the fingerprint is checked
+    against the previous _CLAIM_COOLDOWN_DAYS of wire history — if the same
+    structural claim was made recently, the new dispatch's severity is
+    capped at 'signal' so it can't re-headline as alarm/alert every day.
+    """
     if not items:
         return
 
@@ -167,13 +230,17 @@ def _insert_items(
     for i, item in enumerate(items):
         grounding = item.get("grounding")
         grounding_json = json.dumps(grounding) if isinstance(grounding, dict) else None
+        fingerprint = _compute_claim_fingerprint(item)
+        severity = _apply_cooldown(
+            conn, season, fingerprint, item.get("severity", "signal")
+        )
         conn.execute(
             """
             INSERT INTO war_room_wire
                 (id, headline, text, emoji, category, severity, teams,
                  source, context_hash, hash_version, season, match_day,
-                 grounding_json)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 grounding_json, claim_fingerprint)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             [
                 next_id + i,
@@ -181,7 +248,7 @@ def _insert_items(
                 item["text"],
                 item["emoji"],
                 item["category"],
-                item["severity"],
+                severity,
                 item["teams"],
                 item.get("source", "wire"),
                 item.get("_context_hash", ""),
@@ -189,6 +256,7 @@ def _insert_items(
                 season,
                 today,
                 grounding_json,
+                fingerprint,
             ],
         )
 

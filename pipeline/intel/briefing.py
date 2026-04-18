@@ -744,11 +744,14 @@ def _inject_post_llm(
     parsed: dict,
     match: ScheduleMatch,
     venue_stats: dict,
+    live_ctx: dict | None = None,
 ) -> dict:
     """Enrich LLM response with authoritative source data.
 
     Numbers from Cricsheet/standings override any LLM-generated values.
     LLM-generated narratives (trend, venue note, h2h note) are preserved.
+    Baseline absences are injected mechanically from availability.json so
+    the LLM never has to decide whether to re-surface standing news.
     """
     # ── Match metadata (from ScheduleMatch, not LLM) ──
     parsed["team1_id"] = match.team1
@@ -781,7 +784,40 @@ def _inject_post_llm(
     # ── Phase stats (from Cricsheet, not LLM) ──
     parsed["phase_stats"] = _query_phase_stats(match)
 
+    # ── Baseline absences (from availability.json, not LLM) ──
+    # The LLM's prompt tells it NOT to include standing absences in
+    # squad_news; they surface here instead as a compact footer list.
+    parsed["squad_news_baseline"] = _baseline_squad_news(live_ctx, match)
+
     return parsed
+
+
+def _baseline_squad_news(
+    live_ctx: dict | None, match: ScheduleMatch,
+) -> list[str]:
+    """Return compact per-team baseline absence strings for this fixture.
+
+    Output: ["[KKR] Season-long outs: Harshit Rana.", "[MI] Season-long outs: Santner."]
+    Only teams playing in this match. Empty list if nothing baseline.
+    """
+    if not live_ctx:
+        return []
+    availability = live_ctx.get("availability") or {}
+    by_team = availability.get("by_team") or {}
+    out: list[str] = []
+    for fid in (match.team1, match.team2):
+        entries = by_team.get(fid) or []
+        names = [
+            (e.get("player") or "").strip()
+            for e in entries
+            if e.get("is_baseline") and (e.get("player") or "").strip()
+        ]
+        if names:
+            short = _short(fid).upper()
+            out.append(
+                f"[{short}] Season-long outs: " + ", ".join(names) + "."
+            )
+    return out
 
 
 def _build_espn_context(match: ScheduleMatch) -> str:
@@ -875,7 +911,7 @@ async def generate_briefing(
             f" {_short(match.team2)})[/dim]"
         )
         # Re-inject source data even on cache hit (standings may have changed)
-        return _inject_post_llm(cached["parsed"], match, venue_stats)
+        return _inject_post_llm(cached["parsed"], match, venue_stats, live_ctx)
 
     # Build context for LLM
     venue_context = _build_venue_context(venue_stats)
@@ -972,7 +1008,7 @@ async def generate_briefing(
         return None
 
     # Inject authoritative source data over LLM output
-    parsed = _inject_post_llm(parsed, match, venue_stats)
+    parsed = _inject_post_llm(parsed, match, venue_stats, live_ctx)
 
     cache.put(_CACHE_TASK, cache_key, {
         "parsed": parsed,

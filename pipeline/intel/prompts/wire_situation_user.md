@@ -26,10 +26,25 @@ Use tools when you spot a hypothesis worth verifying: "Is CSK's remaining schedu
 
 Valid franchise IDs: {franchise_ids}
 
-## ALREADY ON THE WIRE — these are dispatches you have already filed today
+## ALREADY ON THE WIRE — dispatches from the last 7 days
+
+Each line is tagged with the date it was filed.
 
 {previous_entries}
 
-Any new dispatch that restates a claim above — even with different wording, different framing, or a different supporting number — will be discarded. Find a different angle, a different team, a different mathematical lens, or advance an existing thread by showing what changed since you last filed.
+<delta_rule>
+If a dispatch above already covers the same team with the same grounding.type (same kind of claim — elimination math, NRR pattern, schedule projection, etc.), you may only file again when a SPECIFIC NUMERIC THRESHOLD HAS JUST CROSSED since that dispatch:
+
+- Mathematical elimination is now possible where it wasn't.
+- NRR has crossed a band boundary (±0.5, ±1.0).
+- Matches-remaining reached a new bucket (10 → 9, 5 → 4, etc.).
+- A match result since the prior dispatch materially changed the math.
+
+"The same claim with a slightly different number" is not news. "KKR needed 88% yesterday, 100% today" is not a new dispatch — it is yesterday's dispatch with the number ticked. In that case: file on a different team, pick a different mathematical lens on the same team, or return [].
+
+The wire reader sees the last 7 days of the feed. Repeats stand out.
+</delta_rule>
+
+Any new dispatch that restates a claim above will be discarded.
 
 Return ONLY a JSON array.

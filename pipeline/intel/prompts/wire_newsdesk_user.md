@@ -25,10 +25,23 @@ Produce 1-3 News Desk dispatches for the IPL AI Wire.
 
 Valid franchise IDs: {franchise_ids}
 
-## ALREADY ON THE WIRE — these are dispatches you have already filed today
+## ALREADY ON THE WIRE — dispatches from the last 7 days
+
+Each line is tagged with the date it was filed.
 
 {previous_entries}
 
-Any new dispatch that restates a story above — even with different wording, a different angle, or a different quote from the same article — will be discarded. If a story you already covered has *new* information (a fresh quote, an updated injury status, a contradicting report), you may advance the thread by stating what changed. Otherwise, pick a different story.
+<delta_rule>
+If a dispatch above already covers the same team's news of the same grounding.type (tactical_shift, injury_impact, transfer, etc.), you may only file again when something new has landed since that dispatch:
+
+- A fresh quote from a different speaker.
+- A new article contradicting or updating the earlier one.
+- A status change (doubtful → out, out → available, etc.).
+- A tactical consequence that has now concretely played out.
+
+"The player is still out" is not news after you have already filed "the player is out". Baseline absences are already reflected in the availability baseline block — do not re-file them as news. Pick a different story, a different team, or return [].
+</delta_rule>
+
+Any new dispatch that restates a story above will be discarded.
 
 Return ONLY a JSON array (or empty array [] if nothing warrants a dispatch).

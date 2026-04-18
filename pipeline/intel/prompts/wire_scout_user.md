@@ -20,10 +20,23 @@ Produce 3-5 Scout Report dispatches for the IPL AI Wire.
 
 Valid franchise IDs: {franchise_ids}
 
-## ALREADY ON THE WIRE — these are dispatches you have already filed today
+## ALREADY ON THE WIRE — dispatches from the last 7 days
+
+Each line is tagged with the date it was filed.
 
 {previous_entries}
 
-Any new dispatch that restates a claim above — even with different wording, different framing, or a different supporting number — will be discarded. Pick a different player, a different stat, a different angle, or advance an existing thread by showing what changed since you last filed.
+<delta_rule>
+If a dispatch above already covers the same player with the same grounding.type (same kind of claim — phase dominance, role fit, cap race position, breakout, diagnosis), you may only file again when the underlying stat has materially moved:
+
+- Phase-split number crossed a threshold (e.g. death-overs SR went from 140 to 170).
+- Cap-race position changed by ≥2 spots.
+- Role breakpoint (first 5-fer, first century of season, first POTM).
+- A recent match result created a new angle (e.g. player saved a game that was already heading the other way).
+
+"Same player, same story, next sync" is not a scouting report — it is a reminder. In that case: pick a different player or return [].
+</delta_rule>
+
+Any new dispatch that restates a claim above will be discarded.
 
 Return ONLY a JSON array.

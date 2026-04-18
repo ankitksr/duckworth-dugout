@@ -39,7 +39,12 @@ Generate a JSON object with these fields:
 
 - "form": object with "{team1_short}" and "{team2_short}" sub-objects each having "trend" only (1-2 sentences on current momentum/issues). Do NOT include wins/losses/NRR — those are injected from source data.
 
-- "squad_news": array of 2-4 strings — injuries, playing XI changes, tactical notes. **Hard rules:** (a) an injury claim is only valid if the exact player name appears in the INJURY/AVAILABILITY block above, OR is the subject of a direct quote from a RECENT RSS article (not a past-tense recap). (b) Your training data is months stale — treat every player not in the availability block as FIT (see availability constraint in system prompt). (c) If nothing meaningful is happening for a team, write "no significant squad news" for that team — do NOT invent a non-event. (d) If a role tag is shown in brackets next to a player name in the squad list, respect it — never describe a `[bowler]` as a batting-order fixture or vice versa.
+- "squad_news": array of 2-4 strings — injuries, playing XI changes, tactical notes. **Hard rules:**
+  (a) An injury claim is only valid if the exact player name appears in the INJURY/AVAILABILITY — FRESH block above, OR is the subject of a direct quote from a RECENT RSS article (not a past-tense recap).
+  (b) Your training data is months stale — treat every player not in the FRESH block as FIT (see availability constraint in system prompt).
+  (c) **Players listed in the INJURY/AVAILABILITY — BASELINE block are standing absences already absorbed into team form. Do NOT include them in `squad_news` under any circumstances — they surface separately as a footer attached by the pipeline, not by you.** Squad_news is for changes in the last 7 days, not season-long facts.
+  (d) If nothing fresh is happening for a team, write "no significant squad news" for that team — do NOT invent a non-event, and do NOT fall back to restating a baseline absence just to fill the list.
+  (e) If a role tag is shown in brackets next to a player name in the squad list, respect it — never describe a `[bowler]` as a batting-order fixture or vice versa.
 
 - "key_matchups": array of 2-3 objects with structured fields:
   {{

@@ -31,11 +31,13 @@ CREATE TABLE IF NOT EXISTS war_room_wire (
     match_day VARCHAR,
     expired BOOLEAN DEFAULT FALSE,
     generated_at TIMESTAMP DEFAULT current_timestamp,
-    grounding_json TEXT
+    grounding_json TEXT,
+    claim_fingerprint VARCHAR
 );
 
--- Migration: grounding_json added after initial schema. Safe to run repeatedly.
+-- Migrations — safe to run repeatedly on existing DBs.
 ALTER TABLE war_room_wire ADD COLUMN IF NOT EXISTS grounding_json TEXT;
+ALTER TABLE war_room_wire ADD COLUMN IF NOT EXISTS claim_fingerprint VARCHAR;
 
 -- Panel snapshots: versioned JSON for change detection
 CREATE TABLE IF NOT EXISTS war_room_snapshots (

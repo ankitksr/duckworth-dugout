@@ -126,46 +126,53 @@ class TheTakeGenerator(WireGenerator):
         """Called by orchestrator with dispatches from other generators."""
         self._other_outputs = outputs
 
-    def get_previous_entries(self, ctx: GeneratorContext, limit: int = 30) -> str:
-        """Take's view of prior dispatches: own takes + cross-desk all-day history.
+    def get_previous_entries(self, ctx: GeneratorContext, limit: int = 40) -> str:
+        """Take's view of prior dispatches: own takes + cross-desk history.
 
-        The base implementation source-scopes to a single generator. Take is
-        the synthesis desk, so it needs visibility into both (a) its own
-        prior takes (to avoid restating them) and (b) what the other desks
-        have already filed earlier today (so it doesn't synthesize the same
-        thread twice).
+        Windowed to PREVIOUS_ENTRIES_DAYS regardless of expired flag so
+        yesterday's takes and cross-desk history remain visible for
+        day-over-day repetition avoidance. Take's job is synthesis, so it
+        needs (a) its own prior takes and (b) what other desks have filed.
         """
         own = ctx.conn.execute(
-            """
-            SELECT category, headline, text FROM war_room_wire
-            WHERE season = ? AND expired = FALSE AND source = 'take'
+            f"""
+            SELECT category, headline, text, CAST(generated_at AS DATE) AS d
+            FROM war_room_wire
+            WHERE season = ? AND source = 'take'
+              AND generated_at >= (current_timestamp - INTERVAL '{self.PREVIOUS_ENTRIES_DAYS} days')
             ORDER BY generated_at DESC
             LIMIT ?
             """,
             [ctx.season, limit],
         ).fetchall()
         cross = ctx.conn.execute(
-            """
-            SELECT source, category, headline, text FROM war_room_wire
-            WHERE season = ? AND expired = FALSE AND source != 'take'
+            f"""
+            SELECT source, category, headline, text, CAST(generated_at AS DATE) AS d
+            FROM war_room_wire
+            WHERE season = ? AND source != 'take'
+              AND generated_at >= (current_timestamp - INTERVAL '{self.PREVIOUS_ENTRIES_DAYS} days')
             ORDER BY generated_at DESC
-            LIMIT 40
+            LIMIT 50
             """,
             [ctx.season],
         ).fetchall()
         own_text = (
-            "\n".join(f"- [{r[0]}] {r[1]}: {r[2]}" for r in own)
+            "\n".join(f"- [{r[3]}] [{r[0]}] {r[1]}: {r[2]}" for r in own)
             or "(none yet)"
         )
         cross_text = (
-            "\n".join(f"- [{r[0]}:{r[1]}] {r[2]}: {r[3]}" for r in cross)
+            "\n".join(f"- [{r[4]}] [{r[0]}:{r[1]}] {r[2]}: {r[3]}" for r in cross)
             or "(none yet)"
         )
         return (
-            "YOUR PRIOR TAKES (do not restate any of these):\n"
+            "YOUR PRIOR TAKES — last "
+            f"{self.PREVIOUS_ENTRIES_DAYS} days "
+            "(do not restate any of these; if today's thread is already "
+            "here, find a different angle or return []):\n"
             + own_text
-            + "\n\nWHAT OTHER DESKS HAVE ALREADY FILED TODAY "
-            "(synthesize across these — do not just rephrase one):\n"
+            + "\n\nWHAT OTHER DESKS HAVE FILED — last "
+            f"{self.PREVIOUS_ENTRIES_DAYS} days "
+            "(synthesize across these; do not just rephrase one):\n"
             + cross_text
         )
 

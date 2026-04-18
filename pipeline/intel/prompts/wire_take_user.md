@@ -51,9 +51,15 @@ If the citation floor isn't met, do not file the `reframe`. File only the synthe
 
 Valid franchise IDs: {franchise_ids}
 
-## DISPATCHES ALREADY ON TODAY'S WIRE
+## DISPATCHES ALREADY ON THE WIRE — last 7 days
+
+Each line is tagged with the date it was filed.
 
 {previous_entries}
+
+<delta_rule>
+If a dispatch above already threads the same pair of signals you are about to connect, you may only file again when one of the threads has materially changed since that dispatch — a new result, a new story, a new numeric breakpoint. "Same synthesis, fresh metaphor" is restatement, not a new take. In that case: find a connection nobody has drawn yet, or return [].
+</delta_rule>
 
 Any new dispatch that restates a thread above — your own prior takes OR a synthesis another desk has effectively already made — will be discarded. If you want to advance a thread, name what changed since it was last filed. Otherwise, find a connection nobody has drawn yet.
 

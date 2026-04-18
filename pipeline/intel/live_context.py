@@ -171,13 +171,18 @@ def build_live_context(
 def format_availability_block(ctx: dict) -> str:
     """Render availability.json as the verified-facts injury block.
 
+    Split into two sub-blocks:
+      - FRESH: entries flagged within the baseline window (is_baseline=False
+        or unset). Bulleted, full reason strings — these are the changes
+        consumers should react to as news.
+      - BASELINE: entries flagged >7 days with unchanged `out` status.
+        Rendered as a compact one-liner so the LLM sees them as
+        already-absorbed background, not actionable news.
+
     All LLM generators that discuss players embed this. The wording is
     deliberately blunt — the model has a strong prior (stale training
     data) to overcome, so the rule can't be subtle.
     """
-    # Always emit the block — even when empty — so the LLM can tell the
-    # difference between "no unavailable players" and "block was truncated."
-    # Silence would implicitly license the fabricated-injury failure mode.
     empty_sentinel = (
         "INJURY/AVAILABILITY: none confirmed this sync — every squad member "
         "is available. Do not invent absences."
@@ -185,24 +190,48 @@ def format_availability_block(ctx: dict) -> str:
     availability = ctx.get("availability")
     if not availability:
         return empty_sentinel
+
     by_team = availability.get("by_team") or {}
-    lines: list[str] = []
+    fresh_lines: list[str] = []
+    baseline_tokens: list[str] = []
+
     for fid, entries in by_team.items():
         for e in entries:
             player = (e.get("player") or "").strip()
             status = (e.get("status") or "").strip()
-            reason = (e.get("reason") or "").strip()
             if not player or not status:
                 continue
+            if e.get("is_baseline"):
+                baseline_tokens.append(f"{player} ({_short(fid)})")
+                continue
+            reason = (e.get("reason") or "").strip()
             tail = f" — {reason}" if reason else ""
-            lines.append(f"  {player} ({_short(fid)}, {status}){tail}")
-    if not lines:
+            fresh_lines.append(f"  {player} ({_short(fid)}, {status}){tail}")
+
+    if not fresh_lines and not baseline_tokens:
         return empty_sentinel
-    return (
-        "INJURY/AVAILABILITY (the ONLY verified facts — do not invent any "
-        "other player as injured, doubtful, missing, or unavailable):\n"
-        + "\n".join(lines)
-    )
+
+    sections: list[str] = []
+    if fresh_lines:
+        sections.append(
+            "INJURY/AVAILABILITY — FRESH (flagged or changed in the last 7 "
+            "days; the ONLY verified facts — do not invent any other player "
+            "as injured, doubtful, missing, or unavailable):\n"
+            + "\n".join(fresh_lines)
+        )
+    else:
+        sections.append(
+            "INJURY/AVAILABILITY — FRESH: none in the last 7 days. "
+            "Do not invent absences."
+        )
+    if baseline_tokens:
+        sections.append(
+            "INJURY/AVAILABILITY — BASELINE (standing absences already "
+            "reflected in recent form; do NOT re-surface these as news or "
+            "squad_news — they are background, not a fresh story): "
+            + ", ".join(baseline_tokens)
+        )
+    return "\n\n".join(sections)
 
 
 def format_wire_recent_block(

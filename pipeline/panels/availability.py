@@ -7,14 +7,21 @@ not just warm — sees fresh availability state without coupling the wire
 panel to the availability panel's schedule.
 """
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
+import duckdb
 from rich.console import Console
 
+from pipeline.clock import today_ist_iso
 from pipeline.context import SyncContext
 from pipeline.writer import write_panel
 
 console = Console()
+
+# Threshold past which a standing absence stops being "news" and becomes
+# baseline — rendered separately in the availability block so prompts
+# don't restate it as fresh injury news every match.
+_BASELINE_DAYS = 7
 
 
 def sync(ctx: SyncContext) -> None:
@@ -54,7 +61,8 @@ def sync(ctx: SyncContext) -> None:
     new_events = ctx.extraction_stats.get("events", 0)
 
     # 2. Build payload (filter to actionable, non-available players)
-    payload = _build_payload(state, ctx.season, new_events)
+    first_flagged = _first_out_flagged_per_player(db_conn, ctx.season)
+    payload = _build_payload(state, ctx.season, new_events, first_flagged)
 
     # 3. Dual-write JSON
     write_panel(
@@ -158,18 +166,86 @@ def _apply_appearance_overrides(
     return overridden
 
 
+def _first_out_flagged_per_player(
+    conn: duckdb.DuckDBPyConnection,
+    season: str,
+) -> dict[str, date]:
+    """Map player → date they were first flagged `out` in the current
+    continuous absence.
+
+    "Continuous absence" = earliest `out` event AFTER the most recent
+    `available` event (if any). A player who was cleared and then re-flagged
+    is counted from the re-flag, not from the first flag of the season.
+    """
+    try:
+        rows = conn.execute(
+            """
+            WITH ranked AS (
+                SELECT
+                    player_name,
+                    status,
+                    article_published,
+                    MAX(CASE WHEN status = 'available'
+                            THEN article_published END)
+                        OVER (PARTITION BY player_name
+                              ORDER BY article_published
+                              ROWS BETWEEN UNBOUNDED PRECEDING
+                                       AND CURRENT ROW) AS last_available
+                FROM war_room_player_availability_events
+                WHERE season = ? AND article_published IS NOT NULL
+            )
+            SELECT player_name, MIN(article_published) AS first_out
+            FROM ranked
+            WHERE status = 'out'
+              AND (last_available IS NULL OR article_published > last_available)
+            GROUP BY player_name
+            """,
+            [season],
+        ).fetchall()
+    except Exception:
+        return {}
+    out: dict[str, date] = {}
+    for name, first_out in rows:
+        if first_out is None:
+            continue
+        if isinstance(first_out, datetime):
+            out[name] = first_out.date()
+        elif isinstance(first_out, date):
+            out[name] = first_out
+    return out
+
+
 def _build_payload(
     state: dict[str, dict],
     season: str,
     new_events: int,
+    first_flagged: dict[str, date],
 ) -> dict:
-    """Filter to actionable (non-available) players, group by team."""
+    """Filter to actionable (non-available) players, group by team.
+
+    Each entry carries `days_since_flagged` + `is_baseline` so downstream
+    consumers (briefing, dossier, wire) can distinguish fresh news from
+    standing absences already absorbed into team form.
+    """
     by_team: dict[str, list[dict]] = {}
     flat: list[dict] = []
+
+    today = date.fromisoformat(today_ist_iso())
 
     for player, info in sorted(state.items()):
         if info.get("status") == "available":
             continue
+
+        days_since = -1
+        is_baseline = False
+        first_out = first_flagged.get(player)
+        if first_out:
+            days_since = (today - first_out).days
+            is_baseline = (
+                info.get("status") == "out"
+                and days_since > _BASELINE_DAYS
+            )
+
         entry = {
             "player": player,
             "franchise_id": info.get("franchise_id", ""),
@@ -180,6 +256,8 @@ def _build_payload(
             "quote": info.get("quote", ""),
             "as_of": info.get("as_of", ""),
             "confidence": info.get("confidence", ""),
+            "days_since_flagged": days_since,
+            "is_baseline": is_baseline,
         }
         flat.append(entry)
         by_team.setdefault(entry["franchise_id"], []).append(entry)

@@ -256,17 +256,26 @@ class WireGenerator(ABC):
         ).fetchone()
         return row is not None
 
-    def get_previous_entries(self, ctx: GeneratorContext, limit: int = 30) -> str:
-        """Get recent non-expired entries from THIS generator for repetition avoidance.
+    # Previous-entries window. Must be wide enough to catch day-over-day
+    # refiles — if a desk filed "KKR mathematically doomed" yesterday, it
+    # needs to see that dispatch today even though it expired at midnight.
+    PREVIOUS_ENTRIES_DAYS: int = 7
 
-        Source-scoped: a generator only sees its own prior dispatches, so the
-        anti-repetition signal isn't diluted by unrelated entries from other
-        desks. Subclasses may override (e.g. The Take pulls cross-desk history).
+    def get_previous_entries(self, ctx: GeneratorContext, limit: int = 40) -> str:
+        """Get recent entries from THIS generator for repetition avoidance.
+
+        Widened to the last PREVIOUS_ENTRIES_DAYS regardless of `expired`
+        flag — yesterday's KKR-extinction dispatch has expired by midnight
+        but the prompt still needs to see it to avoid re-filing the same
+        structural claim with fresh prose. Source-scoped: a generator only
+        sees its own prior dispatches. Subclasses may override.
         """
         rows = ctx.conn.execute(
-            """
-            SELECT category, headline, text FROM war_room_wire
-            WHERE season = ? AND expired = FALSE AND source = ?
+            f"""
+            SELECT category, headline, text, CAST(generated_at AS DATE) AS d
+            FROM war_room_wire
+            WHERE season = ? AND source = ?
+              AND generated_at >= (current_timestamp - INTERVAL '{self.PREVIOUS_ENTRIES_DAYS} days')
             ORDER BY generated_at DESC
             LIMIT ?
             """,
@@ -274,7 +283,7 @@ class WireGenerator(ABC):
         ).fetchall()
         if not rows:
             return "(none yet — this is the first wire generation)"
-        return "\n".join(f"- [{r[0]}] {r[1]}: {r[2]}" for r in rows)
+        return "\n".join(f"- [{r[3]}] [{r[0]}] {r[1]}: {r[2]}" for r in rows)
 
     async def generate(
         self,

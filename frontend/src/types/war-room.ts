@@ -313,6 +313,11 @@ export interface WRBriefing {
   h2h: Record<string, unknown>;
   form: Record<string, WRFormEntry | unknown>;
   squad_news: string[];
+  // Baseline absences (>7 days flagged, status unchanged). Rendered
+  // separately from squad_news so standing facts don't crowd the
+  // fresh-news list. Populated by the pipeline, not the LLM. Optional
+  // so existing consumers can ignore it until a UI affordance lands.
+  squad_news_baseline?: string[];
   key_matchups: (WRMatchup | { matchup: string; insight: string })[];
   tactical_edge: string;
   favoured?: string;                 // "PBKS" | "KKR" | "even"
