@@ -25,6 +25,7 @@ Usage:
 """
 
 import asyncio
+import json
 from datetime import datetime, timezone
 
 import duckdb
@@ -38,6 +39,7 @@ from pipeline.intel.live_context import (
 from pipeline.intel.roster_context import summary as roster_summary
 from pipeline.intel.wire_generators import HASH_VERSION, GeneratorContext
 from pipeline.intel.wire_generators.archive import TheArchiveGenerator
+from pipeline.intel.wire_generators.fan_desk import FanDeskGenerator
 from pipeline.intel.wire_generators.newsdesk import NewsDeskGenerator
 from pipeline.intel.wire_generators.preview import MatchdayPreviewGenerator
 from pipeline.intel.wire_generators.scout import ScoutReportGenerator
@@ -163,12 +165,15 @@ def _insert_items(
     next_id = (row[0] if row else 0) + 1
 
     for i, item in enumerate(items):
+        grounding = item.get("grounding")
+        grounding_json = json.dumps(grounding) if isinstance(grounding, dict) else None
         conn.execute(
             """
             INSERT INTO war_room_wire
                 (id, headline, text, emoji, category, severity, teams,
-                 source, context_hash, hash_version, season, match_day)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 source, context_hash, hash_version, season, match_day,
+                 grounding_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             [
                 next_id + i,
@@ -183,6 +188,7 @@ def _insert_items(
                 HASH_VERSION,
                 season,
                 today,
+                grounding_json,
             ],
         )
 
@@ -311,6 +317,19 @@ async def generate_wire(
     except Exception as e:
         console.print(f"  [yellow]Wire/take: failed — {e}[/yellow]")
 
+    # Phase 3: Fan Desk — runs last, sees every other dispatch, non-overlapping.
+    # Plain-English, emotion-led register for the casual fan; its
+    # convergence guard (in FanDeskGenerator.filter_items) rejects
+    # `fan_alert` cards that would restate another desk's team coverage.
+    console.print("  [dim]Wire: running Fan Desk…[/dim]")
+    fan = FanDeskGenerator()
+    fan.set_other_outputs(all_items)
+    try:
+        fan_items = await fan.generate(ctx, force=force)
+        all_items.extend(fan_items)
+    except Exception as e:
+        console.print(f"  [yellow]Wire/fan_desk: failed — {e}[/yellow]")
+
     # Insert all items into DB
     _insert_items(conn, all_items, season, today_str)
 
@@ -326,8 +345,14 @@ async def generate_wire(
 # ── Export with aggregation ─────────────────────────────────────────
 
 _MAX_PER_TEAM = 8
-_MAX_CONSECUTIVE_SAME_SOURCE = 2
+_MAX_ALARMS_PER_TEAM = 1
 
+# Round-robin interleave order within each severity tier. Take sits last
+# on the dedicated column because it synthesises the rest — the reader
+# should see the raw desks first, then the thread that ties them together.
+_DESK_INTERLEAVE_ORDER = (
+    "situation", "newsdesk", "scout", "archive", "preview", "fan_desk", "take",
+)
 
 _SEVERITY_ORDER = ("alarm", "alert", "signal")
 
@@ -364,17 +389,20 @@ def export_wire_json(
 ) -> list[dict]:
     """Export non-expired wire entries with structural aggregation.
 
-    Rules:
-    1. Severity ordering: alarm > alert > signal.
-    2. Within each severity tier, non-take desks come first in a
-       newsroom-front-page order (situation → newsdesk → preview → scout),
-       then take dispatches last — take now synthesizes the other desks,
-       so it only makes sense after the reader has seen them.
-    3. Per-team cap: max _MAX_PER_TEAM entries per team, applied across
-       the full sorted list so top-ranked items win the slot.
-    4. Source diversity within each severity tier: no more than
-       _MAX_CONSECUTIVE_SAME_SOURCE in a row. Overflow is deferred to
-       the end of the current tier, not the end of the whole list.
+    Pipeline:
+      1. SQL returns rows by severity then generated_at DESC.
+      2. Alarm-tier demotion: at most _MAX_ALARMS_PER_TEAM alarm cards
+         per team stay as alarm. Extra alarms on the same team are
+         demoted (display-only — DB row untouched) so information stays
+         visible without the top-of-wire monoculture we saw when four
+         desks converged on one team.
+      3. Regroup by (possibly demoted) severity.
+      4. Within each severity tier, round-robin interleave by desk in
+         _DESK_INTERLEAVE_ORDER — rotate one card per desk per pass
+         instead of stacking desks. Make the wire feel like a mixed
+         newsroom, not six silos.
+      5. Per-team cap: max _MAX_PER_TEAM entries per team across the
+         full sorted list. Earlier-ranked items win the slot.
     """
     rows = conn.execute(
         """
@@ -389,21 +417,11 @@ def export_wire_json(
                 WHEN 'alert' THEN 1
                 ELSE 2
             END,
-            CASE coalesce(source, 'wire') WHEN 'take' THEN 1 ELSE 0 END,
-            CASE coalesce(source, 'wire')
-                WHEN 'situation' THEN 0
-                WHEN 'newsdesk'  THEN 1
-                WHEN 'preview'   THEN 2
-                WHEN 'scout'     THEN 3
-                WHEN 'archive'   THEN 4
-                ELSE 5
-            END,
             generated_at DESC
         """,
         [season],
     ).fetchall()
 
-    # Build raw entries
     raw: list[dict] = [
         {
             "headline": r[0],
@@ -419,58 +437,84 @@ def export_wire_json(
         for r in rows
     ]
 
-    # Per-team cap — iterates the full sorted list so alarm/alert items
-    # win the team slots over signal items.
-    team_counts: dict[str, int] = {}
-    capped: list[dict] = []
+    # Demote alarm cards so at most _MAX_ALARMS_PER_TEAM remain per team.
+    # The earliest-sorted alarm for each team (newest generated_at, because
+    # SQL ordered DESC) keeps its severity; subsequent same-team alarms are
+    # rewritten to "alert" in the output dict. DB rows are never modified.
+    _demote_duplicate_alarms(raw)
+
+    # Regroup by (possibly demoted) severity so the interleave stays
+    # inside the tier it came from.
+    by_severity: dict[str, list[dict]] = {s: [] for s in _SEVERITY_ORDER}
+    other: list[dict] = []
     for entry in raw:
+        sev = entry.get("severity", "")
+        (by_severity[sev] if sev in by_severity else other).append(entry)
+
+    interleaved: list[dict] = []
+    for sev in _SEVERITY_ORDER:
+        interleaved.extend(_interleave_by_source(by_severity[sev]))
+    interleaved.extend(_interleave_by_source(other))
+
+    # Per-team cap last — applied across the fully interleaved list so
+    # higher-severity items still win the team slots over signal items.
+    team_counts: dict[str, int] = {}
+    final: list[dict] = []
+    for entry in interleaved:
         teams = entry.get("teams", [])
         if teams:
             if any(team_counts.get(t, 0) >= _MAX_PER_TEAM for t in teams):
                 continue
             for t in teams:
                 team_counts[t] = team_counts.get(t, 0) + 1
-        capped.append(entry)
-
-    # Group by severity so source-diversity deferrals stay inside the
-    # tier they came from instead of dropping to the bottom of the wire.
-    by_severity: dict[str, list[dict]] = {s: [] for s in _SEVERITY_ORDER}
-    other: list[dict] = []
-    for entry in capped:
-        sev = entry.get("severity", "")
-        (by_severity[sev] if sev in by_severity else other).append(entry)
-
-    final: list[dict] = []
-    for sev in _SEVERITY_ORDER:
-        final.extend(_apply_source_diversity(by_severity[sev]))
-    final.extend(_apply_source_diversity(other))
+        final.append(entry)
 
     return final
 
 
-def _apply_source_diversity(items: list[dict]) -> list[dict]:
-    """Break long same-source runs by deferring overflow to the end.
+def _demote_duplicate_alarms(items: list[dict]) -> None:
+    """Mutate items in place so at most _MAX_ALARMS_PER_TEAM alarm cards
+    remain per team. Extra alarms are rewritten to severity='alert'.
 
-    Linear pass: if the current item's source matches the previous
-    emitted source and we've already emitted _MAX_CONSECUTIVE_SAME_SOURCE
-    in a row, push the item onto a deferred queue. The deferred queue is
-    appended to the end of the returned list (caller decides whether
-    that's "end of tier" or "end of wire" by how it invokes us).
+    Assumes items are already sorted severity-first, generated_at DESC —
+    so iterating in order means the newest alarm per team survives and
+    older ones on the same team demote. Non-alarm entries are untouched.
     """
-    out: list[dict] = []
-    deferred: list[dict] = []
-    consecutive_source = ""
-    consecutive_count = 0
+    alarm_count: dict[str, int] = {}
+    for entry in items:
+        if entry.get("severity") != "alarm":
+            continue
+        teams = entry.get("teams") or []
+        if any(alarm_count.get(t, 0) >= _MAX_ALARMS_PER_TEAM for t in teams):
+            entry["severity"] = "alert"
+            # Do NOT bump alarm_count for the demoted card — it is no
+            # longer an alarm, so it cannot take a future team's slot.
+            continue
+        for t in teams:
+            alarm_count[t] = alarm_count.get(t, 0) + 1
+
+
+def _interleave_by_source(items: list[dict]) -> list[dict]:
+    """Round-robin items across desks using _DESK_INTERLEAVE_ORDER.
+
+    Each desk gets a queue (preserving the incoming order — which upstream
+    guarantees is newest-first). We pop one item per desk per pass until
+    every queue is empty. Sources not in the order list are drained last
+    to keep the output deterministic.
+    """
+    queues: dict[str, list[dict]] = {src: [] for src in _DESK_INTERLEAVE_ORDER}
+    unknown: list[dict] = []
     for entry in items:
         src = entry.get("source", "wire")
-        if src == consecutive_source:
-            consecutive_count += 1
-            if consecutive_count > _MAX_CONSECUTIVE_SAME_SOURCE:
-                deferred.append(entry)
-                continue
+        if src in queues:
+            queues[src].append(entry)
         else:
-            consecutive_source = src
-            consecutive_count = 1
-        out.append(entry)
-    out.extend(deferred)
+            unknown.append(entry)
+
+    out: list[dict] = []
+    while any(queues[src] for src in _DESK_INTERLEAVE_ORDER):
+        for src in _DESK_INTERLEAVE_ORDER:
+            if queues[src]:
+                out.append(queues[src].pop(0))
+    out.extend(unknown)
     return out

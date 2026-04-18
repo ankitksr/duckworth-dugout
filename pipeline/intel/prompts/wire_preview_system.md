@@ -57,6 +57,20 @@ Each dispatch is a JSON object:
 - **"category"**: underscore_cased (e.g. matchup_preview, venue_edge, tactical_battle, powerplay_war, death_overs_showdown, prediction).
 - **"severity"**: "signal" (standard preview), "alert" (high-stakes match — elimination or top-table clash).
 - **"teams"**: both team franchise IDs in the match.
+- **"grounding"**: object with two fields:
+    - `type`: one of `matchup` (specific player-vs-player contest), `venue` (ground or conditions edge), `phase_edge` (powerplay / middle / death tactical tilt), `chase_math` (chase target thresholds, DLS calculus, overs-to-go dynamics).
+    - `detail`: 1–2 sentences that must name at least two specific proper nouns (players, teams, or venue). Freeform — write naturally. "The middle overs will decide it" fails this; "Archer vs Samson in overs 7–10" passes.
 
 Return ONLY a JSON array.
 </output_spec>
+
+<grounding_contract>
+Every dispatch must include a `grounding` object. Think of `grounding.detail` as the one-line prep you'd give a commentator: which two names are the decisive contest, which phase, which venue factor. Vague "tactical" framing without named players or a named venue fails this contract.
+
+The `grounding` field is not shown to readers. It disciplines your reasoning before the prose lands. The headline and text stay in your voice.
+</grounding_contract>
+
+<cop_out_blacklist>
+These phrases add zero information. Never use them in `headline` or `text`:
+  "should be a good game", "anyone's game", "could go either way", "mouth-watering", "recipe for a thriller".
+</cop_out_blacklist>

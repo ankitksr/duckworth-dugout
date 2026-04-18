@@ -49,7 +49,124 @@ DAILY_CAP: dict[str, int] = {
     "preview": 8,
     "take": 8,
     "archive": 3,
+    "fan_desk": 2,
 }
+
+# Grounding-contract enforcement mode.
+#
+#   False → warn-only. Validators log which dispatches would have been
+#     dropped, but return items untouched. Use during rollout to calibrate
+#     blacklists and enum sets against real LLM output.
+#   True  → strict. Validators drop failing items.
+#
+# Flip to True once the warn-only logs confirm we're only rejecting
+# genuinely low-quality dispatches.
+_STRICT_GROUNDING = False
+
+
+def _jaccard(a: str, b: str) -> float:
+    """Token-level Jaccard similarity (case-insensitive, ignores <3-char tokens)."""
+    ta = {t for t in re.findall(r"\w+", a.lower()) if len(t) >= 3}
+    tb = {t for t in re.findall(r"\w+", b.lower()) if len(t) >= 3}
+    if not ta or not tb:
+        return 0.0
+    return len(ta & tb) / len(ta | tb)
+
+
+def _validate_grounding(
+    source: str,
+    item: dict,
+    *,
+    type_enum: set[str],
+    detail_min_chars: int = 15,
+    detail_min_words: int = 0,
+    cop_outs: tuple[str, ...] = (),
+    extra_checks: list | None = None,
+) -> str | None:
+    """Shared grounding-contract validator.
+
+    Returns None when the item passes; returns a short reason string when
+    it fails. Callers decide (per module-level _STRICT_GROUNDING) whether a
+    failure drops the item or just logs.
+
+    Checks applied in order:
+      1. grounding object present with both `type` and `detail` keys
+      2. grounding.type in the desk's enum
+      3. grounding.detail is a string of >= detail_min_chars and >= detail_min_words
+      4. neither headline nor text contains any cop-out phrase (case-insensitive)
+      5. any extra_checks — each a callable(item) -> str|None
+    """
+    g = item.get("grounding")
+    if not isinstance(g, dict):
+        return "missing grounding object"
+
+    gtype = (g.get("type") or "").strip().lower()
+    if gtype not in type_enum:
+        return f"grounding.type={gtype!r} not in {sorted(type_enum)}"
+
+    detail = (g.get("detail") or "").strip()
+    if len(detail) < detail_min_chars:
+        return f"grounding.detail too short ({len(detail)} < {detail_min_chars})"
+    if detail_min_words and len(detail.split()) < detail_min_words:
+        return f"grounding.detail too few words ({len(detail.split())} < {detail_min_words})"
+
+    prose = f"{item.get('headline', '')} {item.get('text', '')}".lower()
+    for phrase in cop_outs:
+        if phrase.lower() in prose:
+            return f"cop-out phrase: {phrase!r}"
+
+    for check in extra_checks or []:
+        reason = check(item)
+        if reason:
+            return reason
+
+    return None
+
+
+def _apply_grounding_filter(
+    source: str,
+    items: list[dict],
+    *,
+    type_enum: set[str],
+    detail_min_chars: int = 15,
+    detail_min_words: int = 0,
+    cop_outs: tuple[str, ...] = (),
+    extra_checks: list | None = None,
+) -> list[dict]:
+    """Run _validate_grounding across items; respect _STRICT_GROUNDING.
+
+    Warn-only mode logs the first rejection reason per item and keeps the
+    item. Strict mode drops rejected items. Either way, accepted items are
+    returned unchanged so downstream stages see the same shape.
+    """
+    kept: list[dict] = []
+    rejected = 0
+    for item in items:
+        reason = _validate_grounding(
+            source, item,
+            type_enum=type_enum,
+            detail_min_chars=detail_min_chars,
+            detail_min_words=detail_min_words,
+            cop_outs=cop_outs,
+            extra_checks=extra_checks,
+        )
+        if reason is None:
+            kept.append(item)
+            continue
+        rejected += 1
+        mode = "dropped" if _STRICT_GROUNDING else "warn"
+        console.print(
+            f"  [dim yellow]Wire/{source}: grounding {mode} — "
+            f"{reason} | {item.get('headline', '')[:70]!r}[/dim yellow]"
+        )
+        if not _STRICT_GROUNDING:
+            kept.append(item)
+    if rejected and _STRICT_GROUNDING:
+        console.print(
+            f"  [yellow]Wire/{source}: dropped {rejected} dispatch(es) "
+            f"failing grounding contract[/yellow]"
+        )
+    return kept
 
 
 def _load_json(filename: str) -> Any:
@@ -289,8 +406,12 @@ class WireGenerator(ABC):
                     ]
                 else:
                     teams = []
+                grounding = entry.get("grounding")
+                if not isinstance(grounding, dict):
+                    grounding = None
                 items.append({
                     "headline": headline, "text": txt, "emoji": emoji,
                     "category": category, "severity": severity, "teams": teams,
+                    "grounding": grounding,
                 })
         return items

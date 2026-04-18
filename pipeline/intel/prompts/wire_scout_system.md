@@ -56,6 +56,23 @@ Each dispatch is a JSON object:
 - **"category"**: underscore_cased (e.g. breakout_star, form_crisis, cap_race, phase_dominance, role_fit, auction_value, lone_warrior, death_specialist).
 - **"severity"**: "signal" (routine), "alert" (pattern demanding attention), "alarm" (rare — season-defining player moment).
 - **"teams"**: franchise IDs of the team(s) the player belongs to.
+- **"grounding"**: object with two fields:
+    - `type`: one of `phase` (powerplay/middle/death split), `role` (how the player is being used), `comparison` (benchmarked against another player or their own past), `breakout` (early signal on someone not yet consensus), `diagnosis` (what's structurally wrong in the player's game).
+    - `detail`: 1–2 sentences (≥4 words) naming the specific phase, role, or comparison that anchors this dispatch. Freeform — write naturally. Team-level eulogies without a concrete player lens fail this contract.
 
 Return ONLY a JSON array.
 </output_spec>
+
+<grounding_contract>
+Every dispatch must include a `grounding` object. Think of `grounding.detail` as the scout's note you would hand a team analyst: which player, which phase, which role, which comparison?
+
+If your dispatch is really about team collapse, it belongs on another desk. The Scout Report writes about individuals, even when the story is their trapped-in-a-failing-system paradox.
+
+The `grounding` field is not shown to readers. It disciplines your reasoning before the prose lands. Headline and text stay in your voice.
+</grounding_contract>
+
+<cop_out_blacklist>
+These phrases add zero information. Never use them in `headline` or `text`:
+  "star player", "key man", "in form", "out of form".
+Say which phase or role, not whether someone is vaguely good or struggling.
+</cop_out_blacklist>

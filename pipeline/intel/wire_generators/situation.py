@@ -13,6 +13,15 @@ from pipeline.intel.wire_generators import (
     HASH_VERSION,
     GeneratorContext,
     WireGenerator,
+    _apply_grounding_filter,
+)
+
+_SITUATION_GROUNDING_TYPES = {"inflection", "threshold", "pattern", "projection"}
+_SITUATION_COP_OUTS = (
+    "at the end of the day",
+    "uphill battle",
+    "mountain to climb",
+    "things are looking tough",
 )
 
 
@@ -122,6 +131,15 @@ class SituationRoomGenerator(WireGenerator):
                 parts.append("QUALIFICATION MATH:\n" + "\n".join(qual_lines))
 
         return "\n\n".join(parts)
+
+    def filter_items(
+        self, ctx: GeneratorContext, items: list[dict]
+    ) -> list[dict]:
+        return _apply_grounding_filter(
+            self.SOURCE, items,
+            type_enum=_SITUATION_GROUNDING_TYPES,
+            cop_outs=_SITUATION_COP_OUTS,
+        )
 
     def system_prompt(self) -> str:
         return load_prompt("wire_situation_system.md")

@@ -21,8 +21,20 @@ from pipeline.intel.wire_generators import (
     HASH_VERSION,
     GeneratorContext,
     WireGenerator,
+    _apply_grounding_filter,
 )
 from pipeline.ipl.franchise_metadata import IPL_FRANCHISES
+
+_ARCHIVE_GROUNDING_TYPES = {
+    "precedent", "cautionary_twin", "milestone_timeline",
+    "numerical_isomorphism",
+}
+# Archive's own system prompt already hard-bans nostalgia vocab. Keep the
+# blacklist here as a second line of defense for dispatches that slip past.
+_ARCHIVE_COP_OUTS = (
+    "iconic", "legendary", "storied", "vintage", "echoes of",
+    "reminds us of", "shades of", "storybook", "fairytale",
+)
 
 _SHORT = {fid: d["short_name"] for fid, d in IPL_FRANCHISES.items() if not d.get("defunct")}
 
@@ -137,6 +149,15 @@ class TheArchiveGenerator(WireGenerator):
             )
 
         return "\n\n".join(parts)
+
+    def filter_items(
+        self, ctx: GeneratorContext, items: list[dict]
+    ) -> list[dict]:
+        return _apply_grounding_filter(
+            self.SOURCE, items,
+            type_enum=_ARCHIVE_GROUNDING_TYPES,
+            cop_outs=_ARCHIVE_COP_OUTS,
+        )
 
     def system_prompt(self) -> str:
         return load_prompt("wire_archive_system.md")

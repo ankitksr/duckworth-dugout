@@ -30,8 +30,12 @@ CREATE TABLE IF NOT EXISTS war_room_wire (
     season VARCHAR NOT NULL,
     match_day VARCHAR,
     expired BOOLEAN DEFAULT FALSE,
-    generated_at TIMESTAMP DEFAULT current_timestamp
+    generated_at TIMESTAMP DEFAULT current_timestamp,
+    grounding_json TEXT
 );
+
+-- Migration: grounding_json added after initial schema. Safe to run repeatedly.
+ALTER TABLE war_room_wire ADD COLUMN IF NOT EXISTS grounding_json TEXT;
 
 -- Panel snapshots: versioned JSON for change detection
 CREATE TABLE IF NOT EXISTS war_room_snapshots (

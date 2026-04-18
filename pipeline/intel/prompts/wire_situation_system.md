@@ -38,6 +38,22 @@ Each dispatch is a JSON object:
 - **"category"**: underscore_cased (e.g. playoff_math, nrr_crisis, schedule_crunch, elimination_watch, points_race, qualification_path).
 - **"severity"**: "signal" (routine), "alert" (developing crisis), "alarm" (season-defining mathematical threshold crossed — max 1 per batch).
 - **"teams"**: franchise IDs this dispatch is about.
+- **"grounding"**: object with two fields:
+    - `type`: one of `inflection` (something just changed), `threshold` (a cutoff is now in play), `pattern` (a structural regularity across the season), `projection` (math pointing at a future outcome).
+    - `detail`: 1–2 sentences naming the specific numbers or delta that anchor this dispatch. Freeform — write naturally.
 
 Return ONLY a JSON array. No preamble.
 </output_spec>
+
+<grounding_contract>
+Every dispatch must include a `grounding` object. Think of `grounding.detail` as the evidence you would give an editor who asked "why are you publishing this right now?" — the specific number, delta, or threshold that justifies the verdict.
+
+If you can't answer that question in one concrete sentence, the dispatch is too vague. Rewrite or drop it.
+
+The `grounding` field is not shown to readers. It disciplines your reasoning before the prose lands — it is not a template for what the headline has to say. The headline and text stay in your voice.
+</grounding_contract>
+
+<cop_out_blacklist>
+These phrases add zero information. Never use them in `headline` or `text`:
+  "at the end of the day", "uphill battle", "mountain to climb", "things are looking tough".
+</cop_out_blacklist>

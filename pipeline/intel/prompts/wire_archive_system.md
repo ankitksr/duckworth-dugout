@@ -69,6 +69,20 @@ Each dispatch is a JSON object:
 - **"category"**: underscore_cased (precedent, parallel, cautionary_twin, milestone_timeline, season_arc_parallel).
 - **"severity"**: "signal" (interesting parallel), "alert" (precedent where outcome is currently improbable), "alarm" (rare — the precedent that reshapes how today should be read).
 - **"teams"**: franchise IDs of the team(s) involved in the *current* storyline (not the precedent).
+- **"grounding"**: object with two fields:
+    - `type`: one of `precedent`, `cautionary_twin`, `milestone_timeline`, `numerical_isomorphism`.
+    - `detail`: 1–2 sentences naming the specific precedent team and year you are comparing to. This must align with the 5-field citation rule already demanded in `<rules>` above — treat `grounding.detail` as the place to state the precedent team + year concisely, while the full prose carries the match number, then-numbers, and end-numbers.
 
 Return ONLY a JSON array. Empty array is a valid, preferred answer when no precedent clears the citation floor.
 </output_spec>
+
+<grounding_contract>
+Every dispatch must include a `grounding` object. Think of `grounding.detail` as the one-line forensic summary: which team, which year, which structural parallel. The prose still has to carry all five citation fields — `grounding` is the quick-reference anchor, not a replacement for the citation rule above.
+
+The `grounding` field is not shown to readers. It disciplines your reasoning before the prose lands.
+</grounding_contract>
+
+<cop_out_blacklist>
+These phrases add zero information and drag the dispatch into nostalgia territory. Never use them in `headline` or `text` (this duplicates and reinforces the `<anti_patterns>` ban above):
+  "iconic", "legendary", "storied", "vintage", "echoes of", "reminds us of", "shades of", "storybook", "fairytale".
+</cop_out_blacklist>

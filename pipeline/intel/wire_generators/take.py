@@ -15,7 +15,39 @@ from pipeline.intel.wire_generators import (
     HASH_VERSION,
     GeneratorContext,
     WireGenerator,
+    _apply_grounding_filter,
+    _jaccard,
 )
+
+_TAKE_GROUNDING_TYPES = {"connect", "extend", "reframe", "contrast"}
+# Take's system prompt already bans several cop-outs; extend lightly here
+# so the validator has teeth even if the prompt slips.
+_TAKE_COP_OUTS = (
+    "at the end of the day",
+    "make no mistake",
+    "mark my words",
+    "write this down",
+)
+
+
+def _take_threads_check(item: dict) -> str | None:
+    """Take dispatches must thread >=2 distinct signals.
+
+    Threads live on grounding.threads (list[str]). Each thread must be >=20
+    chars, and pairwise Jaccard overlap must stay below 0.5 — otherwise the
+    "synthesis" is just one thread rephrased.
+    """
+    g = item.get("grounding") or {}
+    threads = g.get("threads")
+    if not isinstance(threads, list) or len(threads) < 2:
+        return "threads missing or <2 entries"
+    if any(not isinstance(t, str) or len(t.strip()) < 20 for t in threads):
+        return "threads contain an entry <20 chars"
+    for i, a in enumerate(threads):
+        for b in threads[i + 1:]:
+            if _jaccard(a, b) >= 0.5:
+                return "threads overlap too heavily (single-thread disguise)"
+    return None
 
 
 def _time_window() -> str:
@@ -135,6 +167,20 @@ class TheTakeGenerator(WireGenerator):
             + "\n\nWHAT OTHER DESKS HAVE ALREADY FILED TODAY "
             "(synthesize across these — do not just rephrase one):\n"
             + cross_text
+        )
+
+    def filter_items(
+        self, ctx: GeneratorContext, items: list[dict]
+    ) -> list[dict]:
+        # Take's grounding uses `threads` (a list) instead of the generic
+        # `detail` field — the threads check enforces the specificity
+        # contract, so skip the detail-length gate by setting it to 0.
+        return _apply_grounding_filter(
+            self.SOURCE, items,
+            type_enum=_TAKE_GROUNDING_TYPES,
+            detail_min_chars=0,
+            cop_outs=_TAKE_COP_OUTS,
+            extra_checks=[_take_threads_check],
         )
 
     def system_prompt(self) -> str:

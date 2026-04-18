@@ -13,11 +13,22 @@ from pipeline.intel.wire_generators import (
     HASH_VERSION,
     GeneratorContext,
     WireGenerator,
+    _apply_grounding_filter,
     _load_json,
 )
 from pipeline.ipl.franchise_metadata import IPL_FRANCHISES
 
 _SHORT = {fid: d["short_name"] for fid, d in IPL_FRANCHISES.items() if not d.get("defunct")}
+
+_SCOUT_GROUNDING_TYPES = {
+    "phase", "role", "comparison", "breakout", "diagnosis",
+}
+_SCOUT_COP_OUTS = (
+    "star player",
+    "key man",
+    "in form",
+    "out of form",
+)
 
 
 def _squad_team_map(ctx: GeneratorContext) -> dict[str, str]:
@@ -186,6 +197,16 @@ class ScoutReportGenerator(WireGenerator):
                 parts.append("MILESTONE WATCH:\n" + "\n".join(lines))
 
         return "\n\n".join(parts)
+
+    def filter_items(
+        self, ctx: GeneratorContext, items: list[dict]
+    ) -> list[dict]:
+        return _apply_grounding_filter(
+            self.SOURCE, items,
+            type_enum=_SCOUT_GROUNDING_TYPES,
+            detail_min_words=4,
+            cop_outs=_SCOUT_COP_OUTS,
+        )
 
     def system_prompt(self) -> str:
         return load_prompt("wire_scout_system.md")

@@ -222,6 +222,10 @@ class WireDispatch(BaseModel):
     category: str
     severity: str
     teams: list[str]
+    # Structured grounding — disciplines reasoning before the prose lands.
+    # Shape is desk-specific; validation happens in each generator's
+    # filter_items hook, not here.
+    grounding: dict | None = None
 
 
 # ---------------------------------------------------------------------------

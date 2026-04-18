@@ -21,6 +21,16 @@ from pipeline.intel.wire_generators import (
     HASH_VERSION,
     GeneratorContext,
     WireGenerator,
+    _apply_grounding_filter,
+)
+
+_NEWSDESK_GROUNDING_TYPES = {
+    "tactical_shift", "injury_impact", "transfer",
+    "governance", "team_dynamics",
+}
+_NEWSDESK_COP_OUTS = (
+    "it remains to be seen",
+    "only time will tell",
 )
 
 
@@ -146,6 +156,15 @@ class NewsDeskGenerator(WireGenerator):
             )
 
         return "RECENT ARTICLES:\n" + "\n---\n".join(parts) + standings_line
+
+    def filter_items(
+        self, ctx: GeneratorContext, items: list[dict]
+    ) -> list[dict]:
+        return _apply_grounding_filter(
+            self.SOURCE, items,
+            type_enum=_NEWSDESK_GROUNDING_TYPES,
+            cop_outs=_NEWSDESK_COP_OUTS,
+        )
 
     def system_prompt(self) -> str:
         return load_prompt("wire_newsdesk_system.md")

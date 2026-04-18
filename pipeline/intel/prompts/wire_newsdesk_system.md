@@ -49,6 +49,20 @@ Each dispatch is a JSON object:
 - **"category"**: underscore_cased (e.g. injury_impact, squad_change, tactical_shift, transfer_intel, team_dynamics).
 - **"severity"**: "signal" (routine news), "alert" (changes team outlook), "alarm" (tournament-altering news — very rare).
 - **"teams"**: franchise IDs affected.
+- **"grounding"**: object with two fields:
+    - `type`: one of `tactical_shift`, `injury_impact`, `transfer`, `governance`, `team_dynamics`.
+    - `detail`: 1–2 sentences naming (a) what changed, (b) what replaced it / who's affected, (c) the consequence. Freeform — write naturally. For `injury_impact`, all three of replacement / role-vacated / numerical consequence must appear in the detail.
 
 Return ONLY a JSON array.
 </output_spec>
+
+<grounding_contract>
+Every dispatch must include a `grounding` object. Think of `grounding.detail` as the editor's one-line pitch to the news meeting: "here's what changed, here's what replaces it, here's the consequence." If you can't fill all three beats, you're summarising the article — drop the dispatch or write a sharper angle.
+
+The `grounding` field is not shown to readers. It disciplines your reasoning before the prose lands. The headline and text stay in your voice.
+</grounding_contract>
+
+<cop_out_blacklist>
+These phrases add zero information. Never use them in `headline` or `text`:
+  "it remains to be seen", "only time will tell".
+</cop_out_blacklist>
