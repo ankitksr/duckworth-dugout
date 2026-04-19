@@ -173,15 +173,27 @@ def _compute_claim_fingerprint(item: dict) -> str:
     return hashlib.sha256(key.encode()).hexdigest()[:16]
 
 
+# Per-sync cooldown demotion tally. Reset at the top of each
+# generate_wire() call; summary printed once at the end. Keys are source
+# names so we can report the per-desk breakdown.
+_cooldown_tally: dict[str, int] = {}
+
+
+def _reset_cooldown_tally() -> None:
+    _cooldown_tally.clear()
+
+
 def _apply_cooldown(
     conn: duckdb.DuckDBPyConnection,
     season: str,
     fingerprint: str,
     proposed_severity: str,
+    source: str = "wire",
 ) -> str:
     """If the same fingerprint has landed in the last N days, cap severity
     at 'signal'. Demotion is display-only — the dispatch still ships, just
-    without the alarm/alert podium.
+    without the alarm/alert podium. Each demotion is tallied into
+    `_cooldown_tally` so generate_wire can print a per-sync summary.
     """
     if proposed_severity == "signal":
         return proposed_severity
@@ -195,6 +207,7 @@ def _apply_cooldown(
         [season, fingerprint],
     ).fetchone()
     if hit:
+        _cooldown_tally[source] = _cooldown_tally.get(source, 0) + 1
         console.print(
             f"  [dim yellow]Wire: cooldown demotion — fingerprint "
             f"{fingerprint[:8]} already fired in last "
@@ -232,7 +245,9 @@ def _insert_items(
         grounding_json = json.dumps(grounding) if isinstance(grounding, dict) else None
         fingerprint = _compute_claim_fingerprint(item)
         severity = _apply_cooldown(
-            conn, season, fingerprint, item.get("severity", "signal")
+            conn, season, fingerprint,
+            item.get("severity", "signal"),
+            source=item.get("source", "wire"),
         )
         conn.execute(
             """
@@ -278,6 +293,7 @@ async def generate_wire(
     Returns all newly generated items.
     """
     today_str = today_ist_iso()
+    _reset_cooldown_tally()
 
     # Daily reset
     expired = _expire_previous_day(conn, season, today_str)
@@ -407,6 +423,16 @@ async def generate_wire(
     else:
         console.print("  [yellow]Wire: no dispatches generated this cycle[/yellow]")
 
+    demotions = sum(_cooldown_tally.values())
+    if demotions:
+        breakdown = ", ".join(
+            f"{src}:{n}" for src, n in sorted(_cooldown_tally.items())
+        )
+        console.print(
+            f"  [dim]Wire: cooldown demoted {demotions} dispatch(es) — "
+            f"{breakdown}[/dim]"
+        )
+
     return all_items
 
 
@@ -414,6 +440,15 @@ async def generate_wire(
 
 _MAX_PER_TEAM = 8
 _MAX_ALARMS_PER_TEAM = 1
+
+# Age-based severity decay, applied at export time only — DB rows keep
+# their original severity. A card stops deserving its severity slot after
+# readers have had a chance to see it. Alarms are for "just broke" news;
+# by +4h the story has been read, so it moves to alert. Alerts are the
+# current newsroom; by +12h they're context, so they drop to signal.
+# Compound: a 20h-old alarm lands at signal, not alert.
+_DECAY_HOURS_ALARM = 4
+_DECAY_HOURS_ALERT = 12
 
 # Round-robin interleave order within each severity tier. Take sits last
 # on the dedicated column because it synthesises the rest — the reader
@@ -505,6 +540,12 @@ def export_wire_json(
         for r in rows
     ]
 
+    # Age-based severity decay — rewrite display severity so readers don't
+    # keep seeing yesterday's alarm at the top of today's feed. Runs before
+    # dedup so a 20h-old "alarm" has already become "signal" and isn't
+    # competing for the alarm-tier team slot.
+    _apply_severity_decay(raw)
+
     # Demote alarm cards so at most _MAX_ALARMS_PER_TEAM remain per team.
     # The earliest-sorted alarm for each team (newest generated_at, because
     # SQL ordered DESC) keeps its severity; subsequent same-team alarms are
@@ -538,6 +579,42 @@ def export_wire_json(
         final.append(entry)
 
     return final
+
+
+def _apply_severity_decay(items: list[dict]) -> None:
+    """Rewrite each item's severity based on age.
+
+    alarm older than _DECAY_HOURS_ALARM → alert
+    alert (including just-decayed-from-alarm) older than _DECAY_HOURS_ALERT
+        → signal
+
+    Compounds: a 20h-old alarm becomes alert (hits >4h), then becomes
+    signal (hits >12h). Display-only — the DB row keeps its original
+    severity, and tomorrow's cooldown-fingerprint check still sees the
+    original.
+
+    Rationale: alarm is for "just broke"; readers have digested it within
+    a few hours, so pinning yesterday's mathematical-extinction headline
+    at the top forever reads as the feed being stale.
+    """
+    now = datetime.now(timezone.utc)
+    for item in items:
+        ga = item.get("generated_at", "")
+        if not ga:
+            continue
+        try:
+            gen = datetime.fromisoformat(ga.replace("Z", "+00:00"))
+        except (ValueError, TypeError):
+            continue
+        if gen.tzinfo is None:
+            gen = gen.replace(tzinfo=timezone.utc)
+        age_h = (now - gen).total_seconds() / 3600.0
+        sev = item.get("severity", "")
+        if sev == "alarm" and age_h > _DECAY_HOURS_ALARM:
+            sev = "alert"
+        if sev == "alert" and age_h > _DECAY_HOURS_ALERT:
+            sev = "signal"
+        item["severity"] = sev
 
 
 def _demote_duplicate_alarms(items: list[dict]) -> None:

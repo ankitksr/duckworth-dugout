@@ -20,13 +20,24 @@ from pipeline.intel.wire_generators import (
 )
 
 _TAKE_GROUNDING_TYPES = {"connect", "extend", "reframe", "contrast"}
-# Take's system prompt already bans several cop-outs; extend lightly here
-# so the validator has teeth even if the prompt slips.
+# Take's system prompt bans a few cop-outs; this list is the validator
+# layer — surgical, targets the exact tropes the desk keeps falling back
+# on after running in prod. Each entry was an actual headline or text
+# phrase before being added here.
 _TAKE_COP_OUTS = (
     "at the end of the day",
     "make no mistake",
     "mark my words",
     "write this down",
+    # Doom/demise tropes — over-used on struggling teams
+    "terminal decline",
+    "dynasty dying",
+    "dynasty in terminal decline",
+    "in freefall",
+    "structural rot",
+    "mathematically sunken",
+    "rearranging deck chairs",
+    "deck chairs",
 )
 
 

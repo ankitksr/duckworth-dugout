@@ -61,7 +61,7 @@ def sync(ctx: SyncContext) -> None:
     new_events = ctx.extraction_stats.get("events", 0)
 
     # 2. Build payload (filter to actionable, non-available players)
-    first_flagged = _first_out_flagged_per_player(db_conn, ctx.season)
+    first_flagged = _first_flagged_per_player(db_conn, ctx.season)
     payload = _build_payload(state, ctx.season, new_events, first_flagged)
 
     # 3. Dual-write JSON
@@ -166,16 +166,18 @@ def _apply_appearance_overrides(
     return overridden
 
 
-def _first_out_flagged_per_player(
+def _first_flagged_per_player(
     conn: duckdb.DuckDBPyConnection,
     season: str,
 ) -> dict[str, date]:
-    """Map player → date they were first flagged `out` in the current
-    continuous absence.
+    """Map player → date they were first flagged `out` or `doubtful` in the
+    current continuous absence.
 
-    "Continuous absence" = earliest `out` event AFTER the most recent
-    `available` event (if any). A player who was cleared and then re-flagged
-    is counted from the re-flag, not from the first flag of the season.
+    "Continuous absence" = earliest unavailable event (out or doubtful)
+    AFTER the most recent `available` event. A player cleared and then
+    re-flagged counts from the re-flag, not from the first flag of the
+    season. Chronic `doubtful` (e.g. unresolved for weeks) is included
+    so the baseline tier picks it up.
     """
     try:
         rows = conn.execute(
@@ -194,9 +196,9 @@ def _first_out_flagged_per_player(
                 FROM war_room_player_availability_events
                 WHERE season = ? AND article_published IS NOT NULL
             )
-            SELECT player_name, MIN(article_published) AS first_out
+            SELECT player_name, MIN(article_published) AS first_flagged
             FROM ranked
-            WHERE status = 'out'
+            WHERE status IN ('out', 'doubtful')
               AND (last_available IS NULL OR article_published > last_available)
             GROUP BY player_name
             """,
@@ -205,13 +207,13 @@ def _first_out_flagged_per_player(
     except Exception:
         return {}
     out: dict[str, date] = {}
-    for name, first_out in rows:
-        if first_out is None:
+    for name, first_flagged in rows:
+        if first_flagged is None:
             continue
-        if isinstance(first_out, datetime):
-            out[name] = first_out.date()
-        elif isinstance(first_out, date):
-            out[name] = first_out
+        if isinstance(first_flagged, datetime):
+            out[name] = first_flagged.date()
+        elif isinstance(first_flagged, date):
+            out[name] = first_flagged
     return out
 
 
@@ -236,15 +238,20 @@ def _build_payload(
         if info.get("status") == "available":
             continue
 
-        days_since = -1
+        days_since: int | None = None
         is_baseline = False
-        first_out = first_flagged.get(player)
-        if first_out:
-            days_since = (today - first_out).days
-            is_baseline = (
-                info.get("status") == "out"
-                and days_since > _BASELINE_DAYS
-            )
+        first_flag = first_flagged.get(player)
+        if first_flag:
+            computed = (today - first_flag).days
+            # Negative days can happen when the article date is in the
+            # future due to clock drift or timezone-mangled RSS dates —
+            # treat as "unknown age" rather than "flagged in the future".
+            days_since = computed if computed >= 0 else None
+            if days_since is not None:
+                is_baseline = (
+                    info.get("status") in ("out", "doubtful")
+                    and days_since > _BASELINE_DAYS
+                )
 
         entry = {
             "player": player,

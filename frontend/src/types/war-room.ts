@@ -431,6 +431,14 @@ export interface WRAvailabilityEntry {
   quote: string;
   as_of: string; // ISO 8601
   confidence: "high" | "medium" | "low" | "";
+  // Days since the player was first flagged in the current continuous
+  // absence (out or doubtful). null when the date can't be computed.
+  days_since_flagged?: number | null;
+  // True when the absence has lasted past the baseline threshold
+  // (configured in pipeline/panels/availability.py). Baseline players are
+  // standing facts, not fresh news — downstream panels surface them
+  // separately rather than repeat them as squad_news each match.
+  is_baseline?: boolean;
 }
 
 export interface WRAvailability {
