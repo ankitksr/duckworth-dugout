@@ -578,13 +578,32 @@ function VenueTab({ briefing }: { briefing: WRBriefing }) {
 // ── Main Panel ──
 
 export function BriefingPanel() {
-  const { briefings, scenarios } = useWarRoomState();
+  const { briefings, scenarios, schedule } = useWarRoomState();
   const [activeIdx, setActiveIdx] = useState(0);
   const [activeTab, setActiveTab] = useState<BriefingTab>("edge");
 
-  const safeIdx = briefings && briefings.length > 0
-    ? Math.min(activeIdx, briefings.length - 1) : 0;
-  const briefing = briefings?.[safeIdx] ?? null;
+  // Filter out briefings whose fixture has completed — keeps the panel
+  // focused on the live/upcoming match on double-header days even when
+  // briefing.json is stale (briefing is a cool-tier panel that regenerates
+  // every ~4h, while schedule.json updates every ~30min in match windows).
+  // Fallback to the unfiltered list if every briefing is completed, so
+  // the panel never goes blank.
+  const visibleBriefings = useMemo(() => {
+    if (!briefings?.length || !schedule?.length) return briefings ?? [];
+    const fixtureFor = (b: typeof briefings[number]) =>
+      schedule.find((f) =>
+        (b.match_number != null && f.match_number === b.match_number) ||
+        (b.date && f.date === b.date && b.team1_id && b.team2_id &&
+          ((f.team1 === b.team1_id && f.team2 === b.team2_id) ||
+           (f.team1 === b.team2_id && f.team2 === b.team1_id))),
+      );
+    const filtered = briefings.filter((b) => fixtureFor(b)?.status !== "completed");
+    return filtered.length > 0 ? filtered : briefings;
+  }, [briefings, schedule]);
+
+  const safeIdx = visibleBriefings.length > 0
+    ? Math.min(activeIdx, visibleBriefings.length - 1) : 0;
+  const briefing = visibleBriefings[safeIdx] ?? null;
 
   const ifTonight = useMemo(() => {
     if (!scenarios?.if_tonight?.length || !briefing) return null;
@@ -628,9 +647,9 @@ export function BriefingPanel() {
     <div className="wr-pnl wr-briefing-pnl">
       <div className="wr-ph">
         Briefing <sub>PRE-MATCH</sub>
-        {briefings.length > 1 && (
+        {visibleBriefings.length > 1 && (
           <span className="wr-br-match-pills">
-            {briefings.map((b, i) => (
+            {visibleBriefings.map((b, i) => (
               <button
                 key={i}
                 className={`wr-br-match-pill ${safeIdx === i ? "on" : ""}`}

@@ -45,10 +45,14 @@ def sync(ctx: SyncContext) -> None:
 
     next_date = upcoming[0]["date"]
 
-    # Pull every match on next_date — including double-header matches that
-    # may have already completed today. Otherwise the briefing panel loses
-    # the early match's pill the moment its status flips to "completed".
-    next_matches = [m for m in all_matches if m.get("date") == next_date]
+    # Pull non-completed matches on next_date. On double-header days, drop
+    # the early match once its status flips to "completed" so the panel
+    # focuses on what's still to come (or live). The `upcoming` filter
+    # above guarantees at least one non-completed match exists on next_date.
+    next_matches = [
+        m for m in all_matches
+        if m.get("date") == next_date and m.get("status") != "completed"
+    ]
     next_matches.sort(key=lambda m: m.get("time", ""))
 
     targets = [ScheduleMatch.from_schedule_dict(m) for m in next_matches]
