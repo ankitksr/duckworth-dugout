@@ -218,13 +218,16 @@ def overlay_live_scores(matches: list[ScheduleMatch]) -> list[ScheduleMatch]:
         # Pre-match listing: no scores and nobody batting — skip.
         has_play = s1 or s2 or b1 or b2
 
-        for match in matches:
-            if {t1, t2} != {match.team1, match.team2}:
-                continue
-
-            # Only promote to live if there's actual play data
-            # and the match isn't already completed.
-            if match.status != "completed" and has_play:
+        # Same team pair plays twice per season (home + away). Skip
+        # already-completed legs so the RSS overlay reaches the
+        # current/upcoming fixture instead of stopping at the older one.
+        candidates = [
+            m for m in matches
+            if {t1, t2} == {m.team1, m.team2} and m.status != "completed"
+        ]
+        for match in candidates:
+            # Only promote to live if there's actual play data.
+            if has_play:
                 match.status = "live"
 
             # Update fields only when RSS provides non-null values;
@@ -248,7 +251,7 @@ def overlay_live_scores(matches: list[ScheduleMatch]) -> list[ScheduleMatch]:
             match.match_url = item.link
             if match.status == "live":
                 live_count += 1
-            break
+            break  # only patch the earliest non-completed leg
 
     if live_count:
         console.print(f"  [green]Schedule: {live_count} live match(es)[/green]")

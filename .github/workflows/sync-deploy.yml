@@ -100,12 +100,15 @@ jobs:
       - name: Install pipeline dependencies
         run: uv sync
 
+      # Cache key includes uv.lock hash so a Playwright version bump
+      # (which moves the Chromium build into a new directory like
+      # chromium-1217/) automatically busts the cache.
       - name: Restore Playwright browsers
         id: pw-cache
         uses: actions/cache/restore@v5.0.5
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-chromium
+          key: playwright-chromium-${{ hashFiles('uv.lock') }}
 
       - name: Install Playwright Chromium
         if: steps.pw-cache.outputs.cache-hit != 'true'
@@ -116,7 +119,7 @@ jobs:
         uses: actions/cache/save@v5.0.5
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-chromium
+          key: playwright-chromium-${{ hashFiles('uv.lock') }}
 
       # ── cricket.duckdb (from duckworth-mcp) ──────────────────────
       - name: Restore cricket.duckdb cache
