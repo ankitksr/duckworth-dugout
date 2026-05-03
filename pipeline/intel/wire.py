@@ -27,7 +27,7 @@ Usage:
 import asyncio
 import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import duckdb
 from rich.console import Console
@@ -52,6 +52,12 @@ from pipeline.models import ScheduleMatch
 console = Console()
 
 _SHORT = {fid: d["short_name"] for fid, d in IPL_FRANCHISES.items() if not d.get("defunct")}
+
+# How many days of forward fixtures the Matchday Preview generator sees.
+# Today + the next two days — covers Fri/Sat/Sun weekend slates and
+# midweek doubleheaders without dragging the LLM into a fortnight of
+# "tactics" the reader won't act on.
+_PREVIEW_WINDOW_DAYS = 3
 
 
 # ── Base context builder ────────────────────────────────────────────
@@ -105,6 +111,36 @@ def _build_base_context(
 
 
 # ── DB helpers ──────────────────────────────────────────────────────
+
+def _build_preview_window(
+    schedule: list[dict] | None,
+    today_str: str,
+) -> list[ScheduleMatch]:
+    """Return scheduled/live fixtures from today through today+window-1.
+
+    Sorted by (date, time) so the LLM sees fixtures in chronological
+    order. Completed and far-future matches are excluded — completed
+    needs no preview; far-future drags the prompt without payoff.
+    """
+    if not schedule:
+        return []
+    try:
+        today_d = date.fromisoformat(today_str)
+    except ValueError:
+        return []
+    cutoff = (today_d + timedelta(days=_PREVIEW_WINDOW_DAYS - 1)).isoformat()
+
+    out: list[ScheduleMatch] = []
+    for m in schedule:
+        d = m.get("date") or ""
+        if not (today_str <= d <= cutoff):
+            continue
+        if m.get("status") not in ("scheduled", "live"):
+            continue
+        out.append(ScheduleMatch.from_schedule_dict(m))
+    out.sort(key=lambda x: (x.date, x.time))
+    return out
+
 
 def _expire_previous_day(
     conn: duckdb.DuckDBPyConnection,
@@ -249,6 +285,11 @@ def _insert_items(
             item.get("severity", "signal"),
             source=item.get("source", "wire"),
         )
+        # Generators may pin a row to its target match's date (e.g. preview
+        # files dispatches for tomorrow's fixture today). The default stays
+        # the generation date so daily-reset semantics are unchanged for
+        # everyone else.
+        item_match_day = item.get("_match_day") or today
         conn.execute(
             """
             INSERT INTO war_room_wire
@@ -269,7 +310,7 @@ def _insert_items(
                 item.get("_context_hash", ""),
                 HASH_VERSION,
                 season,
-                today,
+                item_match_day,
                 grounding_json,
                 fingerprint,
             ],
@@ -350,6 +391,17 @@ async def generate_wire(
             f"  [dim]Wire: filtered {dropped} completed match(es) from today's fixtures[/dim]"
         )
 
+    # Forward window for Matchday Preview: today + next _PREVIEW_WINDOW_DAYS-1
+    # days, scheduled/live only. Built off `schedule` (the full season list of
+    # dicts loaded by live_context) so previews can land on Friday for the
+    # weekend's slate, not just today.
+    upcoming_matches = _build_preview_window(schedule, today_str)
+    if upcoming_matches:
+        console.print(
+            f"  [dim]Wire: preview window holds {len(upcoming_matches)} "
+            f"fixture(s) over the next {_PREVIEW_WINDOW_DAYS}d[/dim]"
+        )
+
     ctx = GeneratorContext(
         conn=conn,
         season=season,
@@ -358,6 +410,7 @@ async def generate_wire(
         caps=caps,
         schedule=schedule,
         base_context=base_context,
+        upcoming_matches=upcoming_matches,
     )
 
     # Instantiate generators

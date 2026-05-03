@@ -32,7 +32,7 @@ def sync(ctx: SyncContext) -> None:
     all_matches = json.loads(sched_path.read_text(encoding="utf-8"))
     today_str = today_ist_iso()
 
-    # Find next upcoming matches (scheduled/live, today or future)
+    # Find the next date that still has a scheduled/live match.
     upcoming = [
         m for m in all_matches
         if m.get("date", "") >= today_str
@@ -43,9 +43,13 @@ def sync(ctx: SyncContext) -> None:
     if not upcoming:
         return
 
-    # Take the next match day's worth (1-2 for double-headers)
     next_date = upcoming[0]["date"]
-    next_matches = [m for m in upcoming if m["date"] == next_date]
+
+    # Pull every match on next_date — including double-header matches that
+    # may have already completed today. Otherwise the briefing panel loses
+    # the early match's pill the moment its status flips to "completed".
+    next_matches = [m for m in all_matches if m.get("date") == next_date]
+    next_matches.sort(key=lambda m: m.get("time", ""))
 
     targets = [ScheduleMatch.from_schedule_dict(m) for m in next_matches]
 
