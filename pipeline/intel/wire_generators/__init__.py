@@ -19,7 +19,7 @@ import hashlib
 import json
 import re
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import duckdb
@@ -37,7 +37,7 @@ _VALID_SEVERITIES = {"signal", "alert", "alarm"}
 # Bumped when context_hash semantics change. Prefixed onto every hash so
 # legacy DB rows can never collide with hashes from a newer generator
 # version — on deploy, generators run fresh exactly once.
-HASH_VERSION = "v5"
+HASH_VERSION = "v6"
 
 # Hard ceiling on non-expired entries per source per day. Backstop against
 # unbounded accumulation if hashes keep changing despite the previous-entries
@@ -190,6 +190,10 @@ class GeneratorContext:
     caps: dict | None
     schedule: list[dict] | None
     base_context: str  # shared grounding: roster summary + table snapshot
+    # Rolling preview window: today + next two days, scheduled/live only.
+    # Used by Matchday Preview so the wire carries lookahead coverage
+    # rather than collapsing to today-only the moment IST hits 3pm.
+    upcoming_matches: list[ScheduleMatch] = field(default_factory=list)
 
 
 class WireGenerator(ABC):
