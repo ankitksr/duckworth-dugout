@@ -57,7 +57,10 @@ def sync(ctx: SyncContext) -> None:
     if matches:
         _apply_match_notes_from_disk(matches, ctx.public_dir)
 
-    # Live match enrichment via page crawl (before writing panel)
+    # Live match enrichment via page crawl (before writing panel).
+    # Pass live matches in-memory — schedule.json on disk is still the
+    # previous run's state (we write below) so a fresh promotion this
+    # sync wouldn't be visible to a disk-read filter.
     live_matches = [m for m in matches if m.status == "live" and m.match_url]
     if live_matches:
         try:
@@ -67,7 +70,16 @@ def sync(ctx: SyncContext) -> None:
                 write_live_snapshot,
             )
 
-            results = crawl_live_matches_sync()
+            live_payload = [
+                {
+                    "match_number": m.match_number,
+                    "team1": m.team1,
+                    "team2": m.team2,
+                    "match_url": m.match_url,
+                }
+                for m in live_matches
+            ]
+            results = crawl_live_matches_sync(live_matches=live_payload)
             if results:
                 write_live_snapshot(results)
                 write_live_archive(results)

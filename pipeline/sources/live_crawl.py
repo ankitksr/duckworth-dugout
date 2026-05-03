@@ -432,18 +432,32 @@ def _extract_winner_fid(
 # ── Orchestration ────────────────────────────────────────────────────
 
 
-def crawl_live_matches_sync(schedule_path: Path | None = None) -> list[LiveMatchData]:
-    """Find live matches in schedule.json, fetch them via the configured
-    source (LIVE_SOURCE), return enriched data."""
-    path = schedule_path or PUBLIC_API_DIR / "schedule.json"
-    if not path.exists():
-        return []
+def crawl_live_matches_sync(
+    schedule_path: Path | None = None,
+    live_matches: list[dict] | None = None,
+) -> list[LiveMatchData]:
+    """Fetch live matches via the configured source (LIVE_SOURCE).
 
-    schedule = json.loads(path.read_text(encoding="utf-8"))
-    live = [
-        m for m in schedule
-        if m.get("status") == "live" and m.get("match_url")
-    ]
+    `live_matches` (preferred) is a pre-filtered list of dicts with
+    match_number / team1 / team2 / match_url. Pass this when the caller
+    has the in-memory state — reading schedule.json from disk would
+    miss promotions made in the same sync (the caller writes the panel
+    after this returns).
+
+    Falls back to reading schedule_path / PUBLIC_API_DIR/schedule.json
+    when live_matches is not supplied (run-once CLI path).
+    """
+    if live_matches is None:
+        path = schedule_path or PUBLIC_API_DIR / "schedule.json"
+        if not path.exists():
+            return []
+        schedule = json.loads(path.read_text(encoding="utf-8"))
+        live = [
+            m for m in schedule
+            if m.get("status") == "live" and m.get("match_url")
+        ]
+    else:
+        live = live_matches
 
     if not live:
         return []
