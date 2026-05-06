@@ -165,6 +165,17 @@ def overlay_wikipedia_fixtures(matches: list[ScheduleMatch], season: str) -> lis
         summary_winner, summary_result = _result_from_summary(summary or {})
         completed = fixture["status"] == "completed" or summary_result is not None
         if not completed:
+            # Wikipedia says match isn't completed. If our prior state has
+            # it stuck as completed without scores (e.g. from a previous
+            # run that ingested a placeholder [URL Scorecard] result),
+            # reset so the UI doesn't show a phantom result for an
+            # unplayed match.
+            if (match.status == "completed"
+                    and not match.score1 and not match.score2
+                    and not match.winner):
+                match.status = "scheduled"
+                match.result = None
+                count += 1
             continue
 
         # Don't trust transient Wikipedia results (e.g. "Innings break")

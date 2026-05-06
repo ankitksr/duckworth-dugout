@@ -727,8 +727,9 @@ def extract_narrative(wikitext: str) -> str | None:
 
 
 def clean_wikitext(text: str) -> str:
-    """Remove wiki markup: [[links]], {{templates}}, '''bold''', etc."""
+    """Remove wiki markup: [[links]], [url text], {{templates}}, '''bold''', etc."""
     text = re.sub(r"\[\[(?:[^|\]]*\|)?([^\]]+)\]\]", r"\1", text)  # [[link|text]] → text
+    text = re.sub(r"\[https?://[^\s\]]+\s*([^\]]*)\]", r"\1", text)  # [url text] → text
     text = re.sub(r"\{\{[^}]+\}\}", "", text)  # remove templates
     text = re.sub(r"'{2,3}", "", text)  # remove bold/italic markers
     text = re.sub(r"<ref[^>]*>.*?</ref>", "", text, flags=re.DOTALL)  # remove refs

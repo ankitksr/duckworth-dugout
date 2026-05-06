@@ -93,6 +93,7 @@ def _strip_cell(cell: str, *, strip_parens: bool = True) -> str:
         cell = clean_wikitext(cell)
     else:
         cell = re.sub(r"\[\[(?:[^|\]]*\|)?([^\]]+)\]\]", r"\1", cell)
+        cell = re.sub(r"\[https?://[^\s\]]+\s*([^\]]*)\]", r"\1", cell)
         cell = re.sub(r"'{2,3}", "", cell)
         cell = re.sub(r"<[^>]+>", "", cell)
     return " ".join(cell.replace("&nbsp;", " ").split())
@@ -576,6 +577,19 @@ def parse_ipl_fixtures(wikitext: str) -> list[dict]:
         score1, overs1 = _parse_score(fields.get("score1", ""))
         score2, overs2 = _parse_score(fields.get("score2", ""))
         result_text = _strip_cell(fields.get("result", ""))
+        # Wikipedia editors often pre-fill `result` with a [URL Scorecard]
+        # placeholder for upcoming matches; after link-stripping only
+        # "Scorecard" / "Report" remains. Treat as no result so we don't
+        # flag unplayed matches as completed.
+        if result_text and re.fullmatch(r"(?i)\s*(scorecard|report)\s*", result_text):
+            result_text = ""
+        elif result_text:
+            # Strip trailing "Scorecard"/"Report" label left behind when
+            # an external link sits alongside real result text.
+            result_text = re.sub(
+                r"\s*\b(scorecard|report)\s*$", "",
+                result_text, flags=re.IGNORECASE,
+            ).strip()
         fixtures.append(
             {
                 "match_number": _parse_match_number(fields, index),
