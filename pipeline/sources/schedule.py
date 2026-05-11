@@ -11,6 +11,7 @@ import re
 
 from rich.console import Console
 
+from pipeline.clock import today_ist_iso
 from pipeline.config import CRICKET_DB_PATH, DATA_DIR, ROOT_DIR
 from pipeline.db.connection import connect_readonly
 from pipeline.ipl.franchise_metadata import IPL_FRANCHISES
@@ -201,6 +202,7 @@ def overlay_live_scores(matches: list[ScheduleMatch]) -> list[ScheduleMatch]:
     is handled by other sources (live_crawl, Wikipedia, Cricsheet).
     """
     items = RSSFetcher(FEEDS["livescores"]["url"]).fetch()
+    today = today_ist_iso()
 
     live_count = 0
     for item in items:
@@ -218,12 +220,16 @@ def overlay_live_scores(matches: list[ScheduleMatch]) -> list[ScheduleMatch]:
         # Pre-match listing: no scores and nobody batting — skip.
         has_play = s1 or s2 or b1 or b2
 
-        # Same team pair plays twice per season (home + away). Skip
-        # already-completed legs so the RSS overlay reaches the
-        # current/upcoming fixture instead of stopping at the older one.
+        # Same team pair plays twice per season (home + away). RSS only
+        # lists currently-live matches, so restrict to fixtures dated
+        # today (IST) — without this, a stale RSS item for the first
+        # leg can leak scores onto the future second leg once the first
+        # completes.
         candidates = [
             m for m in matches
-            if {t1, t2} == {m.team1, m.team2} and m.status != "completed"
+            if {t1, t2} == {m.team1, m.team2}
+            and m.status != "completed"
+            and m.date == today
         ]
         for match in candidates:
             # Only promote to live if there's actual play data.
@@ -394,9 +400,27 @@ def sync_schedule(
     # gets demoted to "scheduled" so the live overlay must re-confirm.
     # Without this, a match that ended between runs would stay "live"
     # if no overlay re-promotes (or demotes via Cricsheet/ESPN crawl).
+    #
+    # Phantom-completion reset: a match marked "completed" without a
+    # winner *and* without a result string is almost certainly an
+    # RSS/crawl leak onto a future fixture (same team pair, different
+    # date). Wipe the leaked scores and demote so overlays start from
+    # scheduled. Real wash-outs always carry result="No result".
     for match in matches:
         if match.status == "live":
             match.status = "scheduled"
+        elif (match.status == "completed"
+              and not match.winner and not match.result):
+            match.status = "scheduled"
+            match.score1 = None
+            match.score2 = None
+            match.overs1 = None
+            match.overs2 = None
+            match.batting = None
+            match.status_text = None
+            match.current_rr = None
+            match.required_rr = None
+            match.live_forecast = None
 
     matches = overlay_completed(matches, season)
     from pipeline.sources.wikipedia import overlay_wikipedia_fixtures

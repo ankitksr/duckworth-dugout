@@ -161,6 +161,29 @@ def overlay_wikipedia_fixtures(matches: list[ScheduleMatch], season: str) -> lis
         match = by_number.get(fixture["match_number"])
         if not match:
             continue
+        # Wikipedia's team1/team2 order in a fixture block doesn't
+        # always agree with our fixtures.json ordering (Wikipedia often
+        # lists the away/touring side first; we follow Cricsheet's
+        # ordering). Align by franchise id so score1/overs1/top_batter1
+        # map to *match.team1* — not to Wikipedia's positional team1.
+        swap = (
+            fixture.get("team1") == match.team2
+            and fixture.get("team2") == match.team1
+        )
+        if swap:
+            fixture = {
+                **fixture,
+                "team1": match.team1,
+                "team2": match.team2,
+                "score1": fixture.get("score2"),
+                "score2": fixture.get("score1"),
+                "overs1": fixture.get("overs2"),
+                "overs2": fixture.get("overs1"),
+                "top_batter1": fixture.get("top_batter2"),
+                "top_batter2": fixture.get("top_batter1"),
+                "top_bowler1": fixture.get("top_bowler2"),
+                "top_bowler2": fixture.get("top_bowler1"),
+            }
         summary = summaries.get(fixture["match_number"])
         summary_winner, summary_result = _result_from_summary(summary or {})
         completed = fixture["status"] == "completed" or summary_result is not None
@@ -186,18 +209,30 @@ def overlay_wikipedia_fixtures(matches: list[ScheduleMatch], season: str) -> lis
         if match.status == "scheduled" and not transient:
             match.status = "completed"
             updated = True
-        if not match.score1 and fixture.get("score1"):
-            match.score1 = fixture["score1"]
-            updated = True
-        if not match.score2 and fixture.get("score2"):
-            match.score2 = fixture["score2"]
-            updated = True
-        if not match.overs1 and fixture.get("overs1"):
-            match.overs1 = f'{fixture["overs1"]} ov'
-            updated = True
-        if not match.overs2 and fixture.get("overs2"):
-            match.overs2 = f'{fixture["overs2"]} ov'
-            updated = True
+        # Wikipedia is the post-match scoreboard — overwrite scores
+        # and overs for completed fixtures so we replace any stale
+        # mid-chase snapshot from live_crawl/RSS with the final figures.
+        # Skip overwriting when the fixture is still transient (in
+        # progress) so we don't blank a richer live state.
+        if not transient:
+            if fixture.get("score1"):
+                if match.score1 != fixture["score1"]:
+                    match.score1 = fixture["score1"]
+                    updated = True
+            if fixture.get("score2"):
+                if match.score2 != fixture["score2"]:
+                    match.score2 = fixture["score2"]
+                    updated = True
+            if fixture.get("overs1"):
+                new_overs1 = f'{fixture["overs1"]} ov'
+                if match.overs1 != new_overs1:
+                    match.overs1 = new_overs1
+                    updated = True
+            if fixture.get("overs2"):
+                new_overs2 = f'{fixture["overs2"]} ov'
+                if match.overs2 != new_overs2:
+                    match.overs2 = new_overs2
+                    updated = True
         if not match.hero_name and fixture.get("motm"):
             match.hero_name = fixture["motm"]
             updated = True

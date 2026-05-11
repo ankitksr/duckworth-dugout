@@ -61,7 +61,19 @@ def sync(ctx: SyncContext) -> None:
     # Pass live matches in-memory — schedule.json on disk is still the
     # previous run's state (we write below) so a fresh promotion this
     # sync wouldn't be visible to a disk-read filter.
-    live_matches = [m for m in matches if m.status == "live" and m.match_url]
+    #
+    # Also re-crawl today's *completed* matches: when ESPN flips state
+    # to POST mid-pipeline (or standings/Wikipedia overlay marks a match
+    # completed before live_crawl ever ran on it), the schedule can hold
+    # the last mid-chase snapshot. Crawling once more pulls ESPN's final
+    # scoreboard so the chase score reflects the actual result.
+    from pipeline.clock import today_ist_iso
+    today = today_ist_iso()
+    live_matches = [
+        m for m in matches
+        if m.match_url
+        and (m.status == "live" or (m.status == "completed" and m.date == today))
+    ]
     if live_matches:
         try:
             from pipeline.sources.live_crawl import (
@@ -81,7 +93,13 @@ def sync(ctx: SyncContext) -> None:
             ]
             results = crawl_live_matches_sync(live_matches=live_payload)
             if results:
-                write_live_snapshot(results)
+                # Snapshot only currently-live results; the
+                # completed-today re-crawls are score refreshers and
+                # shouldn't appear in live-match.json (frontend treats
+                # that file as the live overlay).
+                live_results = [r for r in results if r.status == "live"]
+                if live_results:
+                    write_live_snapshot(live_results)
                 write_live_archive(results)
                 for r in results:
                     for m in matches:
