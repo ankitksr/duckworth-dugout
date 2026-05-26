@@ -557,69 +557,141 @@ def parse_ipl_statistics(wikitext: str) -> dict[str, list[dict]]:
     return result
 
 
+_STAGE_ANCHOR_RE = re.compile(r"\{\{anchor\|match(\d+)\}\}", re.IGNORECASE)
+_TIME_RE = re.compile(r"\b(\d{1,2}:\d{2})\b")
+_KNOCKOUT_KEYWORDS = ("qualifier", "eliminator", "final")
+
+
+def _parse_stage(round_raw: str) -> tuple[str | None, int | None]:
+    """Return (stage_label, match_number) from a Wikipedia `round` field.
+
+    Format: `{{anchor|match71}} '''Qualifier 1'''` — anchor gives the
+    season-wide match number, the bolded text is the stage label.
+    """
+    if not round_raw:
+        return None, None
+    anchor_match = _STAGE_ANCHOR_RE.search(round_raw)
+    anchor_no = int(anchor_match.group(1)) if anchor_match else None
+    label = _strip_cell(_STAGE_ANCHOR_RE.sub("", round_raw))
+    label = re.sub(r"'{2,5}", "", label).strip(" '") or None
+    return label, anchor_no
+
+
+def _parse_venue_city(raw: str) -> tuple[str | None, str | None]:
+    """Wikipedia venue cells are `[[Venue|Display]], [[City]]` — split
+    on the top-level comma so we keep stadium and city distinct.
+    """
+    if not raw:
+        return None, None
+    cleaned = _strip_cell(raw, strip_parens=False)
+    if not cleaned:
+        return None, None
+    parts = [p.strip() for p in cleaned.split(",") if p.strip()]
+    if len(parts) >= 2:
+        return parts[0], parts[-1]
+    return parts[0], None
+
+
+def _parse_fixture_block(
+    block: str,
+    *,
+    default_index: int,
+    is_playoff: bool = False,
+) -> dict | None:
+    fields = _parse_template_fields(block)
+    team1 = _resolve_team_id(fields.get("team1", ""))
+    team2 = _resolve_team_id(fields.get("team2", ""))
+    # Playoff stubs for later rounds (Q2/Final) carry placeholder strings
+    # like "Loser of Qualifier 1" that don't resolve to a franchise.
+    # Skip until Wikipedia fills them in.
+    if not team1 or not team2:
+        return None
+
+    stage_label, stage_match_no = _parse_stage(fields.get("round", ""))
+
+    home_team = None
+    if "(H)" in fields.get("team1", ""):
+        home_team = team1
+    elif "(H)" in fields.get("team2", ""):
+        home_team = team2
+
+    score1, overs1 = _parse_score(fields.get("score1", ""))
+    score2, overs2 = _parse_score(fields.get("score2", ""))
+    result_text = _strip_cell(fields.get("result", ""))
+    if result_text and re.fullmatch(r"(?i)\s*(scorecard|report)\s*", result_text):
+        result_text = ""
+    elif result_text:
+        result_text = re.sub(
+            r"\s*\b(scorecard|report)\s*$", "",
+            result_text, flags=re.IGNORECASE,
+        ).strip()
+
+    match_number = stage_match_no or _parse_match_number(fields, default_index)
+    venue, city = _parse_venue_city(fields.get("venue", ""))
+    time_match = _TIME_RE.search(fields.get("time", ""))
+    time_str = f"{time_match.group(1)} IST" if time_match else None
+
+    match_url_match = re.search(r"\[(https?://[^\s\]]+)", fields.get("report", ""))
+
+    return {
+        "match_number": match_number,
+        "date": _parse_date(fields),
+        "team1": team1,
+        "team2": team2,
+        "home_team": home_team,
+        "score1": score1,
+        "score2": score2,
+        "overs1": overs1,
+        "overs2": overs2,
+        "top_batter1": _parse_top_batter(fields.get("runs1", "")),
+        "top_bowler1": _parse_top_bowler(fields.get("wickets1", "")),
+        "top_batter2": _parse_top_batter(fields.get("runs2", "")),
+        "top_bowler2": _parse_top_bowler(fields.get("wickets2", "")),
+        "result": result_text or None,
+        "motm": _extract_link_text(fields.get("motm", "")),
+        "match_url": match_url_match.group(1) if match_url_match else None,
+        "toss": _strip_cell(fields.get("toss", "")) or None,
+        "notes": _strip_cell(fields.get("notes", "")) or None,
+        "stage": stage_label if is_playoff else None,
+        "is_playoff": is_playoff,
+        "time": time_str,
+        "venue": venue,
+        "city": city,
+        "status": (
+            "completed"
+            if (score1 or score2 or result_text)
+            and not _is_transient_result(result_text)
+            else "scheduled"
+        ),
+    }
+
+
 def parse_ipl_fixtures(wikitext: str) -> list[dict]:
-    section = _section_text(wikitext, ("fixtures", "league stage"))
-    source = section or wikitext
+    league_section = _section_text(wikitext, ("fixtures", "league stage"))
+    league_source = league_section or wikitext
     fixtures: list[dict] = []
-    for index, block in enumerate(_template_blocks(source, "Single-innings cricket match"), 1):
-        fields = _parse_template_fields(block)
-        team1 = _resolve_team_id(fields.get("team1", ""))
-        team2 = _resolve_team_id(fields.get("team2", ""))
-        if not team1 or not team2:
-            continue
+    for index, block in enumerate(
+        _template_blocks(league_source, "Single-innings cricket match"), 1
+    ):
+        fixture = _parse_fixture_block(block, default_index=index, is_playoff=False)
+        if fixture:
+            fixtures.append(fixture)
 
-        home_team = None
-        if "(H)" in fields.get("team1", ""):
-            home_team = team1
-        elif "(H)" in fields.get("team2", ""):
-            home_team = team2
-
-        score1, overs1 = _parse_score(fields.get("score1", ""))
-        score2, overs2 = _parse_score(fields.get("score2", ""))
-        result_text = _strip_cell(fields.get("result", ""))
-        # Wikipedia editors often pre-fill `result` with a [URL Scorecard]
-        # placeholder for upcoming matches; after link-stripping only
-        # "Scorecard" / "Report" remains. Treat as no result so we don't
-        # flag unplayed matches as completed.
-        if result_text and re.fullmatch(r"(?i)\s*(scorecard|report)\s*", result_text):
-            result_text = ""
-        elif result_text:
-            # Strip trailing "Scorecard"/"Report" label left behind when
-            # an external link sits alongside real result text.
-            result_text = re.sub(
-                r"\s*\b(scorecard|report)\s*$", "",
-                result_text, flags=re.IGNORECASE,
-            ).strip()
-        fixtures.append(
-            {
-                "match_number": _parse_match_number(fields, index),
-                "date": _parse_date(fields),
-                "team1": team1,
-                "team2": team2,
-                "home_team": home_team,
-                "score1": score1,
-                "score2": score2,
-                "overs1": overs1,
-                "overs2": overs2,
-                "top_batter1": _parse_top_batter(fields.get("runs1", "")),
-                "top_bowler1": _parse_top_bowler(fields.get("wickets1", "")),
-                "top_batter2": _parse_top_batter(fields.get("runs2", "")),
-                "top_bowler2": _parse_top_bowler(fields.get("wickets2", "")),
-                "result": result_text or None,
-                "motm": _extract_link_text(fields.get("motm", "")),
-                "match_url": re.search(r"\[(https?://[^\s\]]+)", fields.get("report", "")),
-                "toss": _strip_cell(fields.get("toss", "")) or None,
-                "notes": _strip_cell(fields.get("notes", "")) or None,
-                "status": (
-                    "completed"
-                    if (score1 or score2 or result_text)
-                    and not _is_transient_result(result_text)
-                    else "scheduled"
-                ),
-            }
-        )
-        if fixtures[-1]["match_url"] is not None:
-            fixtures[-1]["match_url"] = fixtures[-1]["match_url"].group(1)
+    # Playoffs sit in their own section with sub-headings (Qualifier 1,
+    # Eliminator, Qualifier 2, Final). Each template carries an explicit
+    # anchored match number in its `round` field so we don't collide with
+    # league fixture numbering even if the league section is missing.
+    playoffs_section = _section_text(wikitext, ("playoffs",))
+    if playoffs_section:
+        league_max = max((f["match_number"] for f in fixtures), default=0)
+        for index, block in enumerate(
+            _template_blocks(playoffs_section, "Single-innings cricket match"), 1
+        ):
+            fixture = _parse_fixture_block(
+                block, default_index=league_max + index, is_playoff=True,
+            )
+            if fixture:
+                fixtures.append(fixture)
     return fixtures
 
 

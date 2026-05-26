@@ -1,6 +1,7 @@
 Generate a pre-match intel brief for this IPL 2026 fixture:
 
 MATCH: {team1} vs {team2}
+STAGE: {stage}
 DATE: {date}, {time}
 VENUE: {venue}, {city}
 

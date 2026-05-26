@@ -41,7 +41,10 @@ export function MatchTimeline() {
   const renderStub = (m: WRFixture) => (
     <>
       <div className="wr-tmc-stub">
-        <div className="wr-tmc-stub-date">{formatMatchDate(m.date)} · {m.time}</div>
+        <div className="wr-tmc-stub-date">
+          {formatMatchDate(m.date)} · {m.time}
+          {m.stage && <span className="wr-tmc-stub-stage"> · {m.stage.toUpperCase()}</span>}
+        </div>
         <div className="wr-tmc-stub-city">{m.city || m.venue} · <span className="wr-tmc-stub-mnum">M{m.match_number}</span></div>
       </div>
       <div className="wr-tmc-sep" />

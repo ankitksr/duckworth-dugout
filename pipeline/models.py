@@ -99,6 +99,9 @@ class ScheduleMatch:
     current_rr: float | None = None   # current run rate
     required_rr: float | None = None  # required run rate
     live_forecast: str | None = None  # "RR 135"
+    # Playoff stage label — "Qualifier 1" | "Eliminator" | "Qualifier 2"
+    # | "Final". None for league-stage matches.
+    stage: str | None = None
 
     @classmethod
     def from_schedule_dict(cls, m: dict) -> "ScheduleMatch":

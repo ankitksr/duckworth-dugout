@@ -88,6 +88,11 @@
 .wr-tmc-stub-mnum {
   color: var(--wr-tm);
 }
+.wr-tmc-stub-stage {
+  color: var(--wr-win, #f0b540);
+  font-weight: 900;
+  letter-spacing: 0.5px;
+}
 
 .wr-tmc-t {
   font: 700 13px 'Anybody', sans-serif;

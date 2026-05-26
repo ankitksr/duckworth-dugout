@@ -52,6 +52,8 @@ export interface WRFixture {
   live_forecast: string | null;
   win_prob_team1: number | null;
   win_prob_team2: number | null;
+  // Playoff stage — "Qualifier 1" | "Eliminator" | "Qualifier 2" | "Final"
+  stage?: string | null;
 }
 
 // ── caps.json ──
@@ -309,6 +311,7 @@ export interface WRBriefing {
   date?: string;                     // "2026-04-06"
   time?: string;                     // "19:30 IST"
   match_number?: number;
+  stage?: string | null;             // "Qualifier 1" | "Eliminator" | "Qualifier 2" | "Final"
   venue_stats?: WRVenueStats;
   h2h: Record<string, unknown>;
   form: Record<string, WRFormEntry | unknown>;

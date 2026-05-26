@@ -157,10 +157,33 @@ def overlay_wikipedia_fixtures(matches: list[ScheduleMatch], season: str) -> lis
         for row in parse_ipl_match_summary(wikitext)
     }
     count = 0
+    appended = 0
+    appended_matches: list[ScheduleMatch] = []
     for fixture in parse_ipl_fixtures(wikitext):
         match = by_number.get(fixture["match_number"])
+        # Playoff fixtures don't appear in the static fixtures-{season}.json
+        # (which is league-only). Append them as new entries with stage
+        # info so downstream panels — schedule timeline, briefing — see
+        # tonight's Qualifier the same way they'd see a league match.
+        if not match and fixture.get("is_playoff"):
+            new_match = ScheduleMatch(
+                match_number=fixture["match_number"],
+                date=fixture.get("date") or "",
+                time=fixture.get("time") or "",
+                venue=fixture.get("venue") or "",
+                city=fixture.get("city") or "",
+                team1=fixture["team1"],
+                team2=fixture["team2"],
+                stage=fixture.get("stage"),
+            )
+            appended_matches.append(new_match)
+            by_number[new_match.match_number] = new_match
+            match = new_match
+            appended += 1
         if not match:
             continue
+        if fixture.get("stage") and not match.stage:
+            match.stage = fixture["stage"]
         # Wikipedia's team1/team2 order in a fixture block doesn't
         # always agree with our fixtures.json ordering (Wikipedia often
         # lists the away/touring side first; we follow Cricsheet's
@@ -293,9 +316,16 @@ def overlay_wikipedia_fixtures(matches: list[ScheduleMatch], season: str) -> lis
         if updated:
             count += 1
 
+    if appended_matches:
+        matches = matches + appended_matches
+        matches.sort(key=lambda m: m.match_number)
     if count:
         console.print(
             f"  [green]Schedule: {count} match(es) enriched from Wikipedia[/green]"
+        )
+    if appended:
+        console.print(
+            f"  [green]Schedule: {appended} playoff fixture(s) added from Wikipedia[/green]"
         )
     return matches
 

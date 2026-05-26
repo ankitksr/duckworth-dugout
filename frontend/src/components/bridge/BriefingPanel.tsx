@@ -141,11 +141,13 @@ function HeroStrip({ briefing }: { briefing: WRBriefing }) {
         <div className="wr-bp-detail-meta">
           {briefing.time}
           {briefing.match_number != null && <> &middot; M{briefing.match_number}</>}
+          {briefing.stage && <> &middot; <span className="wr-bp-stage">{briefing.stage.toUpperCase()}</span></>}
         </div>
         <div className="wr-bp-detail-compact" aria-hidden="true">
           {(city || venueName).toUpperCase()}
           {briefing.time && <> &middot; {briefing.time.replace(/\s*IST\s*$/i, "")}</>}
           {briefing.match_number != null && <> &middot; M{briefing.match_number}</>}
+          {briefing.stage && <> &middot; <span className="wr-bp-stage">{briefing.stage.toUpperCase()}</span></>}
         </div>
         {previewLink && (
           <a href={previewLink.url} target="_blank" rel="noopener noreferrer" className="wr-bp-preview">

@@ -759,6 +759,7 @@ def _inject_post_llm(
     parsed["date"] = match.date
     parsed["time"] = match.time
     parsed["match_number"] = match.match_number
+    parsed["stage"] = match.stage
 
     # ── Venue stats (from Cricsheet queries, not LLM) ──
     venue_note = parsed.pop("venue_note", None)
@@ -957,6 +958,7 @@ async def generate_briefing(
     from pipeline.llm.gemini import GeminiProvider
 
     provider = GeminiProvider(model=GEMINI_MODEL_PRO, panel="briefing")
+    stage_label = match.stage or "League stage"
     prompt = _USER_PROMPT.format(
         team1=_short(match.team1),
         team2=_short(match.team2),
@@ -966,6 +968,7 @@ async def generate_briefing(
         time=match.time,
         venue=match.venue,
         city=match.city,
+        stage=stage_label,
         venue_context=venue_context,
         h2h_context=h2h_context,
         form_context=form_context,
