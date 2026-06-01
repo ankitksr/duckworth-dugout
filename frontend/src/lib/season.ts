@@ -19,7 +19,7 @@ export interface SeasonInfo {
   champion: string;
   /** Full franchise name for the banner / wrap. */
   championName: string;
-  /** ISO date the pipeline last synced — shown as "data frozen …". */
+  /** Fallback "data frozen …" date. The banner prefers meta.last_sync. */
   frozenAt: string;
   /** Optional final scoreline, e.g. "RCB beat PBKS by 6 runs". null hides it. */
   finalResult: string | null;
@@ -30,6 +30,6 @@ export const SEASON: SeasonInfo = {
   year: "2026",
   champion: "rcb",
   championName: "Royal Challengers Bengaluru",
-  frozenAt: "2026-05-26",
+  frozenAt: "2026-05-31",
   finalResult: null,
 };
