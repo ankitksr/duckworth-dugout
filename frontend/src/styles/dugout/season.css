@@ -1,0 +1,139 @@
+/* ── Off-season: champions banner + season wrap ──
+   Rendered only when SEASON.concluded (see lib/season.ts). The `--champ`
+   custom property is set inline from the champion's franchise colour. */
+
+/* Slim ribbon under the top bar. */
+.wr-season-banner {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 14px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--champ) 18%, transparent), transparent 60%),
+    var(--wr-s1);
+  border-bottom: 1px solid color-mix(in srgb, var(--champ) 40%, var(--wr-b2));
+  font: 500 11px 'Inter', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.wr-sb-trophy {
+  font-size: 13px;
+  line-height: 1;
+}
+.wr-sb-title {
+  font: 800 10px 'Anybody', sans-serif;
+  letter-spacing: 2px;
+  color: var(--champ);
+}
+.wr-sb-champ {
+  color: var(--wr-t);
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wr-sb-result {
+  color: var(--wr-t2);
+}
+.wr-sb-sep {
+  color: var(--wr-tm);
+}
+.wr-sb-spacer {
+  flex: 1;
+}
+.wr-sb-frozen {
+  font: 400 10px 'JetBrains Mono', monospace;
+  color: var(--wr-t3);
+  flex-shrink: 0;
+}
+
+/* ── Season Wrap (replaces the pre-match Briefing centre panel) ── */
+
+.wr-sw-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  padding: 28px 16px 24px;
+  border-radius: 4px;
+  margin-bottom: 14px;
+  border: 1px solid color-mix(in srgb, var(--champ) 30%, var(--wr-b2));
+}
+.wr-sw-trophy {
+  font-size: 34px;
+  line-height: 1;
+  filter: drop-shadow(0 0 12px color-mix(in srgb, var(--champ) 60%, transparent));
+}
+.wr-sw-champ-tag {
+  font: 700 10px 'JetBrains Mono', monospace;
+  letter-spacing: 4px;
+  color: var(--wr-t3);
+  margin-top: 6px;
+}
+.wr-sw-champ-name {
+  font: 900 40px 'Anybody', sans-serif;
+  letter-spacing: 2px;
+  line-height: 1;
+  text-shadow: 0 0 24px color-mix(in srgb, var(--champ) 45%, transparent);
+}
+.wr-sw-champ-full {
+  font: 500 12px 'Inter', sans-serif;
+  color: var(--wr-t2);
+}
+.wr-sw-final {
+  margin-top: 6px;
+  font: 500 11px 'JetBrains Mono', monospace;
+  color: var(--wr-t);
+  padding: 3px 10px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--champ) 14%, transparent);
+}
+
+.wr-sw-glance {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.wr-sw-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 12px 8px;
+  background: var(--wr-s2);
+  border: 1px solid var(--wr-b2);
+  border-radius: 3px;
+}
+.wr-sw-stat strong {
+  font: 700 20px 'Anybody', sans-serif;
+  color: var(--wr-t);
+}
+.wr-sw-stat span {
+  font: 600 8px 'JetBrains Mono', monospace;
+  letter-spacing: 1.5px;
+  color: var(--wr-t3);
+}
+
+.wr-sw-note {
+  padding: 12px 14px;
+  background: var(--wr-s1);
+  border: 1px solid var(--wr-b2);
+  border-radius: 3px;
+  font: 400 12px 'Inter', sans-serif;
+  line-height: 1.6;
+  color: var(--wr-t2);
+}
+
+/* On phones the single-line banner can't hold the frozen-date tail too —
+   drop it (the wrap note carries the off-season context) and let the
+   champion name ellipsis rather than clip mid-word. */
+@media (max-width: 640px) {
+  .wr-sb-frozen,
+  .wr-sb-spacer {
+    display: none;
+  }
+}

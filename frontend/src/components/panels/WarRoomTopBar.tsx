@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useWarRoomState, useWarRoomDispatch } from "../../hooks/useWarRoom";
 import { istClock } from "../helpers";
+import { SEASON } from "../../lib/season";
 
 export function WarRoomTopBar() {
   const { standings, ticker, schedule } = useWarRoomState();
@@ -14,7 +15,10 @@ export function WarRoomTopBar() {
     return () => clearInterval(id);
   }, []);
 
-  const hasLive = schedule?.some((m) => m.status === "live") ?? false;
+  // Off-season: the last sync froze mid-match, so schedule still carries a
+  // "live" fixture. Suppress the LIVE badge so the page doesn't claim a
+  // match is in progress months later.
+  const hasLive = !SEASON.concluded && (schedule?.some((m) => m.status === "live") ?? false);
 
   // On mobile, the briefing/team-intel panel sits above the fold. When the
   // user taps a pill from a scrolled position, the swap happens off-screen
