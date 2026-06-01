@@ -53,6 +53,11 @@ jobs:
 
       - name: Build
         working-directory: frontend
+        # GitHub Pages serves under /duckworth-dugout — without this the
+        # build emits root-relative /_astro asset URLs that 404 on Pages
+        # (sync-deploy.yml already sets this; deploy.yml had been missing it).
+        env:
+          ASTRO_BASE: /duckworth-dugout
         run: npm run build
 
       - uses: actions/upload-pages-artifact@v5.0.0
